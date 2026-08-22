@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>GvG - Rodízio Completo com Dois Botões</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }
+        .container { max-width: 650px; margin: auto; background: white; padding: 20px; border-radius: 8px; }
+        .result-box { margin-top: 20px; padding: 15px; background: #f8f9fa; white-space: pre-wrap; border: 1px solid #ccc; font-size: 14px; }
+        button { cursor: pointer; padding: 12px; margin-top: 10px; border: none; border-radius: 4px; color: white; font-weight: bold; width: 100%; }
+        textarea { width: 100%; height: 120px; padding: 8px; box-sizing: border-box; }
+        .config-box { background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #ffeeba; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="config-box">
+        <h3>⚙️ Memória de Nomes "Sistema" (Opcional)</h3>
+        <textarea id="listaSistemaMemoria" placeholder="Nomes que sempre serão sistema (um por linha)..."></textarea>
+        <button onclick="salvarSistema()" style="background:#ffc107; color:black;">💾 Salvar na Memória</button>
+    </div>
+
+    <h2>1. Lista de Nomes</h2>
+    <textarea id="listaTexto" placeholder="Cole a lista completa (Ex: Kira 321 sistema)"></textarea>
+    
+    <h3>❌ Não Responderam:</h3>
+    <textarea id="ausentesTexto" placeholder="Ex: Tiagoli, Safir" style="height:40px;"></textarea>
+
+    <button onclick="distribuir()" style="background:#28a745;">🚀 Carregar e Gerar Rodízio</button>
+    
+    <div id="resultado" class="result-box">A escala aparecerá aqui...</div>
+    
+    <div id="botoesZap" style="display:none;">
+        <button onclick="compartilharZap('adm')" style="background:#25d366;">📤 Enviar p/ ADM (Com Contagem e Detalhes do Sistema)</button>
+        <button onclick="compartilharZap('players')" style="background:#007bff;">📤 Enviar p/ Players (Apenas a Escala)</button>
+    </div>
+</div>
+
+<script>
+    let gradePlayers = "";
+    let gradeCompleta = "";
+
+    window.onload = () => document.getElementById('listaSistemaMemoria').value = localStorage.getItem('nomesSistema') || "";
+
+    function salvarSistema() {
+        localStorage.setItem('nomesSistema', document.getElementById('listaSistemaMemoria').value);
+        alert("Lista salva na memória com sucesso!");
+    }
+
+    function distribuir() {
+        const texto = document.getElementById('listaTexto').value;
+        if (!texto.trim()) {
+            alert("Por favor, cole a lista de nomes!");
+            return;
+        }
+
+        const ausentes = document.getElementById('ausentesTexto').value.toLowerCase().split(/[\n,]/).map(n => n.trim());
+        const memoria = document.getElementById('listaSistemaMemoria').value.toLowerCase().split('\n').map(n => n.trim());
+        
+        let lista = texto.split('\n').filter(l => l.trim()).map(l => {
+            let linhaLimpa = l.trim();
+            let linhaLower = linhaLimpa.toLowerCase();
+            
+            let temSistemaNaLinha = linhaLower.includes('sistema');
+            let semPalavraSistema = linhaLimpa.replace(/sistema/gi, '').trim();
+            
+            let partes = semPalavraSistema.split(/\s+/);
+            let pts = parseInt(partes.pop());
+            let nome = partes.join(' ');
+            
+            if (isNaN(pts)) pts = 0;
+
+            let ehSistema = temSistemaNaLinha || memoria.includes(nome.toLowerCase());
+            
+            return { nome, pontos: pts, ehSistema };
+        }).filter(m => m.pontos >= 80 && !ausentes.includes(m.nome.toLowerCase()));
+
+        let sistemaPessoas = lista.filter(m => m.ehSistema).sort((a,b) => b.pontos - a.pontos);
+        let nomesSistema = sistemaPessoas.map(m => m.nome);
+        let totalSistemaEncontrados = sistemaPessoas.length;
+        
+        let turnos = ['Sáb Tarde', 'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb Manhã'];
+        let escala = {};
+        let contagem = {};
+        lista.forEach(m => contagem[m.nome] = 0);
+        turnos.forEach(t => escala[t] = []);
+
+        let vagasSexta = [];
+        let vagasSabManha = [];
+
+        // Preenche Sexta (até 5 vagas)
+        for (let i = 0; i < 5; i++) {
+            if (sistemaPessoas.length === 0) break;
+            let escolhido = sistemaPessoas[i % sistemaPessoas.length];
+            vagasSexta.push(escolhido);
+            contagem[escolhido.nome] += 1;
+        }
+
+        // Preenche Sábado Manhã (até 5 vagas)
+        for (let i = 0; i < 5; i++) {
+            if (sistemaPessoas.length === 0) break;
+            let escolhido = sistemaPessoas[(5 + i) % sistemaPessoas.length];
+            vagasSabManha.push(escolhido);
+            contagem[escolhido.nome] += 1;
+        }
+
+        escala['Sexta'] = vagasSexta;
+        escala['Sáb Manhã'] = vagasSabManha;
+
+        let contagemSistemaNosDias = {};
+        [...vagasSexta, ...vagasSabManha].forEach(m => {
+            contagemSistemaNosDias[m.nome] = (contagemSistemaNosDias[m.nome] || 0) + 1;
+        });
+        let repetidosNoSistema = Object.keys(contagemSistemaNosDias).filter(nome => contagemSistemaNosDias[nome] > 1);
+
+        // Preenche Restante (Sáb Tarde até Quinta) - Excluindo quem é sistema
+        turnos.filter(t => t !== 'Sexta' && t !== 'Sáb Manhã').forEach(t => {
+            let disponiveis = lista.filter(m => !nomesSistema.includes(m.nome))
+                .sort((a,b) => (contagem[a.nome] - contagem[b.nome]) || (b.pontos - a.pontos));
+            
+            disponiveis.slice(0, 5).forEach(m => {
+                escala[t].push(m);
+                contagem[m.nome]++;
+            });
+        });
+
+        // Monta texto para os Players (Apenas a escala)
+        let saidaPlayers = `🏆 *Premiação GvG*\n\n`;
+        turnos.forEach(t => {
+            saidaPlayers += `*${t}:*\n`;
+            if (escala[t].length > 0) {
+                escala[t].forEach(m => {
+                    saidaPlayers += `- ${m.nome} (${m.pontos})\n`;
+                });
+            } else {
+                saidaPlayers += `- Ninguém disponível\n`;
+            }
+            saidaPlayers += "\n";
+        });
+        gradePlayers = saidaPlayers;
+
+        // Monta resumo de contagem para ADM
+        let resumoContagem = `📊 *Resumo de Aparições (Rodízio):*\n`;
+        let sistemaOrdenados = [...sistemaPessoas];
+        let naoSistemaNomes = Object.keys(contagem).filter(nome => !nomesSistema.includes(nome));
+        
+        naoSistemaNomes.sort((a, b) => {
+            let ptsA = lista.find(x => x.nome === a).pontos;
+            let ptsB = lista.find(x => x.nome === b).pontos;
+            return ptsB - ptsA;
+        });
+
+        sistemaOrdenados.forEach(m => {
+            resumoContagem += `${m.nome}: ${contagem[m.nome]}x\n`;
+        });
+        naoSistemaNomes.forEach(nome => {
+            resumoContagem += `${nome}: ${contagem[nome]}x\n`;
+        });
+
+        let resumoSistemaDetalhado = `\n⚙️ *Detalhes do Sistema (Sexta e Sáb Manhã):*\n`;
+        resumoSistemaDetalhado += `- ${totalSistemaEncontrados} aptos com marcação do sistema (>= 80 pts)\n`;
+        resumoSistemaDetalhado += `- 10 slots preenchidos\n\n`;
+        resumoSistemaDetalhado += `🔄 *Repetições nos dias do sistema:*\n`;
+        if (repetidosNoSistema.length > 0) {
+            repetidosNoSistema.forEach(nome => {
+                resumoSistemaDetalhado += `- ${nome}: apareceu ${contagemSistemaNosDias[nome]}x (Sexta/Sáb Manhã)\n`;
+            });
+        } else {
+            resumoSistemaDetalhado += `Nenhum membro do sistema repetiu entre Sexta e Sábado Manhã.\n`;
+        }
+
+        gradeCompleta = saidaPlayers + resumoContagem + resumoSistemaDetalhado;
+
+        document.getElementById('resultado').innerText = gradeCompleta;
+        document.getElementById('botoesZap').style.display = 'block';
+    }
+
+    function compartilharZap(tipo) {
+        const texto = (tipo === 'adm') ? gradeCompleta : gradePlayers;
+        window.open("https://wa.me/?text=" + encodeURIComponent(texto), '_blank');
+    }
+</script>
+</body>
+</html>
