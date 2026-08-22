@@ -7,7 +7,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f0f2f5; color: #333; }
         .container { max-width: 750px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        /* Estilo das Abas */
+        /* Abas */
         .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; gap: 5px; overflow-x: auto; }
         .tab-btn { flex: 1; padding: 10px; border: none; background: #f1f1f1; font-weight: bold; font-size: 14px; cursor: pointer; border-radius: 8px 8px 0 0; transition: 0.3s; color: #555; white-space: nowrap; }
         .tab-btn.active { background: #007bff; color: white; }
@@ -19,27 +19,37 @@
         
         .result-box { margin-top: 20px; padding: 15px; background: #f8f9fa; white-space: pre-wrap; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; line-height: 1.5; }
         
-        /* Listas e Histórico */
+        /* Listas e Controles */
         .search-box { width: 100%; padding: 8px; margin-bottom: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; }
-        .player-grid, .history-grid { max-height: 320px; overflow-y: auto; border: 1px solid #eee; border-radius: 6px; padding: 10px; background: #fafafa; }
-        .player-item, .history-item { padding: 10px 12px; border-bottom: 1px solid #eee; background: white; margin-bottom: 6px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .player-item:last-child, .history-item:last-child { border-bottom: none; }
+        .player-grid, .history-grid { min-height: 200px; border: 1px solid #eee; border-radius: 6px; padding: 10px; background: #fafafa; }
+        .player-item, .history-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #eee; background: white; margin-bottom: 6px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .history-item { flex-direction: column; align-items: stretch; }
         .badge-sys { background: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-        .history-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #666; margin-bottom: 5px; border-bottom: 1px dashed #ddd; padding-bottom: 4px; }
-        .history-text { font-size: 13px; white-space: pre-wrap; color: #333; max-height: 100px; overflow-y: auto; background: #fdfdfd; padding: 6px; border: 1px solid #eee; border-radius: 4px; }
+        
+        /* Ações e Botões */
+        .btn-group { display: flex; gap: 5px; }
+        .btn-icon { border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; color: white; }
+        .btn-edit { background: #ffc107; color: #000; }
+        .btn-del { background: #dc3545; }
+        .btn-save { background: #28a745; }
+
+        /* Paginação */
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 15px; }
+        .page-btn { padding: 5px 10px; border: 1px solid #ccc; background: white; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .page-btn.active { background: #007bff; color: white; border-color: #007bff; }
+        .page-btn:disabled { background: #e9ecef; cursor: not-allowed; color: #6c757d; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- Navegação de Abas -->
     <div class="tabs">
         <button class="tab-btn active" onclick="alternarAba('abaRodizio')">📅 Gerar Rodízio</button>
         <button class="tab-btn" onclick="alternarAba('abaHistorico')">👥 Pessoas do Sistema (<span id="countTotal">0</span>)</button>
         <button class="tab-btn" onclick="alternarAba('abaLogs')">📁 Histórico de Gerações</button>
     </div>
 
-    <!-- ABA 1: GERAR RODÍZIO -->
+    <!-- ABA 1 -->
     <div id="abaRodizio" class="tab-content active">
         <h2>1. Cole a Lista de Nomes</h2>
         <textarea id="listaTexto" placeholder="Cole a lista aqui..."></textarea>
@@ -58,11 +68,15 @@
     <!-- ABA 2: GERENCIADOR DE SISTEMA -->
     <div id="abaHistorico" class="tab-content">
         <h3>⚙️ Gerenciador de Jogadores do Sistema</h3>
-        <p style="font-size: 13px; color: #666;">Apenas os nomes identificados com a tag "sistema" na última lista colada ficam salvos aqui.</p>
+        <div style="display: flex; gap: 5px; margin-bottom: 12px;">
+            <input type="text" id="novoNomeSistema" class="search-box" placeholder="Adicionar player manualmente..." style="margin-bottom:0;">
+            <button onclick="adicionarManualSistema()" class="btn-icon btn-save" style="padding: 0 15px; font-size: 16px;">✅</button>
+        </div>
         
-        <input type="text" id="filtroJogador" class="search-box" placeholder="🔍 Buscar jogador..." oninput="renderizarHistorico()">
+        <input type="text" id="filtroJogador" class="search-box" placeholder="🔍 Buscar jogador..." oninput="paginaSistema = 1; renderizarHistorico()">
         
         <div class="player-grid" id="listaHistoricoContainer"></div>
+        <div class="pagination" id="paginacaoSistema"></div>
 
         <button onclick="limparBancoJogadores()" class="action-btn" style="background:#dc3545; margin-top:15px; padding:8px;">🗑️ Limpar Banco de Sistema</button>
     </div>
@@ -70,17 +84,21 @@
     <!-- ABA 3: HISTÓRICO DE GERAÇÕES -->
     <div id="abaLogs" class="tab-content">
         <h3>📁 Histórico de Rodízios Gerados</h3>
-        <p style="font-size: 13px; color: #666;">Cada vez que uma nova escala é gerada com sucesso, ela é registrada aqui com data e horário.</p>
+        <p style="font-size: 13px; color: #666;">Gerencie, edite ou apague cada escala gerada anteriormente.</p>
         
         <div class="history-grid" id="listaLogsContainer"></div>
+        <div class="pagination" id="paginacaoLogs"></div>
 
-        <button onclick="limparLogs()" class="action-btn" style="background:#dc3545; margin-top:15px; padding:8px;">🗑️ Limpar Histórico de Gerações</button>
+        <button onclick="limparLogs()" class="action-btn" style="background:#dc3545; margin-top:15px; padding:8px;">🗑️ Limpar Todo o Histórico</button>
     </div>
 </div>
 
 <script>
     let gradePlayers = "";
     let gradeCompleta = "";
+    let paginaSistema = 1;
+    let paginaLogs = 1;
+    const itensPorPagina = 5;
 
     document.getElementById('listaTexto').addEventListener('input', processarETocalhar);
     document.getElementById('ausentesTexto').addEventListener('input', processarETocalhar);
@@ -93,7 +111,6 @@
     function alternarAba(abaId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        
         document.getElementById(abaId).classList.add('active');
         event.currentTarget.classList.add('active');
     }
@@ -107,47 +124,82 @@
         renderizarHistorico();
     }
 
-    function toggleSistema(nomeFormatado) {
-        let banco = getBancoJogadores();
-        let chave = nomeFormatado.toLowerCase();
+    function adicionarManualSistema() {
+        let input = document.getElementById('novoNomeSistema');
+        let nome = input.value.trim();
+        if(!nome) return;
         
-        if (banco[chave]) {
-            delete banco[chave]; 
+        let banco = getBancoJogadores();
+        banco[nome.toLowerCase()] = { nome: nome, ehSistema: true };
+        saveBancoJogadores(banco);
+        input.value = "";
+        processarETocalhar();
+    }
+
+    function deletarSistema(chave) {
+        let banco = getBancoJogadores();
+        delete banco[chave];
+        saveBancoJogadores(banco);
+        processarETocalhar();
+    }
+
+    function editarSistema(chaveOriginal) {
+        let banco = getBancoJogadores();
+        let novoNome = prompt("Editar nome do jogador:", banco[chaveOriginal].nome);
+        if(novoNome && novoNome.trim()) {
+            novoNome = novoNome.trim();
+            let novaChave = novoNome.toLowerCase();
+            banco[novaChave] = { nome: novoNome, ehSistema: true };
+            if(novaChave !== chaveOriginal) delete banco[chaveOriginal];
             saveBancoJogadores(banco);
-            processarETocalhar(); 
+            processarETocalhar();
         }
     }
 
     function renderizarHistorico() {
         const container = document.getElementById('listaHistoricoContainer');
+        const pagContainer = document.getElementById('paginacaoSistema');
         const filtro = document.getElementById('filtroJogador').value.toLowerCase();
         const banco = getBancoJogadores();
         
-        const chaves = Object.keys(banco).sort();
-        document.getElementById('countTotal').innerText = chaves.length;
-
+        let chaves = Object.keys(banco).sort();
+        if(filtro) {
+            chaves = chaves.filter(k => banco[k].nome.toLowerCase().includes(filtro));
+        }
+        
+        document.getElementById('countTotal').innerText = Object.keys(banco).length;
         container.innerHTML = "";
 
         if (chaves.length === 0) {
             container.innerHTML = "<div style='text-align:center; color:#999; padding:20px;'>Nenhum jogador de sistema cadastrado.</div>";
+            pagContainer.innerHTML = "";
             return;
         }
 
-        chaves.forEach(chave => {
+        let totalPaginas = Math.ceil(chaves.length / itensPorPagina);
+        if(paginaSistema > totalPaginas) paginaSistema = totalPaginas;
+        let inicio = (paginaSistema - 1) * itensPorPagina;
+        let fim = inicio + itensPorPagina;
+        let chavesPagina = chaves.slice(inicio, fim);
+
+        chavesPagina.forEach(chave => {
             let player = banco[chave];
-            if (player.nome.toLowerCase().includes(filtro)) {
-                let div = document.createElement('div');
-                div.className = 'player-item';
-                div.innerHTML = `
-                    <label style="cursor:pointer; display:flex; align-items:center; gap:10px; width:100%;">
-                        <input type="checkbox" checked onchange="toggleSistema('${player.nome}')">
-                        <strong>${player.nome}</strong>
-                        <span class="badge-sys">SISTEMA</span>
-                    </label>
-                `;
-                container.appendChild(div);
-            }
+            let div = document.createElement('div');
+            div.className = 'player-item';
+            div.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="badge-sys">SISTEMA</span>
+                    <strong>${player.nome}</strong>
+                </div>
+                <div class="btn-group">
+                    <button class="btn-icon btn-edit" onclick="editarSistema('${chave}')">✏️</button>
+                    <button class="btn-icon btn-del" onclick="deletarSistema('${chave}')">❌</button>
+                </div>
+            `;
+            container.appendChild(div);
         });
+
+        renderizarPaginacao(totalPaginas, paginaSistema, pagContainer, (p) => { paginaSistema = p; renderizarHistorico(); });
     }
 
     function limparBancoJogadores() {
@@ -158,6 +210,7 @@
         }
     }
 
+    // --- LOGS E PAGINAÇÃO ---
     function getLogs() {
         return JSON.parse(localStorage.getItem('gvg_historico_logs')) || [];
     }
@@ -165,48 +218,99 @@
     function salvarLog(textoGerado) {
         let logs = getLogs();
         let agora = new Date();
-        
-        let novoLog = {
-            data: agora.toLocaleDateString('pt-BR'),
-            hora: agora.toLocaleTimeString('pt-BR'),
-            conteudo: textoGerado,
-            timestamp: agora.getTime()
-        };
-
-        logs.unshift(novoLog);
-        if (logs.length > 30) logs.pop();
-
+        logs.unshift({ data: agora.toLocaleDateString('pt-BR'), hora: agora.toLocaleTimeString('pt-BR'), conteudo: textoGerado, timestamp: agora.getTime() });
+        if (logs.length > 50) logs.pop();
         localStorage.setItem('gvg_historico_logs', JSON.stringify(logs));
         renderizarLogs();
     }
 
+    function deletarLog(indexReal) {
+        if(confirm("Deseja apagar este registro do histórico?")) {
+            let logs = getLogs();
+            logs.splice(indexReal, 1);
+            localStorage.setItem('gvg_historico_logs', JSON.stringify(logs));
+            renderizarLogs();
+        }
+    }
+
+    function editarLog(indexReal) {
+        let logs = getLogs();
+        let novoConteudo = prompt("Editar conteúdo do histórico:", logs[indexReal].conteudo);
+        if(novoConteudo !== null) {
+            logs[indexReal].conteudo = novoConteudo;
+            localStorage.setItem('gvg_historico_logs', JSON.stringify(logs));
+            renderizarLogs();
+        }
+    }
+
     function renderizarLogs() {
         const container = document.getElementById('listaLogsContainer');
+        const pagContainer = document.getElementById('paginacaoLogs');
         const logs = getLogs();
 
         container.innerHTML = "";
-
         if (logs.length === 0) {
             container.innerHTML = "<div style='text-align:center; color:#999; padding:20px;'>Nenhum rodízio gerado ainda.</div>";
+            pagContainer.innerHTML = "";
             return;
         }
 
-        logs.forEach((log) => {
+        let totalPaginas = Math.ceil(logs.length / itensPorPagina);
+        if(paginaLogs > totalPaginas) paginaLogs = totalPaginas;
+        let inicio = (paginaLogs - 1) * itensPorPagina;
+        let fim = inicio + itensPorPagina;
+        let logsPagina = logs.slice(inicio, fim);
+
+        logsPagina.forEach((log, idxRelativo) => {
+            let indexReal = inicio + idxRelativo;
             let div = document.createElement('div');
             div.className = 'history-item';
             div.innerHTML = `
-                <div class="history-header">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#666; margin-bottom:5px; border-bottom:1px dashed #ddd; padding-bottom:4px;">
                     <span>📅 <strong>${log.data}</strong> às <strong>${log.hora}</strong></span>
-                    <button onclick="copiarTextoLog(this)" style="background:#007bff; color:white; border:none; padding:3px 8px; border-radius:3px; cursor:pointer; font-size:11px;">📋 Copiar</button>
+                    <div class="btn-group">
+                        <button onclick="copiarTextoLog(this)" style="background:#007bff; color:white; border:none; padding:3px 8px; border-radius:3px; cursor:pointer; font-size:11px;">📋 Copiar</button>
+                        <button class="btn-icon btn-edit" onclick="editarLog(${indexReal})">✏️</button>
+                        <button class="btn-icon btn-del" onclick="deletarLog(${indexReal})">❌</button>
+                    </div>
                 </div>
-                <div class="history-text">${log.conteudo}</div>
+                <div style="font-size: 13px; white-space: pre-wrap; color: #333; max-height: 100px; overflow-y: auto; background: #fdfdfd; padding: 6px; border: 1px solid #eee; border-radius: 4px;">${log.conteudo}</div>
             `;
             container.appendChild(div);
         });
+
+        renderizarPaginacao(totalPaginas, paginaLogs, pagContainer, (p) => { paginaLogs = p; renderizarLogs(); });
+    }
+
+    function renderizarPaginacao(totalPaginas, paginaAtual, container, callback) {
+        container.innerHTML = "";
+        if(totalPaginas <= 1) return;
+
+        let btnAnt = document.createElement('button');
+        btnAnt.className = 'page-btn';
+        btnAnt.innerText = '◀';
+        btnAnt.disabled = paginaAtual === 1;
+        btnAnt.onclick = () => callback(paginaAtual - 1);
+        container.appendChild(btnAnt);
+
+        for(let i=1; i<=totalPaginas; i++) {
+            let btn = document.createElement('button');
+            btn.className = `page-btn ${i === paginaAtual ? 'active' : ''}`;
+            btn.innerText = i;
+            btn.onclick = () => callback(i);
+            container.appendChild(btn);
+        }
+
+        let btnProx = document.createElement('button');
+        btnProx.className = 'page-btn';
+        btnProx.innerText = '▶';
+        btnProx.disabled = paginaAtual === totalPaginas;
+        btnProx.onclick = () => callback(paginaAtual + 1);
+        container.appendChild(btnProx);
     }
 
     function copiarTextoLog(btn) {
-        let textoBox = btn.parentElement.nextElementSibling;
+        let textoBox = btn.parentElement.parentElement.nextElementSibling;
         navigator.clipboard.writeText(textoBox.innerText).then(() => {
             let original = btn.innerText;
             btn.innerText = "✅ Copiado!";
@@ -229,7 +333,7 @@
             return;
         }
 
-        let banco = {}; 
+        let banco = getBancoJogadores(); 
         const ausentes = document.getElementById('ausentesTexto').value.toLowerCase().split(/[\n,]/).map(n => n.trim());
         
         let listaInput = texto.split('\n').filter(l => l.trim()).map(l => {
@@ -244,11 +348,12 @@
             
             let chave = nome.toLowerCase();
 
-            if (temTextoSistema) {
+            if (temTextoSistema && !banco[chave]) {
                 banco[chave] = { nome: nome, ehSistema: true };
             }
 
-            return { nome: nome, pontos: pts, ehSistema: temTextoSistema };
+            let eSistemaFinal = banco[chave] ? banco[chave].ehSistema : false;
+            return { nome: banco[chave] ? banco[chave].nome : nome, pontos: pts, ehSistema: eSistemaFinal };
         });
 
         saveBancoJogadores(banco);
