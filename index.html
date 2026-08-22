@@ -2,38 +2,79 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>GvG - Rodízio Completo com Dois Botões</title>
+    <title>GvG - Rodízio, Gerenciador & Histórico</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }
-        .container { max-width: 650px; margin: auto; background: white; padding: 20px; border-radius: 8px; }
-        .result-box { margin-top: 20px; padding: 15px; background: #f8f9fa; white-space: pre-wrap; border: 1px solid #ccc; font-size: 14px; }
-        button { cursor: pointer; padding: 12px; margin-top: 10px; border: none; border-radius: 4px; color: white; font-weight: bold; width: 100%; }
-        textarea { width: 100%; height: 120px; padding: 8px; box-sizing: border-box; }
-        .config-box { background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #ffeeba; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f0f2f5; color: #333; }
+        .container { max-width: 750px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        /* Estilo das Abas */
+        .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; gap: 5px; overflow-x: auto; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: #f1f1f1; font-weight: bold; font-size: 14px; cursor: pointer; border-radius: 8px 8px 0 0; transition: 0.3s; color: #555; white-space: nowrap; }
+        .tab-btn.active { background: #007bff; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        textarea { width: 100%; height: 110px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        button.action-btn { cursor: pointer; padding: 12px; margin-top: 10px; border: none; border-radius: 6px; color: white; font-weight: bold; width: 100%; font-size: 15px; }
+        
+        .result-box { margin-top: 20px; padding: 15px; background: #f8f9fa; white-space: pre-wrap; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; line-height: 1.5; }
+        
+        /* Listas e Histórico */
+        .search-box { width: 100%; padding: 8px; margin-bottom: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; }
+        .player-grid, .history-grid { max-height: 320px; overflow-y: auto; border: 1px solid #eee; border-radius: 6px; padding: 10px; background: #fafafa; }
+        .player-item, .history-item { padding: 10px 12px; border-bottom: 1px solid #eee; background: white; margin-bottom: 6px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .player-item:last-child, .history-item:last-child { border-bottom: none; }
+        .badge-sys { background: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .history-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #666; margin-bottom: 5px; border-bottom: 1px dashed #ddd; padding-bottom: 4px; }
+        .history-text { font-size: 13px; white-space: pre-wrap; color: #333; max-height: 100px; overflow-y: auto; background: #fdfdfd; padding: 6px; border: 1px solid #eee; border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="config-box">
-        <h3>⚙️ Memória de Nomes "Sistema" (Opcional)</h3>
-        <textarea id="listaSistemaMemoria" placeholder="Nomes que sempre serão sistema (um por linha)..."></textarea>
-        <button onclick="salvarSistema()" style="background:#ffc107; color:black;">💾 Salvar na Memória</button>
+    <!-- Navegação de Abas -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="alternarAba('abaRodizio')">📅 Gerar Rodízio</button>
+        <button class="tab-btn" onclick="alternarAba('abaHistorico')">👥 Pessoas do Sistema (<span id="countTotal">0</span>)</button>
+        <button class="tab-btn" onclick="alternarAba('abaLogs')">📁 Histórico de Gerações</button>
     </div>
 
-    <h2>1. Lista de Nomes</h2>
-    <textarea id="listaTexto" placeholder="Cole a lista completa (Ex: Kira 321 sistema)"></textarea>
-    
-    <h3>❌ Não Responderam:</h3>
-    <textarea id="ausentesTexto" placeholder="Ex: Tiagoli, Safir" style="height:40px;"></textarea>
+    <!-- ABA 1: GERAR RODÍZIO -->
+    <div id="abaRodizio" class="tab-content active">
+        <h2>1. Cole a Lista de Nomes</h2>
+        <textarea id="listaTexto" placeholder="Cole a lista aqui..."></textarea>
+        
+        <h3>❌ Não Responderam:</h3>
+        <textarea id="ausentesTexto" placeholder="Ex: Tiagoli, Safir" style="height:40px;"></textarea>
+        
+        <div id="resultado" class="result-box">A escala aparecerá aqui assim que colar a lista...</div>
+        
+        <div id="botoesZap" style="display:none; margin-top: 15px;">
+            <button class="action-btn" onclick="compartilharZap('adm')" style="background:#25d366;">📤 Enviar p/ ADM</button>
+            <button class="action-btn" onclick="compartilharZap('players')" style="background:#007bff;">📤 Enviar p/ Players</button>
+        </div>
+    </div>
 
-    <button onclick="distribuir()" style="background:#28a745;">🚀 Carregar e Gerar Rodízio</button>
-    
-    <div id="resultado" class="result-box">A escala aparecerá aqui...</div>
-    
-    <div id="botoesZap" style="display:none;">
-        <button onclick="compartilharZap('adm')" style="background:#25d366;">📤 Enviar p/ ADM (Com Contagem e Detalhes do Sistema)</button>
-        <button onclick="compartilharZap('players')" style="background:#007bff;">📤 Enviar p/ Players (Apenas a Escala)</button>
+    <!-- ABA 2: GERENCIADOR DE SISTEMA -->
+    <div id="abaHistorico" class="tab-content">
+        <h3>⚙️ Gerenciador de Jogadores do Sistema</h3>
+        <p style="font-size: 13px; color: #666;">Apenas os nomes identificados com a tag "sistema" na última lista colada ficam salvos aqui.</p>
+        
+        <input type="text" id="filtroJogador" class="search-box" placeholder="🔍 Buscar jogador..." oninput="renderizarHistorico()">
+        
+        <div class="player-grid" id="listaHistoricoContainer"></div>
+
+        <button onclick="limparBancoJogadores()" class="action-btn" style="background:#dc3545; margin-top:15px; padding:8px;">🗑️ Limpar Banco de Sistema</button>
+    </div>
+
+    <!-- ABA 3: HISTÓRICO DE GERAÇÕES -->
+    <div id="abaLogs" class="tab-content">
+        <h3>📁 Histórico de Rodízios Gerados</h3>
+        <p style="font-size: 13px; color: #666;">Cada vez que uma nova escala é gerada com sucesso, ela é registrada aqui com data e horário.</p>
+        
+        <div class="history-grid" id="listaLogsContainer"></div>
+
+        <button onclick="limparLogs()" class="action-btn" style="background:#dc3545; margin-top:15px; padding:8px;">🗑️ Limpar Histórico de Gerações</button>
     </div>
 </div>
 
@@ -41,144 +82,230 @@
     let gradePlayers = "";
     let gradeCompleta = "";
 
-    window.onload = () => document.getElementById('listaSistemaMemoria').value = localStorage.getItem('nomesSistema') || "";
+    document.getElementById('listaTexto').addEventListener('input', processarETocalhar);
+    document.getElementById('ausentesTexto').addEventListener('input', processarETocalhar);
 
-    function salvarSistema() {
-        localStorage.setItem('nomesSistema', document.getElementById('listaSistemaMemoria').value);
-        alert("Lista salva na memória com sucesso!");
+    window.onload = () => {
+        renderizarHistorico();
+        renderizarLogs();
+    };
+
+    function alternarAba(abaId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(abaId).classList.add('active');
+        event.currentTarget.classList.add('active');
     }
 
-    function distribuir() {
-        const texto = document.getElementById('listaTexto').value;
-        if (!texto.trim()) {
-            alert("Por favor, cole a lista de nomes!");
+    function getBancoJogadores() {
+        return JSON.parse(localStorage.getItem('gvg_banco_jogadores')) || {};
+    }
+
+    function saveBancoJogadores(banco) {
+        localStorage.setItem('gvg_banco_jogadores', JSON.stringify(banco));
+        renderizarHistorico();
+    }
+
+    function toggleSistema(nomeFormatado) {
+        let banco = getBancoJogadores();
+        let chave = nomeFormatado.toLowerCase();
+        
+        if (banco[chave]) {
+            delete banco[chave]; 
+            saveBancoJogadores(banco);
+            processarETocalhar(); 
+        }
+    }
+
+    function renderizarHistorico() {
+        const container = document.getElementById('listaHistoricoContainer');
+        const filtro = document.getElementById('filtroJogador').value.toLowerCase();
+        const banco = getBancoJogadores();
+        
+        const chaves = Object.keys(banco).sort();
+        document.getElementById('countTotal').innerText = chaves.length;
+
+        container.innerHTML = "";
+
+        if (chaves.length === 0) {
+            container.innerHTML = "<div style='text-align:center; color:#999; padding:20px;'>Nenhum jogador de sistema cadastrado.</div>";
             return;
         }
 
-        const ausentes = document.getElementById('ausentesTexto').value.toLowerCase().split(/[\n,]/).map(n => n.trim());
-        const memoria = document.getElementById('listaSistemaMemoria').value.toLowerCase().split('\n').map(n => n.trim());
+        chaves.forEach(chave => {
+            let player = banco[chave];
+            if (player.nome.toLowerCase().includes(filtro)) {
+                let div = document.createElement('div');
+                div.className = 'player-item';
+                div.innerHTML = `
+                    <label style="cursor:pointer; display:flex; align-items:center; gap:10px; width:100%;">
+                        <input type="checkbox" checked onchange="toggleSistema('${player.nome}')">
+                        <strong>${player.nome}</strong>
+                        <span class="badge-sys">SISTEMA</span>
+                    </label>
+                `;
+                container.appendChild(div);
+            }
+        });
+    }
+
+    function limparBancoJogadores() {
+        if (confirm("Tem certeza que deseja apagar o banco de jogadores de sistema?")) {
+            localStorage.removeItem('gvg_banco_jogadores');
+            renderizarHistorico();
+            processarETocalhar();
+        }
+    }
+
+    function getLogs() {
+        return JSON.parse(localStorage.getItem('gvg_historico_logs')) || [];
+    }
+
+    function salvarLog(textoGerado) {
+        let logs = getLogs();
+        let agora = new Date();
         
-        let lista = texto.split('\n').filter(l => l.trim()).map(l => {
+        let novoLog = {
+            data: agora.toLocaleDateString('pt-BR'),
+            hora: agora.toLocaleTimeString('pt-BR'),
+            conteudo: textoGerado,
+            timestamp: agora.getTime()
+        };
+
+        logs.unshift(novoLog);
+        if (logs.length > 30) logs.pop();
+
+        localStorage.setItem('gvg_historico_logs', JSON.stringify(logs));
+        renderizarLogs();
+    }
+
+    function renderizarLogs() {
+        const container = document.getElementById('listaLogsContainer');
+        const logs = getLogs();
+
+        container.innerHTML = "";
+
+        if (logs.length === 0) {
+            container.innerHTML = "<div style='text-align:center; color:#999; padding:20px;'>Nenhum rodízio gerado ainda.</div>";
+            return;
+        }
+
+        logs.forEach((log) => {
+            let div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <div class="history-header">
+                    <span>📅 <strong>${log.data}</strong> às <strong>${log.hora}</strong></span>
+                    <button onclick="copiarTextoLog(this)" style="background:#007bff; color:white; border:none; padding:3px 8px; border-radius:3px; cursor:pointer; font-size:11px;">📋 Copiar</button>
+                </div>
+                <div class="history-text">${log.conteudo}</div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function copiarTextoLog(btn) {
+        let textoBox = btn.parentElement.nextElementSibling;
+        navigator.clipboard.writeText(textoBox.innerText).then(() => {
+            let original = btn.innerText;
+            btn.innerText = "✅ Copiado!";
+            setTimeout(() => btn.innerText = original, 2000);
+        });
+    }
+
+    function limparLogs() {
+        if (confirm("Deseja apagar todo o histórico de gerações?")) {
+            localStorage.removeItem('gvg_historico_logs');
+            renderizarLogs();
+        }
+    }
+
+    function processarETocalhar() {
+        const texto = document.getElementById('listaTexto').value;
+        if (!texto.trim()) {
+            document.getElementById('resultado').innerText = "A escala aparecerá aqui assim que colar a lista...";
+            document.getElementById('botoesZap').style.display = 'none';
+            return;
+        }
+
+        let banco = {}; 
+        const ausentes = document.getElementById('ausentesTexto').value.toLowerCase().split(/[\n,]/).map(n => n.trim());
+        
+        let listaInput = texto.split('\n').filter(l => l.trim()).map(l => {
             let linhaLimpa = l.trim();
-            let linhaLower = linhaLimpa.toLowerCase();
-            
-            let temSistemaNaLinha = linhaLower.includes('sistema');
+            let temTextoSistema = linhaLimpa.toLowerCase().includes('sistema');
             let semPalavraSistema = linhaLimpa.replace(/sistema/gi, '').trim();
             
             let partes = semPalavraSistema.split(/\s+/);
             let pts = parseInt(partes.pop());
             let nome = partes.join(' ');
-            
             if (isNaN(pts)) pts = 0;
-
-            let ehSistema = temSistemaNaLinha || memoria.includes(nome.toLowerCase());
             
-            return { nome, pontos: pts, ehSistema };
-        }).filter(m => m.pontos >= 80 && !ausentes.includes(m.nome.toLowerCase()));
+            let chave = nome.toLowerCase();
 
-        let sistemaPessoas = lista.filter(m => m.ehSistema).sort((a,b) => b.pontos - a.pontos);
+            if (temTextoSistema) {
+                banco[chave] = { nome: nome, ehSistema: true };
+            }
+
+            return { nome: nome, pontos: pts, ehSistema: temTextoSistema };
+        });
+
+        saveBancoJogadores(banco);
+
+        let listaValida = listaInput.filter(m => {
+            if (ausentes.includes(m.nome.toLowerCase())) return false;
+            if (m.ehSistema) return m.pontos >= 80;
+            return true; 
+        });
+
+        let sistemaPessoas = listaValida.filter(m => m.ehSistema).sort((a,b) => b.pontos - a.pontos);
         let nomesSistema = sistemaPessoas.map(m => m.nome);
-        let totalSistemaEncontrados = sistemaPessoas.length;
         
         let turnos = ['Sáb Tarde', 'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb Manhã'];
         let escala = {};
         let contagem = {};
-        lista.forEach(m => contagem[m.nome] = 0);
+        listaValida.forEach(m => contagem[m.nome] = 0);
         turnos.forEach(t => escala[t] = []);
 
-        let vagasSexta = [];
-        let vagasSabManha = [];
-
-        // Preenche Sexta (até 5 vagas)
-        for (let i = 0; i < 5; i++) {
-            if (sistemaPessoas.length === 0) break;
-            let escolhido = sistemaPessoas[i % sistemaPessoas.length];
-            vagasSexta.push(escolhido);
-            contagem[escolhido.nome] += 1;
-        }
-
-        // Preenche Sábado Manhã (até 5 vagas)
-        for (let i = 0; i < 5; i++) {
-            if (sistemaPessoas.length === 0) break;
-            let escolhido = sistemaPessoas[(5 + i) % sistemaPessoas.length];
-            vagasSabManha.push(escolhido);
-            contagem[escolhido.nome] += 1;
-        }
-
-        escala['Sexta'] = vagasSexta;
-        escala['Sáb Manhã'] = vagasSabManha;
-
-        let contagemSistemaNosDias = {};
-        [...vagasSexta, ...vagasSabManha].forEach(m => {
-            contagemSistemaNosDias[m.nome] = (contagemSistemaNosDias[m.nome] || 0) + 1;
-        });
-        let repetidosNoSistema = Object.keys(contagemSistemaNosDias).filter(nome => contagemSistemaNosDias[nome] > 1);
-
-        // Preenche Restante (Sáb Tarde até Quinta) - Excluindo quem é sistema
-        turnos.filter(t => t !== 'Sexta' && t !== 'Sáb Manhã').forEach(t => {
-            let disponiveis = lista.filter(m => !nomesSistema.includes(m.nome))
-                .sort((a,b) => (contagem[a.nome] - contagem[b.nome]) || (b.pontos - a.pontos));
-            
-            disponiveis.slice(0, 5).forEach(m => {
+        ['Sexta', 'Sáb Manhã'].forEach(t => {
+            let offset = (t === 'Sexta' ? 0 : 5);
+            for(let i=0; i<5; i++) {
+                if(sistemaPessoas.length === 0) break;
+                let m = sistemaPessoas[(offset + i) % sistemaPessoas.length];
                 escala[t].push(m);
                 contagem[m.nome]++;
-            });
-        });
-
-        // Monta texto para os Players (Apenas a escala)
-        let saidaPlayers = `🏆 *Premiação GvG*\n\n`;
-        turnos.forEach(t => {
-            saidaPlayers += `*${t}:*\n`;
-            if (escala[t].length > 0) {
-                escala[t].forEach(m => {
-                    saidaPlayers += `- ${m.nome} (${m.pontos})\n`;
-                });
-            } else {
-                saidaPlayers += `- Ninguém disponível\n`;
             }
-            saidaPlayers += "\n";
         });
-        gradePlayers = saidaPlayers;
 
-        // Monta resumo de contagem para ADM
-        let resumoContagem = `📊 *Resumo de Aparições (Rodízio):*\n`;
-        let sistemaOrdenados = [...sistemaPessoas];
-        let naoSistemaNomes = Object.keys(contagem).filter(nome => !nomesSistema.includes(nome));
+        let top15 = listaValida.filter(m => !nomesSistema.includes(m.nome)).sort((a,b) => b.pontos - a.pontos).slice(0, 15);
         
-        naoSistemaNomes.sort((a, b) => {
-            let ptsA = lista.find(x => x.nome === a).pontos;
-            let ptsB = lista.find(x => x.nome === b).pontos;
-            return ptsB - ptsA;
+        turnos.filter(t => t !== 'Sexta' && t !== 'Sáb Manhã').forEach(t => {
+            let disponiveis = [...top15].sort((a,b) => (contagem[a.nome] - contagem[b.nome]) || (b.pontos - a.pontos));
+            for(let i=0; i<5; i++) {
+                if(disponiveis.length === 0) break;
+                let escolhido = disponiveis.shift();
+                escala[t].push(escolhido);
+                contagem[escolhido.nome]++;
+            }
         });
 
-        sistemaOrdenados.forEach(m => {
-            resumoContagem += `${m.nome}: ${contagem[m.nome]}x\n`;
+        let out = "🏆 *Premiação GvG*\n\n";
+        turnos.forEach(t => {
+            out += `*${t}:*\n` + (escala[t].length ? escala[t].map(m => `- ${m.nome} (${m.pontos})`).join('\n') : "- Ninguém disponível") + "\n\n";
         });
-        naoSistemaNomes.forEach(nome => {
-            resumoContagem += `${nome}: ${contagem[nome]}x\n`;
-        });
-
-        let resumoSistemaDetalhado = `\n⚙️ *Detalhes do Sistema (Sexta e Sáb Manhã):*\n`;
-        resumoSistemaDetalhado += `- ${totalSistemaEncontrados} aptos com marcação do sistema (>= 80 pts)\n`;
-        resumoSistemaDetalhado += `- 10 slots preenchidos\n\n`;
-        resumoSistemaDetalhado += `🔄 *Repetições nos dias do sistema:*\n`;
-        if (repetidosNoSistema.length > 0) {
-            repetidosNoSistema.forEach(nome => {
-                resumoSistemaDetalhado += `- ${nome}: apareceu ${contagemSistemaNosDias[nome]}x (Sexta/Sáb Manhã)\n`;
-            });
-        } else {
-            resumoSistemaDetalhado += `Nenhum membro do sistema repetiu entre Sexta e Sábado Manhã.\n`;
-        }
-
-        gradeCompleta = saidaPlayers + resumoContagem + resumoSistemaDetalhado;
-
+        
+        gradePlayers = out;
+        gradeCompleta = out + "\n📊 *Contagem:*\n" + Object.keys(contagem).map(n => `${n}: ${contagem[n]}x`).join('\n');
+        
         document.getElementById('resultado').innerText = gradeCompleta;
         document.getElementById('botoesZap').style.display = 'block';
+
+        salvarLog(gradeCompleta);
     }
 
     function compartilharZap(tipo) {
-        const texto = (tipo === 'adm') ? gradeCompleta : gradePlayers;
-        window.open("https://wa.me/?text=" + encodeURIComponent(texto), '_blank');
+        window.open("https://wa.me/?text=" + encodeURIComponent(tipo === 'adm' ? gradeCompleta : gradePlayers));
     }
 </script>
 </body>
