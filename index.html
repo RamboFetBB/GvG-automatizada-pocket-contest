@@ -5,7 +5,7 @@
     <title>GvG - Rodízio, Gerenciador & Histórico</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f0f2f5; color: #333; }
-        .container { max-width: 750px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .container { max-width: 750px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
         
         /* Abas */
         .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; gap: 5px; overflow-x: auto; }
@@ -38,6 +38,11 @@
         .page-btn { padding: 5px 10px; border: 1px solid #ccc; background: white; cursor: pointer; border-radius: 4px; font-weight: bold; }
         .page-btn.active { background: #007bff; color: white; border-color: #007bff; }
         .page-btn:disabled { background: #e9ecef; cursor: not-allowed; color: #6c757d; }
+
+        /* Modal de Edição Customizado */
+        #modalEdicao { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-box { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .modal-box textarea { height: 200px; margin-top: 10px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -93,12 +98,27 @@
     </div>
 </div>
 
+<!-- MODAL PARA EDIÇÃO CONFORTÁVEL -->
+<div id="modalEdicao">
+    <div class="modal-box">
+        <h3 id="modalTitulo" style="margin-top:0;">✏️ Editar Registro</h3>
+        <textarea id="modalTextoInput"></textarea>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button onclick="fecharModal()" class="action-btn" style="background:#6c757d; width:auto; padding:8px 15px; margin-top:0;">Cancelar</button>
+            <button onclick="salvarEdicaoModal()" class="action-btn" style="background:#28a745; width:auto; padding:8px 15px; margin-top:0;">Salvar Alterações</button>
+        </div>
+    </div>
+</div>
+
 <script>
     let gradePlayers = "";
     let gradeCompleta = "";
     let paginaSistema = 1;
     let paginaLogs = 1;
     const itensPorPagina = 5;
+    
+    let editandoTipo = null; // 'sistema' ou 'log'
+    let editandoChaveOuIndex = null;
 
     document.getElementById('listaTexto').addEventListener('input', processarETocalhar);
     document.getElementById('ausentesTexto').addEventListener('input', processarETocalhar);
@@ -143,17 +163,17 @@
         processarETocalhar();
     }
 
-    function editarSistema(chaveOriginal) {
+    function abrirModalEdicaoSistema(chaveOriginal) {
         let banco = getBancoJogadores();
-        let novoNome = prompt("Editar nome do jogador:", banco[chaveOriginal].nome);
-        if(novoNome && novoNome.trim()) {
-            novoNome = novoNome.trim();
-            let novaChave = novoNome.toLowerCase();
-            banco[novaChave] = { nome: novoNome, ehSistema: true };
-            if(novaChave !== chaveOriginal) delete banco[chaveOriginal];
-            saveBancoJogadores(banco);
-            processarETocalhar();
-        }
+        editandoTipo = 'sistema';
+        editandoChaveOuIndex = chaveOriginal;
+        
+        document.getElementById('modalTitulo').innerText = "✏️ Editar Nome do Jogador";
+        let txtInput = document.getElementById('modalTextoInput');
+        txtInput.style.height = "60px"; // Deixa menor por ser apenas um nome
+        txtInput.value = banco[chaveOriginal].nome;
+        
+        document.getElementById('modalEdicao').style.display = 'flex';
     }
 
     function renderizarHistorico() {
@@ -192,7 +212,7 @@
                     <strong>${player.nome}</strong>
                 </div>
                 <div class="btn-group">
-                    <button class="btn-icon btn-edit" onclick="editarSistema('${chave}')">✏️</button>
+                    <button class="btn-icon btn-edit" onclick="abrirModalEdicaoSistema('${chave}')">✏️</button>
                     <button class="btn-icon btn-del" onclick="deletarSistema('${chave}')">❌</button>
                 </div>
             `;
@@ -233,14 +253,44 @@
         }
     }
 
-    function editarLog(indexReal) {
+    function abrirModalEdicaoLog(indexReal) {
         let logs = getLogs();
-        let novoConteudo = prompt("Editar conteúdo do histórico:", logs[indexReal].conteudo);
-        if(novoConteudo !== null) {
-            logs[indexReal].conteudo = novoConteudo;
+        editandoTipo = 'log';
+        editandoChaveOuIndex = indexReal;
+        
+        document.getElementById('modalTitulo').innerText = "✏️ Editar Escala Salva";
+        let txtInput = document.getElementById('modalTextoInput');
+        txtInput.style.height = "200px"; // Maior para editar o rodízio completo
+        txtInput.value = logs[indexReal].conteudo;
+        
+        document.getElementById('modalEdicao').style.display = 'flex';
+    }
+
+    function fecharModal() {
+        document.getElementById('modalEdicao').style.display = 'none';
+    }
+
+    function salvarEdicaoModal() {
+        let novoTexto = document.getElementById('modalTextoInput').value.trim();
+        if(!novoTexto) return;
+
+        if(editandoTipo === 'sistema') {
+            let banco = getBancoJogadores();
+            let chaveOriginal = editandoChaveOuIndex;
+            let novaChave = novoTexto.toLowerCase();
+            
+            banco[novaChave] = { nome: novoTexto, ehSistema: true };
+            if(novaChave !== chaveOriginal) delete banco[chaveOriginal];
+            saveBancoJogadores(banco);
+            processarETocalhar();
+        } else if(editandoTipo === 'log') {
+            let logs = getLogs();
+            logs[editandoChaveOuIndex].conteudo = novoTexto;
             localStorage.setItem('gvg_historico_logs', JSON.stringify(logs));
             renderizarLogs();
         }
+
+        fecharModal();
     }
 
     function renderizarLogs() {
@@ -270,7 +320,7 @@
                     <span>📅 <strong>${log.data}</strong> às <strong>${log.hora}</strong></span>
                     <div class="btn-group">
                         <button onclick="copiarTextoLog(this)" style="background:#007bff; color:white; border:none; padding:3px 8px; border-radius:3px; cursor:pointer; font-size:11px;">📋 Copiar</button>
-                        <button class="btn-icon btn-edit" onclick="editarLog(${indexReal})">✏️</button>
+                        <button class="btn-icon btn-edit" onclick="abrirModalEdicaoLog(${indexReal})">✏️</button>
                         <button class="btn-icon btn-del" onclick="deletarLog(${indexReal})">❌</button>
                     </div>
                 </div>
