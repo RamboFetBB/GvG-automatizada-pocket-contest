@@ -21,6 +21,9 @@
         
         /* Listas e Controles */
         .search-box { width: 100%; padding: 8px; margin-bottom: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; }
+        .controls-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
+        .select-per-page { padding: 6px; border: 1px solid #ccc; border-radius: 6px; background: white; font-size: 13px; cursor: pointer; }
+        
         .player-grid, .history-grid { min-height: 200px; border: 1px solid #eee; border-radius: 6px; padding: 10px; background: #fafafa; }
         .player-item, .history-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #eee; background: white; margin-bottom: 6px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .history-item { flex-direction: column; align-items: stretch; }
@@ -78,9 +81,17 @@
             <button onclick="adicionarManualSistema()" class="btn-icon btn-save" style="padding: 0 15px; font-size: 16px;">✅</button>
         </div>
         
-        <input type="text" id="filtroJogador" class="search-box" placeholder="🔍 Buscar jogador..." oninput="paginaSistema = 1; renderizarHistorico()">
+        <div class="controls-header">
+            <input type="text" id="filtroJogador" class="search-box" placeholder="🔍 Buscar jogador..." oninput="paginaSistema = 1; renderizarHistorico()" style="margin-bottom:0; flex: 1;">
+            <select id="itensPorPaginaSistema" class="select-per-page" onchange="paginaSistema = 1; renderizarHistorico()">
+                <option value="5">5 por pág</option>
+                <option value="10">10 por pág</option>
+                <option value="20">20 por pág</option>
+                <option value="30">30 por pág</option>
+            </select>
+        </div>
         
-        <div class="player-grid" id="listaHistoricoContainer"></div>
+        <div class="player-grid" id="listaHistoricoContainer" style="margin-top: 12px;"></div>
         <div class="pagination" id="paginacaoSistema"></div>
 
         <button onclick="limparBancoJogadores()" class="action-btn" style="background:#dc3545; margin-top:15px; padding:8px;">🗑️ Limpar Banco de Sistema</button>
@@ -89,9 +100,18 @@
     <!-- ABA 3: HISTÓRICO DE GERAÇÕES -->
     <div id="abaLogs" class="tab-content">
         <h3>📁 Histórico de Rodízios Gerados</h3>
-        <p style="font-size: 13px; color: #666;">Gerencie, edite ou apague cada escala gerada anteriormente.</p>
         
-        <div class="history-grid" id="listaLogsContainer"></div>
+        <div class="controls-header" style="margin-top: 10px;">
+            <p style="font-size: 13px; color: #666; margin:0;">Gerencie, edite ou apague cada escala gerada.</p>
+            <select id="itensPorPaginaLogs" class="select-per-page" onchange="paginaLogs = 1; renderizarLogs()">
+                <option value="5">5 por pág</option>
+                <option value="10">10 por pág</option>
+                <option value="20">20 por pág</option>
+                <option value="30">30 por pág</option>
+            </select>
+        </div>
+        
+        <div class="history-grid" id="listaLogsContainer" style="margin-top: 12px;"></div>
         <div class="pagination" id="paginacaoLogs"></div>
 
         <button onclick="limparLogs()" class="action-btn" style="background:#dc3545; margin-top:15px; padding:8px;">🗑️ Limpar Todo o Histórico</button>
@@ -115,9 +135,8 @@
     let gradeCompleta = "";
     let paginaSistema = 1;
     let paginaLogs = 1;
-    const itensPorPagina = 5;
     
-    let editandoTipo = null; // 'sistema' ou 'log'
+    let editandoTipo = null; 
     let editandoChaveOuIndex = null;
 
     document.getElementById('listaTexto').addEventListener('input', processarETocalhar);
@@ -170,7 +189,7 @@
         
         document.getElementById('modalTitulo').innerText = "✏️ Editar Nome do Jogador";
         let txtInput = document.getElementById('modalTextoInput');
-        txtInput.style.height = "60px"; // Deixa menor por ser apenas um nome
+        txtInput.style.height = "60px";
         txtInput.value = banco[chaveOriginal].nome;
         
         document.getElementById('modalEdicao').style.display = 'flex';
@@ -180,6 +199,7 @@
         const container = document.getElementById('listaHistoricoContainer');
         const pagContainer = document.getElementById('paginacaoSistema');
         const filtro = document.getElementById('filtroJogador').value.toLowerCase();
+        const itensPorPagina = parseInt(document.getElementById('itensPorPaginaSistema').value);
         const banco = getBancoJogadores();
         
         let chaves = Object.keys(banco).sort();
@@ -260,7 +280,7 @@
         
         document.getElementById('modalTitulo').innerText = "✏️ Editar Escala Salva";
         let txtInput = document.getElementById('modalTextoInput');
-        txtInput.style.height = "200px"; // Maior para editar o rodízio completo
+        txtInput.style.height = "200px";
         txtInput.value = logs[indexReal].conteudo;
         
         document.getElementById('modalEdicao').style.display = 'flex';
@@ -296,6 +316,7 @@
     function renderizarLogs() {
         const container = document.getElementById('listaLogsContainer');
         const pagContainer = document.getElementById('paginacaoLogs');
+        const itensPorPagina = parseInt(document.getElementById('itensPorPaginaLogs').value);
         const logs = getLogs();
 
         container.innerHTML = "";
