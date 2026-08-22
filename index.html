@@ -30,11 +30,13 @@
         .badge-sys { background: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         
         /* Ações e Botões */
-        .btn-group { display: flex; gap: 5px; }
+        .btn-group { display: flex; gap: 5px; flex-wrap: wrap; }
         .btn-icon { border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; color: white; }
         .btn-edit { background: #ffc107; color: #000; }
         .btn-del { background: #dc3545; }
         .btn-save { background: #28a745; }
+        .btn-copy-adm { background: #25d366; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; }
+        .btn-copy-players { background: #007bff; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; }
 
         /* Paginação */
         .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 15px; }
@@ -255,10 +257,16 @@
         return JSON.parse(localStorage.getItem('gvg_historico_logs')) || [];
     }
 
-    function salvarLog(textoGerado) {
+    function salvarLog(playersTexto, completaTexto) {
         let logs = getLogs();
         let agora = new Date();
-        logs.unshift({ data: agora.toLocaleDateString('pt-BR'), hora: agora.toLocaleTimeString('pt-BR'), conteudo: textoGerado, timestamp: agora.getTime() });
+        logs.unshift({ 
+            data: agora.toLocaleDateString('pt-BR'), 
+            hora: agora.toLocaleTimeString('pt-BR'), 
+            conteudo: completaTexto, 
+            conteudoPlayers: playersTexto,
+            timestamp: agora.getTime() 
+        });
         if (logs.length > 50) logs.pop();
         localStorage.setItem('gvg_historico_logs', JSON.stringify(logs));
         renderizarLogs();
@@ -306,6 +314,7 @@
         } else if(editandoTipo === 'log') {
             let logs = getLogs();
             logs[editandoChaveOuIndex].conteudo = novoTexto;
+            logs[editandoChaveOuIndex].conteudoPlayers = novoTexto; // Atualiza ambos ao editar manualmente pelo modal
             localStorage.setItem('gvg_historico_logs', JSON.stringify(logs));
             renderizarLogs();
         }
@@ -334,18 +343,22 @@
 
         logsPagina.forEach((log, idxRelativo) => {
             let indexReal = inicio + idxRelativo;
+            let textoPlayersSalvo = log.conteudoPlayers || log.conteudo;
+            let textoAdmSalvo = log.conteudo;
+
             let div = document.createElement('div');
             div.className = 'history-item';
             div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#666; margin-bottom:5px; border-bottom:1px dashed #ddd; padding-bottom:4px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#666; margin-bottom:5px; border-bottom:1px dashed #ddd; padding-bottom:4px; flex-wrap:wrap; gap:5px;">
                     <span>📅 <strong>${log.data}</strong> às <strong>${log.hora}</strong></span>
                     <div class="btn-group">
-                        <button onclick="copiarTextoLog(this)" style="background:#007bff; color:white; border:none; padding:3px 8px; border-radius:3px; cursor:pointer; font-size:11px;">📋 Copiar</button>
+                        <button onclick="copiarTextoPersonalizado(this, \`${btoa(encodeURIComponent(textoAdmSalvo))}\`)" class="btn-copy-adm">📋 Copiar p/ ADM</button>
+                        <button onclick="copiarTextoPersonalizado(this, \`${btoa(encodeURIComponent(textoPlayersSalvo))}\`)" class="btn-copy-players">📋 Copiar p/ Player</button>
                         <button class="btn-icon btn-edit" onclick="abrirModalEdicaoLog(${indexReal})">✏️</button>
                         <button class="btn-icon btn-del" onclick="deletarLog(${indexReal})">❌</button>
                     </div>
                 </div>
-                <div style="font-size: 13px; white-space: pre-wrap; color: #333; max-height: 100px; overflow-y: auto; background: #fdfdfd; padding: 6px; border: 1px solid #eee; border-radius: 4px;">${log.conteudo}</div>
+                <div style="font-size: 13px; white-space: pre-wrap; color: #333; max-height: 100px; overflow-y: auto; background: #fdfdfd; padding: 6px; border: 1px solid #eee; border-radius: 4px;">${textoAdmSalvo}</div>
             `;
             container.appendChild(div);
         });
@@ -380,9 +393,9 @@
         container.appendChild(btnProx);
     }
 
-    function copiarTextoLog(btn) {
-        let textoBox = btn.parentElement.parentElement.nextElementSibling;
-        navigator.clipboard.writeText(textoBox.innerText).then(() => {
+    function copiarTextoPersonalizado(btn, base64Texto) {
+        let textoReal = decodeURIComponent(atob(base64Texto));
+        navigator.clipboard.writeText(textoReal).then(() => {
             let original = btn.innerText;
             btn.innerText = "✅ Copiado!";
             setTimeout(() => btn.innerText = original, 2000);
@@ -477,7 +490,7 @@
         document.getElementById('resultado').innerText = gradeCompleta;
         document.getElementById('botoesZap').style.display = 'block';
 
-        salvarLog(gradeCompleta);
+        salvarLog(gradePlayers, gradeCompleta);
     }
 
     function compartilharZap(tipo) {
