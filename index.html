@@ -96,7 +96,7 @@
         <div class="player-grid" id="listaHistoricoContainer" style="margin-top: 12px;"></div>
         <div class="pagination" id="paginacaoSistema"></div>
 
-        <!-- BOTÕES DE BACKUP (EXPORTAR / IMPORTAR) -->
+        <!-- BOTÕES DE BACKUP COM DATA NO NOME DO ARQUIVO -->
         <div style="display: flex; gap: 10px; margin-top: 15px;">
             <button onclick="exportarBackup()" class="action-btn" style="background:#17a2b8; margin-top:0; padding:10px; font-size:14px;">💾 Exportar Dados (Backup)</button>
             <button onclick="document.getElementById('inputImportar').click()" class="action-btn" style="background:#ffc107; color:#000; margin-top:0; padding:10px; font-size:14px;">📂 Importar Dados</button>
@@ -259,16 +259,24 @@
         }
     }
 
-    // --- FUNÇÕES DE EXPORTAR E IMPORTAR BACKUP ---
+    // --- EXPORTAR E IMPORTAR COM NOME DINÂMICO BASEADO NA DATA ---
     function exportarBackup() {
         const dados = {
             banco_jogadores: getBancoJogadores(),
             historico_logs: getLogs()
         };
+        
+        // Pega a data atual no formato DD-MM-AAAA
+        const agora = new Date();
+        const dia = String(agora.getDate()).padStart(2, '0');
+        const mes = String(agora.getMonth() + 1).padStart(2, '0');
+        const ano = agora.getFullYear();
+        const nomeArquivo = `backup_data_${dia}_${mes}_${ano}.json`;
+
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dados, null, 2));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", "gvg_backup_dados.json");
+        downloadAnchor.setAttribute("download", nomeArquivo);
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
@@ -295,7 +303,7 @@
             } catch (err) {
                 alert("❌ Erro ao importar o arquivo. Certifique-se de que é um arquivo de backup válido.");
             }
-            event.target.value = ""; // Limpa o input file
+            event.target.value = "";
         };
         reader.readAsText(file);
     }
