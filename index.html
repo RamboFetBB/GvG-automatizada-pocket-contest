@@ -96,7 +96,14 @@
         <div class="player-grid" id="listaHistoricoContainer" style="margin-top: 12px;"></div>
         <div class="pagination" id="paginacaoSistema"></div>
 
-        <button onclick="limparBancoJogadores()" class="action-btn" style="background:#dc3545; margin-top:15px; padding:8px;">🗑️ Limpar Banco de Sistema</button>
+        <!-- BOTÕES DE BACKUP (EXPORTAR / IMPORTAR) -->
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button onclick="exportarBackup()" class="action-btn" style="background:#17a2b8; margin-top:0; padding:10px; font-size:14px;">💾 Exportar Dados (Backup)</button>
+            <button onclick="document.getElementById('inputImportar').click()" class="action-btn" style="background:#ffc107; color:#000; margin-top:0; padding:10px; font-size:14px;">📂 Importar Dados</button>
+            <input type="file" id="inputImportar" accept=".json" style="display:none" onchange="importarBackup(event)">
+        </div>
+
+        <button onclick="limparBancoJogadores()" class="action-btn" style="background:#dc3545; margin-top:10px; padding:8px;">🗑️ Limpar Banco de Sistema</button>
     </div>
 
     <!-- ABA 3: HISTÓRICO DE GERAÇÕES -->
@@ -252,6 +259,47 @@
         }
     }
 
+    // --- FUNÇÕES DE EXPORTAR E IMPORTAR BACKUP ---
+    function exportarBackup() {
+        const dados = {
+            banco_jogadores: getBancoJogadores(),
+            historico_logs: getLogs()
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dados, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "gvg_backup_dados.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    function importarBackup(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const dadosImportados = JSON.parse(e.target.result);
+                if (dadosImportados.banco_jogadores) {
+                    localStorage.setItem('gvg_banco_jogadores', JSON.stringify(dadosImportados.banco_jogadores));
+                }
+                if (dadosImportados.historico_logs) {
+                    localStorage.setItem('gvg_historico_logs', JSON.stringify(dadosImportados.historico_logs));
+                }
+                renderizarHistorico();
+                renderizarLogs();
+                processarETocalhar();
+                alert("✅ Dados importados com sucesso!");
+            } catch (err) {
+                alert("❌ Erro ao importar o arquivo. Certifique-se de que é um arquivo de backup válido.");
+            }
+            event.target.value = ""; // Limpa o input file
+        };
+        reader.readAsText(file);
+    }
+
     // --- LOGS E PAGINAÇÃO ---
     function getLogs() {
         return JSON.parse(localStorage.getItem('gvg_historico_logs')) || [];
@@ -314,7 +362,7 @@
         } else if(editandoTipo === 'log') {
             let logs = getLogs();
             logs[editandoChaveOuIndex].conteudo = novoTexto;
-            logs[editandoChaveOuIndex].conteudoPlayers = novoTexto; // Atualiza ambos ao editar manualmente pelo modal
+            logs[editandoChaveOuIndex].conteudoPlayers = novoTexto; 
             localStorage.setItem('gvg_historico_logs', JSON.stringify(logs));
             renderizarLogs();
         }
