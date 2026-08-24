@@ -166,7 +166,7 @@
         <button onclick="limparLogs()" class="action-btn" style="background:#dc3545; margin-top:15px; padding:8px;">🗑️ Limpar Todo o Histórico</button>
     </div>
 
-    <!-- ABA 4: AVISOS PRONTOS (NOVA FUNÇÃO EXCLUSIVA) -->
+    <!-- ABA 4: AVISOS PRONTOS -->
     <div id="abaNotas" class="tab-content">
         <h3>📝 Avisos & Mensagens Prontas</h3>
         <p style="font-size: 13px; color: #777; margin-top: 0;">Salve seus textos fixos, regras ou lembretes para copiar com um toque no celular.</p>
@@ -226,20 +226,28 @@
     }
 
     function calcularProximoTurnoDinamico() {
-        const ordemTurnos = [
-            { nome: 'Sexta', diaSemana: 5 },
-            { nome: 'Sáb Manhã', diaSemana: 6 },
-            { nome: 'Sáb Tarde', diaSemana: 6 },
+        // Ordem exata dos turnos com o dia da semana correspondente (0 = Domingo, 1 = Segunda, etc.)
+        const turnosCronologicos = [
             { nome: 'Domingo', diaSemana: 0 },
             { nome: 'Segunda', diaSemana: 1 },
             { nome: 'Terça', diaSemana: 2 },
             { nome: 'Quarta', diaSemana: 3 },
-            { nome: 'Quinta', diaSemana: 4 }
+            { nome: 'Quinta', diaSemana: 4 },
+            { nome: 'Sexta', diaSemana: 5 },
+            { nome: 'Sáb Manhã', diaSemana: 6 },
+            { nome: 'Sáb Tarde', diaSemana: 6 }
         ];
 
         let agora = new Date();
-        let diaHoje = agora.getDay();
-        let proximo = ordemTurnos.find(t => t.diaSemana > diaHoje) || ordemTurnos[0];
+        let diaHoje = agora.getDay(); // 0 a 6
+
+        // Procura o primeiro turno cujo dia seja igual ou posterior ao dia de hoje
+        let proximo = turnosCronologicos.find(t => t.diaSemana >= diaHoje);
+        // Se já passou de todos na semana, pega o primeiro da próxima semana (Domingo)
+        if (!proximo) {
+            proximo = turnosCronologicos[0];
+        }
+
         let banner = document.getElementById('bannerProximoTurno');
         banner.style.display = 'flex';
         banner.querySelector('span').innerText = `Próximo Turno Estimado: ${proximo.nome}`;
@@ -507,7 +515,6 @@
         renderizarPaginacao(totalPaginas, paginaLogs, pagContainer, (p) => { paginaLogs = p; renderizarLogs(); });
     }
 
-    /* FUNÇÕES DA ABA 4: AVISOS PRONTOS */
     function getNotas() {
         return JSON.parse(localStorage.getItem('gvg_notas_prontas')) || [];
     }
