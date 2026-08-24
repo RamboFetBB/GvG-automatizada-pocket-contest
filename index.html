@@ -44,10 +44,6 @@
         .btn-group { display: flex; gap: 5px; flex-wrap: wrap; }
         .btn-icon { border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; color: white; }
         .btn-edit { background: #ffc107; color: #000; } .btn-del { background: #dc3545; } .btn-save { background: #28a745; }
-        .btn-copy-adm, .btn-copy-players, .btn-whatsapp-turno { border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
-        .btn-copy-adm { background: #25d366; padding: 3px 8px; font-size: 11px; }
-        .btn-copy-players { background: #007bff; padding: 3px 8px; font-size: 11px; }
-        .btn-whatsapp-turno { background: #25d366; padding: 4px 8px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 6px; }
         .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 15px; }
         .page-btn { padding: 5px 10px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); cursor: pointer; border-radius: 4px; font-weight: bold; }
         .page-btn.active { background: #007bff; color: white; border-color: #007bff; }
@@ -186,12 +182,13 @@
 
 <script>
     // --- CONFIGURAÇÕES DO REPOSITÓRIO GITHUB ---
-    const DONO_DO_REPO = "SEU_USUARIO";      // Altere para seu usuário no GitHub
-    const NOME_DO_REPO = "SEU_REPOSITORIO";  // Altere para o nome do repositório
-    const CAMINHO_ARQUIVO = "index.html";    // Caminho do arquivo a editar
+    const DONO_DO_REPO = "RamboFetBB";
+    const NOME_DO_REPO = "GvG-automatizada-pocket-contest";
+    const CAMINHO_ARQUIVO = "index.html";
+    const BRANCH_GIT = "main";
 
     let arquivoSha = "";
-    let gradePlayers = "", gradeCompleta = "", editandoTipo = null, editandoChave = null;
+    let gradePlayers = "", gradeCompleta = "";
     let pag = { sis: 1, log: 1 };
     const turnos = ['Sáb Tarde', 'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb Manhã'];
 
@@ -227,7 +224,7 @@
     }
     function atualizarPreview() {
         let lider = localStorage.getItem('gvg_nome_lider') || '[Líder]';
-        document.getElementById('exemploZapPreview').innerText = `*${lider}*: ${obterCabecalhoLider().replace(obterCabecalhoLider(), '')}...`;
+        document.getElementById('exemploZapPreview').innerText = `${obterCabecalhoLider()}...`;
     }
     function obterCabecalhoLider() {
         let lider = localStorage.getItem('gvg_nome_lider') || 'Líder';
@@ -279,274 +276,424 @@
         document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active');
     }
 
+    // --- GERENCIAMENTO DE DADOS E BANCO DE JOGADORES ---
     const getBanco = () => JSON.parse(localStorage.getItem('gvg_banco_jogadores')) || {};
-    const saveBanco = (b) => { localStorage.setItem('gvg_banco_jogadores', JSON.stringify(b)); renderizarHistorico(); };
-    function adicionarManualSistema() {
-        let nome = document.getElementById('novoNomeSistema').value.trim();
-        if(!nome) return;
-        let b = getBanco(); b[nome.toLowerCase()] = { nome, ehSistema: true };
-        saveBanco(b); document.getElementById('novoNomeSistema').value = ""; processarETocalhar();
-    }
-    function deletarSistema(k) { let b = getBanco(); delete b[k]; saveBanco(b); processarETocalhar(); }
+    const saveBanco = (dados) => localStorage.setItem('gvg_banco_jogadores', JSON.stringify(dados));
 
-    function renderizarHistorico() {
-        let container = document.getElementById('listaHistoricoContainer'), pagC = document.getElementById('paginacaoSistema');
-        let filtro = document.getElementById('filtroJogador').value.toLowerCase(), porPag = parseInt(document.getElementById('itensPorPaginaSistema').value);
-        let b = getBanco(), chaves = Object.keys(b).sort();
-        if(filtro) chaves = chaves.filter(k => b[k].nome.toLowerCase().includes(filtro));
-        document.getElementById('countTotal').innerText = Object.keys(b).length;
-        container.innerHTML = chaves.length ? "" : "<div style='text-align:center; color:#999; padding:20px;'>Nenhum jogador.</div>";
-        pagC.innerHTML = "";
-        
-        let totalP = Math.ceil(chaves.length / porPag);
-        if(pag.sis > totalP) pag.sis = totalP || 1;
-        chaves.slice((pag.sis - 1)*porPag, pag.sis*porPag).forEach(k => {
-            let p = b[k];
-            container.innerHTML += `<div class='player-item'><div style='display:flex; gap:10px; align-items:center;'><span class='badge-sys'>SISTEMA</span><strong>${p.nome}</strong></div><div class='btn-group'><button class='btn-icon btn-edit' onclick="abrirModal('sistema', '${k}')">✏️</button><button class='btn-icon btn-del' onclick="deletarSistema('${k}')">❌</button></div></div>`;
+    const getLogs = () => JSON.parse(localStorage.getItem('gvg_historico_logs')) || [];
+    const saveLogs = (dados) => localStorage.setItem('gvg_historico_logs', JSON.stringify(dados));
+
+    const getNotas = () => JSON.parse(localStorage.getItem('gvg_notas_prontas')) || [];
+    const saveNotas = (dados) => localStorage.setItem('gvg_notas_prontas', JSON.stringify(dados));
+
+    // --- PROCESSAMENTO DO RODÍZIO ---
+    function processarETocalhar() {
+        let texto = document.getElementById('listaTexto').value.trim();
+        let divResult = document.getElementById('resultado');
+        let divAlert = document.getElementById('alertaInvalido');
+        let divZap = document.getElementById('botoesZap');
+
+        if (!texto) {
+            divResult.innerText = "A escala aparecerá aqui assim que colar a lista...";
+            divAlert.style.display = 'none';
+            divZap.style.display = 'none';
+            gradePlayers = ""; gradeCompleta = "";
+            return;
+        }
+
+        let linhas = texto.split('\n');
+        let jogadores = [];
+        let temInvalido = false;
+
+        linhas.forEach(linha => {
+            linha = linha.trim();
+            if(!linha) return;
+            let match = linha.match(/^(.+?)\s+([-\d]+)$/);
+            if(match) {
+                let nome = match[1].trim();
+                let pts = parseInt(match[2], 10);
+                if(isNaN(pts) || pts < 0) temInvalido = true;
+                jogadores.push({ nome, pts });
+            } else {
+                jogadores.push({ nome: linha, pts: 0 });
+            }
         });
-        renderPaginacao(totalP, pag.sis, pagC, p => { pag.sis = p; renderizarHistorico(); });
+
+        divAlert.style.display = temInvalido ? 'block' : 'none';
+        if(jogadores.length === 0) return;
+
+        let totalTurnos = turnos.length;
+        let escalaStrCompleta = "📅 *ESCALA DO RODÍZIO GvG*\n\n";
+        let escalaStrPlayers = "📅 *ESCALA DO RODÍZIO GvG*\n\n";
+
+        let banco = getBanco();
+        jogadores.forEach((j, index) => {
+            let turno = turnos[index % totalTurnos];
+            escalaStrCompleta += `• *${j.nome}* - ${turno} (${j.pts} pts)\n`;
+            escalaStrPlayers += `• *${j.nome}* - ${turno}\n`;
+            
+            if(!banco[j.nome]) banco[j.nome] = { participacoes: 0, pontos: 0 };
+            banco[j.nome].participacoes += 1;
+            banco[j.nome].pontos += j.pts;
+        });
+
+        saveBanco(banco);
+        renderizarHistorico();
+
+        gradeCompleta = escalaStrCompleta;
+        gradePlayers = escalaStrPlayers;
+
+        divResult.innerText = obterCabecalhoLider() + escalaStrCompleta;
+        divZap.style.display = 'block';
+
+        salvarLogAutomatico(jogadores.length, escalaStrCompleta);
+    }
+
+    function compartilharZap(tipo) {
+        let texto = tipo === 'adm' ? (obterCabecalhoLider() + gradeCompleta) : (obterCabecalhoLider() + gradePlayers);
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+    }
+
+    // --- RENDERIZAÇÃO ABA JOGADORES ---
+    function renderizarHistorico() {
+        let banco = getBanco();
+        let filtro = (document.getElementById('filtroJogador').value || '').toLowerCase();
+        let chaves = Object.keys(banco).filter(nome => nome.toLowerCase().includes(filtro));
+        
+        document.getElementById('countTotal').innerText = Object.keys(banco).length;
+        let container = document.getElementById('listaHistoricoContainer');
+        container.innerHTML = '';
+
+        let porPagina = parseInt(document.getElementById('itensPorPaginaSistema').value, 10);
+        let inicio = (pag.sis - 1) * porPagina;
+        let itensPagina = chaves.slice(inicio, inicio + porPagina);
+
+        if(itensPagina.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:10px; opacity:0.6;">Nenhum jogador encontrado.</div>';
+            document.getElementById('paginacaoSistema').innerHTML = '';
+            return;
+        }
+
+        itensPagina.forEach(nome => {
+            let p = banco[nome];
+            let div = document.createElement('div');
+            div.className = 'player-item';
+            div.innerHTML = `
+                <div>
+                    <strong>${nome}</strong> 
+                    <span class="badge-sys">Participações: ${p.participacoes || 0}</span>
+                </div>
+                <div class="btn-group">
+                    <button onclick="excluirJogadorSistema('${nome}')" class="btn-icon btn-del">🗑️</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+
+        renderizarPaginacao('paginacaoSistema', chaves.length, porPagina, pag.sis, (p) => { pag.sis = p; renderizarHistorico(); });
+    }
+
+    function adicionarManualSistema() {
+        let input = document.getElementById('novoNomeSistema');
+        let nome = input.value.trim();
+        if (!nome) return;
+        let banco = getBanco();
+        if (!banco[nome]) {
+            banco[nome] = { participacoes: 0, pontos: 0 };
+            saveBanco(banco);
+            input.value = '';
+            renderizarHistorico();
+        } else {
+            alert('Jogador já existe no sistema.');
+        }
+    }
+
+    function excluirJogadorSistema(nome) {
+        if (confirm(`Deseja remover ${nome} do banco de jogadores?`)) {
+            let banco = getBanco();
+            delete banco[nome];
+            saveBanco(banco);
+            renderizarHistorico();
+        }
     }
 
     function limparBancoJogadores() {
-        if(confirm("Deseja apagar o banco?")) { localStorage.removeItem('gvg_banco_jogadores'); renderizarHistorico(); processarETocalhar(); }
-    }
-
-    const getLogs = () => JSON.parse(localStorage.getItem('gvg_historico_logs')) || [];
-    function deletarLog(i) { if(confirm("Apagar registro?")) { let l = getLogs(); l.splice(i,1); localStorage.setItem('gvg_historico_logs', JSON.stringify(l)); renderizarLogs(); } }
-
-    function renderizarLogs() {
-        let container = document.getElementById('listaLogsContainer'), pagC = document.getElementById('paginacaoLogs');
-        let filtro = document.getElementById('filtroLogs').value.toLowerCase(), porPag = parseInt(document.getElementById('itensPorPaginaLogs').value);
-        let logs = getLogs();
-        if(filtro) logs = logs.filter(l => l.data.toLowerCase().includes(filtro) || l.conteudo.toLowerCase().includes(filtro));
-        container.innerHTML = logs.length ? "" : "<div style='text-align:center; color:#999; padding:20px;'>Nenhum histórico.</div>";
-        pagC.innerHTML = "";
-
-        let totalP = Math.ceil(logs.length / porPag);
-        if(pag.log > totalP) pag.log = totalP || 1;
-        logs.slice((pag.log - 1)*porPag, pag.log*porPag).forEach((log, idx) => {
-            let realIdx = (pag.log - 1)*porPag + idx;
-            let htmlT = "";
-            for(let t in log.escalaDados) {
-                let lista = log.escalaDados[t];
-                let str = lista.length ? lista.map(m => `- ${m.nome} (${m.pontos})`).join('\n') : "- Ninguém";
-                let b64 = btoa(encodeURIComponent(obterCabecalhoLider() + `📢 *GvG - ${t}*\n\n${str}`));
-                htmlT += `<div style="margin:3px 0; font-size:13px;"><strong>${t}:</strong> <button onclick="enviarZapTurno('${b64}')" class="btn-whatsapp-turno" style="padding:2px 6px; font-size:11px;">💬 Avisar</button></div>`;
-            }
-            let b64Adm = btoa(encodeURIComponent(log.conteudo)), b64Pl = btoa(encodeURIComponent(log.conteudoPlayers || log.conteudo));
-            container.innerHTML += `<div class='history-item'><div style='display:flex; justify-content:space-between; font-size:12px; color:#888; margin-bottom:8px;'><span>📅 <strong>${log.data}</strong> às <strong>${log.hora}</strong></span><div class='btn-group'><button onclick="copiar(this, '${b64Adm}')" class='btn-copy-adm'>📋 ADM</button><button onclick="copiar(this, '${b64Pl}')" class='btn-copy-players'>📋 Players</button><button class='btn-icon btn-edit' onclick="abrirModal('log', ${realIdx})">✏️</button><button class='btn-icon btn-del' onclick="deletarLog(${realIdx})">❌</button></div></div><div style='background:var(--box-bg); padding:8px; border:1px solid var(--border-color); border-radius:4px;'>${htmlT}</div></div>`;
-        });
-        renderPaginacao(totalP, pag.log, pagC, p => { pag.log = p; renderizarLogs(); });
-    }
-
-    const getNotas = () => JSON.parse(localStorage.getItem('gvg_notas_prontas')) || [];
-    function salvarNotaPronta() {
-        let t = document.getElementById('tituloNota').value.trim(), c = document.getElementById('conteudoNota').value.trim();
-        if(!t || !c) return alert("Preencha título e conteúdo!");
-        let n = getNotas(); n.unshift({ titulo: t, conteudo: c });
-        localStorage.setItem('gvg_notas_prontas', JSON.stringify(n));
-        document.getElementById('tituloNota').value = ""; document.getElementById('conteudoNota').value = ""; renderizarNotas();
-    }
-    function deletarNota(i) { if(confirm("Apagar aviso?")) { let n = getNotas(); n.splice(i,1); localStorage.setItem('gvg_notas_prontas', JSON.stringify(n)); renderizarNotas(); } }
-    function renderizarNotas() {
-        let c = document.getElementById('listaNotasContainer'), notas = getNotas();
-        c.innerHTML = notas.length ? "" : "<div style='text-align:center; color:#999; padding:20px;'>Nenhum aviso.</div>";
-        notas.forEach((n, i) => {
-            let b64 = btoa(encodeURIComponent(`📌 *${n.titulo}*\n\n${n.conteudo}`)), b64Zap = btoa(encodeURIComponent(obterCabecalhoLider() + `📌 *${n.titulo}*\n\n${n.conteudo}`));
-            c.innerHTML += `<div class='note-item'><div style='display:flex; justify-content:space-between; margin-bottom:6px;'><strong>📌 ${n.titulo}</strong><div class='btn-group'><button onclick="copiar(this, '${b64}')" class='btn-copy-players'>📋 Copiar</button><button onclick="enviarZapTurno('${b64Zap}')" class='btn-whatsapp-turno' style='margin:0; padding:3px 8px; font-size:11px;'>💬 WhatsApp</button><button class='btn-icon btn-del' onclick="deletarNota(${i})">❌</button></div></div><div style='font-size:13px; background:var(--input-bg); padding:8px; border-radius:4px; border:1px solid var(--border-color); white-space:pre-wrap;'>${n.conteudo}</div></div>`;
-        });
-    }
-
-    function renderPaginacao(tot, atual, el, cb) {
-        if(tot <= 1) return;
-        el.innerHTML = `<button class='page-btn' ${atual===1?'disabled':''} onclick="(${cb})(${atual-1})">◀</button>`;
-        for(let i=1; i<=tot; i++) el.innerHTML += `<button class='page-btn ${i===atual?'active':''}' onclick="(${cb})(${i})">${i}</button>`;
-        el.innerHTML += `<button class='page-btn' ${atual===tot?'disabled':''} onclick="(${cb})(${atual+1})">▶</button>`;
-    }
-
-    function abrirModal(tipo, chaveIdx) {
-        editandoTipo = tipo; editandoChave = chaveIdx;
-        document.getElementById('modalTitulo').innerText = "✏️ Editar " + (tipo==='sistema'?'Jogador':'Histórico');
-        document.getElementById('modalTextoInput').value = tipo==='sistema' ? getBanco()[chaveIdx].nome : getLogs()[chaveIdx].conteudo;
-        document.getElementById('modalEdicao').style.display = 'flex';
-    }
-    function salvarEdicaoModal() {
-        let val = document.getElementById('modalTextoInput').value.trim();
-        if(!val) return;
-        if(editandoTipo === 'sistema') {
-            let b = getBanco(); delete b[editandoChave]; b[val.toLowerCase()] = { nome: val, ehSistema: true };
-            saveBanco(b); processarETocalhar();
-        } else {
-            let l = getLogs(); l[editandoChave].conteudo = val; l[editandoChave].conteudoPlayers = val;
-            localStorage.setItem('gvg_historico_logs', JSON.stringify(l)); renderizarLogs();
+        if (confirm('Tem certeza que deseja apagar TODOS os jogadores cadastrados?')) {
+            localStorage.removeItem('gvg_banco_jogadores');
+            renderizarHistorico();
         }
-        document.getElementById('modalEdicao').style.display = 'none';
-    }
-
-    function processarETocalhar() {
-        let texto = document.getElementById('listaTexto').value;
-        if(!texto.trim()) {
-            document.getElementById('resultado').innerText = "A escala aparecerá aqui...";
-            document.getElementById('botoesZap').style.display = 'none';
-            document.getElementById('alertaInvalido').style.display = 'none';
-            return;
-        }
-        let b = getBanco(), invalido = false;
-        let linhas = texto.split('\n').filter(l => l.trim()).map(l => {
-            let limpo = l.trim(), sys = limpo.toLowerCase().includes('sistema');
-            let partes = limpo.replace(/sistema/gi, '').trim().split(/\s+/);
-            let pts = parseInt(partes.pop()) || 0, nome = partes.join(' ');
-            if(pts < 0) invalido = true;
-            let chave = nome.toLowerCase();
-            if(sys && !b[chave]) b[chave] = { nome, ehSistema: true };
-            return { nome: b[chave] ? b[chave].nome : nome, pontos: pts, ehSistema: b[chave] ? b[chave].ehSistema : false };
-        });
-        document.getElementById('alertaInvalido').style.display = invalido ? 'block' : 'none';
-        saveBanco(b);
-
-        let validos = linhas.filter(m => !m.ehSistema || m.pontos >= 80);
-        let sysPessoas = validos.filter(m => m.ehSistema).sort((a,b) => b.pontos - a.pontos);
-        let nomesSys = sysPessoas.map(m => m.nome);
-        let escala = {}, contagem = {};
-        validos.forEach(m => contagem[m.nome] = 0);
-        turnos.forEach(t => escala[t] = []);
-
-        ['Sexta', 'Sáb Manhã'].forEach((t, idx) => {
-            for(let i=0; i<5 && sysPessoas.length; i++) {
-                let m = sysPessoas[(idx * 5 + i) % sysPessoas.length];
-                escala[t].push(m); contagem[m.nome]++;
-            }
-        });
-
-        let top15 = validos.filter(m => !nomesSys.includes(m.nome)).sort((a,b) => b.pontos - a.pontos).slice(0, 15);
-        turnos.filter(t => t !== 'Sexta' && t !== 'Sáb Manhã').forEach(t => {
-            let disp = [...top15].sort((a,b) => (contagem[a.nome] - contagem[b.nome]) || (b.pontos - a.pontos));
-            for(let i=0; i<5 && disp.length; i++) {
-                let m = disp.shift(); escala[t].push(m); contagem[m.nome]++;
-            }
-        });
-
-        let outP = "🏆 *Premiação GvG*\n\n", outC = "🏆 *Premiação GvG*\n\n", box = "🏆 *Premiação GvG*\n\n";
-        turnos.forEach(t => {
-            let lista = escala[t], str = lista.length ? lista.map(m => `- ${m.nome} (${m.pontos})`).join('\n') : "- Ninguém";
-            outP += `*${t}:*\n${str}\n\n`; outC += `*${t}:*\n${str}\n\n`;
-            let b64 = btoa(encodeURIComponent(obterCabecalhoLider() + `📢 *GvG - ${t}*\n\n${str}\n\nPreparem-se!`));
-            box += `*${t}:*\n${str} <button onclick="enviarZapTurno('${b64}')" class="btn-whatsapp-turno">💬 Avisar ${t}</button>\n\n`;
-        });
-        let rod = "📊 *Contagem:*\n" + Object.keys(contagem).map(n => `${n}: ${contagem[n]}x`).join('\n');
-        gradePlayers = outP + rod; gradeCompleta = outC + rod;
-        
-        document.getElementById('resultado').innerHTML = box + rod;
-        document.getElementById('botoesZap').style.display = 'block';
-
-        let logs = getLogs(), agora = new Date();
-        logs.unshift({ data: agora.toLocaleDateString('pt-BR'), hora: agora.toLocaleTimeString('pt-BR'), escalaDados: escala, conteudo: gradeCompleta, conteudoPlayers: gradePlayers });
-        if(logs.length > 50) logs.pop();
-        localStorage.setItem('gvg_historico_logs', JSON.stringify(logs));
-        renderizarLogs();
-    }
-
-    function enviarZapTurno(b64) { window.open("https://wa.me/?text=" + encodeURIComponent(decodeURIComponent(escape(atob(b64))))); }
-    function compartilharZap(tipo) { window.open("https://wa.me/?text=" + encodeURIComponent(obterCabecalhoLider() + (tipo==='adm' ? gradeCompleta : gradePlayers))); }
-    function copiar(btn, b64) {
-        navigator.clipboard.writeText(decodeURIComponent(escape(atob(b64)))).then(() => {
-            let o = btn.innerText; btn.innerText = "✅"; setTimeout(() => btn.innerText = o, 2000);
-        });
     }
 
     function exportarBackup() {
-        let dados = { banco_jogadores: getBanco(), historico_logs: getLogs(), notas_prontas: getNotas(), clan_info: { guilda: localStorage.getItem('gvg_nome_guilda'), lider: localStorage.getItem('gvg_nome_lider'), saudacao: localStorage.getItem('gvg_texto_saudacao') } };
+        let dados = {
+            banco: getBanco(),
+            logs: getLogs(),
+            notas: getNotas(),
+            clan: {
+                guilda: localStorage.getItem('gvg_nome_guilda'),
+                lider: localStorage.getItem('gvg_nome_lider'),
+                saudacao: localStorage.getItem('gvg_texto_saudacao')
+            }
+        };
+        let blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
         let a = document.createElement('a');
-        a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dados, null, 2));
-        a.download = `backup_gvg_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'_')}.json`;
-        document.body.appendChild(a); a.click(); a.remove();
+        a.href = URL.createObjectURL(blob);
+        a.download = `backup_gvg_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
     }
+
     function importarBackup(e) {
-        let f = e.target.files[0]; if(!f) return;
-        let r = new FileReader();
-        r.onload = function(evt) {
+        let file = e.target.files[0];
+        if (!file) return;
+        let reader = new FileReader();
+        reader.onload = (evt) => {
             try {
-                let d = JSON.parse(evt.target.result);
-                if(d.banco_jogadores) localStorage.setItem('gvg_banco_jogadores', JSON.stringify(d.banco_jogadores));
-                if(d.historico_logs) localStorage.setItem('gvg_historico_logs', JSON.stringify(d.historico_logs));
-                if(d.notas_prontas) localStorage.setItem('gvg_notas_prontas', JSON.stringify(d.notas_prontas));
-                if(d.clan_info) {
-                    localStorage.setItem('gvg_nome_guilda', d.clan_info.guilda || '');
-                    localStorage.setItem('gvg_nome_lider', d.clan_info.lider || '');
-                    localStorage.setItem('gvg_texto_saudacao', d.clan_info.saudacao || '');
+                let dados = JSON.parse(evt.target.result);
+                if (dados.banco) saveBanco(dados.banco);
+                if (dados.logs) saveLogs(dados.logs);
+                if (dados.notas) saveNotas(dados.notas);
+                if (dados.clan) {
+                    localStorage.setItem('gvg_nome_guilda', dados.clan.guilda || '');
+                    localStorage.setItem('gvg_nome_lider', dados.clan.lider || '');
+                    localStorage.setItem('gvg_texto_saudacao', dados.clan.saudacao || '');
                     carregarClan();
                 }
-                renderizarHistorico(); renderizarLogs(); renderizarNotas(); processarETocalhar();
-                alert("✅ Backup importado com sucesso!");
-            } catch(err) { alert("❌ Arquivo inválido."); }
-            e.target.value = "";
+                alert('Backup importado com sucesso!');
+                renderizarHistorico(); renderizarLogs(); renderizarNotas();
+            } catch (err) {
+                alert('Erro ao carregar arquivo de backup.');
+            }
         };
-        r.readAsText(f);
+        reader.readAsText(file);
     }
 
-    // --- FUNÇÕES DA ABA 6 (EDITOR AUTO-COMMIT) ---
+    // --- LOGS DE RODÍZIOS ---
+    function salvarLogAutomatico(total, resumo) {
+        let logs = getLogs();
+        logs.unshift({
+            id: Date.now(),
+            data: new Date().toLocaleString('pt-BR'),
+            total: total,
+            texto: resumo
+        });
+        saveLogs(logs);
+        renderizarLogs();
+    }
+
+    function renderizarLogs() {
+        let logs = getLogs();
+        let filtro = (document.getElementById('filtroLogs').value || '').toLowerCase();
+        let filtrados = logs.filter(l => l.data.toLowerCase().includes(filtro) || l.texto.toLowerCase().includes(filtro));
+        
+        let container = document.getElementById('listaLogsContainer');
+        container.innerHTML = '';
+
+        let porPagina = parseInt(document.getElementById('itensPorPaginaLogs').value, 10);
+        let inicio = (pag.log - 1) * porPagina;
+        let itensPagina = filtrados.slice(inicio, inicio + porPagina);
+
+        if(itensPagina.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:10px; opacity:0.6;">Nenhum histórico gravado.</div>';
+            document.getElementById('paginacaoLogs').innerHTML = '';
+            return;
+        }
+
+        itensPagina.forEach(log => {
+            let div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <strong>📅 ${log.data} (${log.total} Players)</strong>
+                    <div class="btn-group">
+                        <button onclick="copiarTexto('${encodeURIComponent(log.texto)}')" class="btn-icon btn-edit">📋 Copiar</button>
+                        <button onclick="excluirLog(${log.id})" class="btn-icon btn-del">🗑️</button>
+                    </div>
+                </div>
+                <div style="font-size:12px; white-space:pre-wrap; max-height:100px; overflow-y:auto; background:var(--box-bg); padding:6px; border-radius:4px;">${log.texto}</div>
+            `;
+            container.appendChild(div);
+        });
+
+        renderizarPaginacao('paginacaoLogs', filtrados.length, porPagina, pag.log, (p) => { pag.log = p; renderizarLogs(); });
+    }
+
+    function excluirLog(id) {
+        let logs = getLogs().filter(l => l.id !== id);
+        saveLogs(logs);
+        renderizarLogs();
+    }
+
+    function limparLogs() {
+        if (confirm('Deseja apagar todo o histórico de rodízios?')) {
+            localStorage.removeItem('gvg_historico_logs');
+            renderizarLogs();
+        }
+    }
+
+    // --- AVISOS E NOTAS ---
+    function salvarNotaPronta() {
+        let titulo = document.getElementById('tituloNota').value.trim();
+        let conteudo = document.getElementById('conteudoNota').value.trim();
+        if(!titulo || !conteudo) { alert('Preencha o título e o conteúdo!'); return; }
+
+        let notas = getNotas();
+        notas.unshift({ id: Date.now(), titulo, conteudo });
+        saveNotas(notas);
+
+        document.getElementById('tituloNota').value = '';
+        document.getElementById('conteudoNota').value = '';
+        renderizarNotas();
+    }
+
+    function renderizarNotas() {
+        let notas = getNotas();
+        let container = document.getElementById('listaNotasContainer');
+        container.innerHTML = '';
+
+        if(notas.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:10px; opacity:0.6;">Nenhum aviso salvo.</div>';
+            return;
+        }
+
+        notas.forEach(nota => {
+            let div = document.createElement('div');
+            div.className = 'note-item';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <strong>📌 ${nota.titulo}</strong>
+                    <div class="btn-group">
+                        <button onclick="enviarZapNota('${encodeURIComponent(nota.conteudo)}')" class="btn-icon btn-save">📤 Zap</button>
+                        <button onclick="excluirNota(${nota.id})" class="btn-icon btn-del">🗑️</button>
+                    </div>
+                </div>
+                <div style="font-size:13px; white-space:pre-wrap;">${nota.conteudo}</div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function excluirNota(id) {
+        let notas = getNotas().filter(n => n.id !== id);
+        saveNotas(notas);
+        renderizarNotas();
+    }
+
+    function enviarZapNota(textoEnc) {
+        let texto = decodeURIComponent(textoEnc);
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(obterCabecalhoLider() + texto)}`, '_blank');
+    }
+
+    function copiarTexto(textoEnc) {
+        let texto = decodeURIComponent(textoEnc);
+        navigator.clipboard.writeText(texto).then(() => alert('Copiado para a área de transferência!'));
+    }
+
+    // --- AUXILIARES E PAGINAÇÃO ---
+    function renderizarPaginacao(elementId, totalItens, porPagina, paginaAtual, callback) {
+        let container = document.getElementById(elementId);
+        container.innerHTML = '';
+        let totalPaginas = Math.ceil(totalItens / porPagina);
+        if (totalPaginas <= 1) return;
+
+        for (let i = 1; i <= totalPaginas; i++) {
+            let btn = document.createElement('button');
+            btn.className = `page-btn ${i === paginaAtual ? 'active' : ''}`;
+            btn.innerText = i;
+            btn.onclick = () => callback(i);
+            container.appendChild(btn);
+        }
+    }
+
+    function salvarEdicaoModal() {
+        document.getElementById('modalEdicao').style.display = 'none';
+    }
+
+    // --- ABA DEV (GITHUB INTEGRATION) ---
     async function carregarCodigo() {
         const token = document.getElementById('inputTokenGit').value.trim();
-        if (!token) return alert("Digite o token do GitHub!");
+        if (!token) {
+            alert('Digite o Personal Access Token!');
+            return;
+        }
 
-        const editor = document.getElementById('editorCodigo');
-        editor.value = "Carregando código do repositório...";
-        editor.style.display = 'block';
+        const url = `https://api.github.com/repos/${DONO_DO_REPO}/${NOME_DO_REPO}/contents/${CAMINHO_ARQUIVO}?ref=${BRANCH_GIT}`;
 
         try {
-            const res = await fetch(`https://api.github.com/repos/${DONO_DO_REPO}/${NOME_DO_REPO}/contents/${CAMINHO_ARQUIVO}`, {
-                headers: { 'Authorization': `token ${token}` }
+            const resp = await fetch(url, {
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
             });
 
-            if (!res.ok) throw new Error("Erro de permissão ou repositório não encontrado.");
+            if (!resp.ok) {
+                if (resp.status === 404) throw new Error('Repositório/arquivo não encontrado ou token sem acesso (marque a opção "repo").');
+                if (resp.status === 401) throw new Error('Token inválido ou expirado.');
+                throw new Error(`Erro na API do GitHub (Status ${resp.status})`);
+            }
 
-            const dados = await res.json();
-            arquivoSha = dados.sha;
-            
-            const textoDecodificado = decodeURIComponent(escape(atob(dados.content.replace(/\s/g, ''))));
-            editor.value = textoDecodificado;
+            const data = await resp.json();
+            arquivoSha = data.sha;
+
+            // Decodificação UTF-8
+            const conteudoDecodificado = decodeURIComponent(
+                escape(atob(data.content.replace(/\s/g, '')))
+            );
+
+            const editor = document.getElementById('editorCodigo');
+            editor.value = conteudoDecodificado;
+            editor.style.display = 'block';
             document.getElementById('boxSalvar').style.display = 'block';
+            alert('✅ Código carregado com sucesso!');
         } catch (err) {
-            alert("Erro ao carregar: " + err.message);
-            editor.style.display = 'none';
-            document.getElementById('boxSalvar').style.display = 'none';
+            alert('❌ Erro ao carregar: ' + err.message);
         }
     }
 
     async function commitarCodigo() {
         const token = document.getElementById('inputTokenGit').value.trim();
-        const novoCodigo = document.getElementById('editorCodigo').value;
-        const msgCommit = document.getElementById('inputMensagemCommit').value || "Atualização via App Mobile";
+        const conteudo = document.getElementById('editorCodigo').value;
+        const msg = document.getElementById('inputMensagemCommit').value.trim() || 'Atualização via Gerenciador GvG';
 
-        if (!confirm("Tem certeza que deseja aplicar o commit direto no GitHub?")) return;
+        if (!token) {
+            alert('Digite o Personal Access Token!');
+            return;
+        }
+        if (!arquivoSha) {
+            alert('Carregue o código primeiro antes de commitar.');
+            return;
+        }
 
-        const codigoBase64 = btoa(unescape(encodeURIComponent(novoCodigo)));
+        const url = `https://api.github.com/repos/${DONO_DO_REPO}/${NOME_DO_REPO}/contents/${CAMINHO_ARQUIVO}`;
+
+        // Codificação UTF-8 para Base64
+        const conteudoBase64 = btoa(unescape(encodeURIComponent(conteudo)));
+
+        const bodyData = {
+            message: msg,
+            content: conteudoBase64,
+            sha: arquivoSha,
+            branch: BRANCH_GIT
+        };
 
         try {
-            const res = await fetch(`https://api.github.com/repos/${DONO_DO_REPO}/${NOME_DO_REPO}/contents/${CAMINHO_ARQUIVO}`, {
+            const resp = await fetch(url, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    message: msgCommit,
-                    content: codigoBase64,
-                    sha: arquivoSha
-                })
+                body: JSON.stringify(bodyData)
             });
 
-            if (res.ok) {
-                alert("✅ Commit realizado com sucesso! O GitHub atualizará seu app em instantes.");
-                document.getElementById('inputTokenGit').value = "";
-                document.getElementById('editorCodigo').style.display = 'none';
-                document.getElementById('boxSalvar').style.display = 'none';
-            } else {
-                const erroApi = await res.json();
-                alert("❌ Falha no commit: " + erroApi.message);
-            }
+            if (!resp.ok) throw new Error(`Erro ao salvar no GitHub (Status ${resp.status})`);
+
+            const data = await resp.json();
+            arquivoSha = data.content.sha;
+            alert('🚀 Commit realizado com sucesso no GitHub!');
         } catch (err) {
-            alert("Erro na conexão com o GitHub.");
+            alert('❌ Erro no commit: ' + err.message);
         }
     }
 </script>
