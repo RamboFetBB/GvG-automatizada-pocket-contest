@@ -23,7 +23,7 @@
         .banner-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; flex-wrap: wrap; gap: 5px; }
         .banner-timer { font-size: 13px; opacity: 0.95; background: rgba(0,0,0,0.15); padding: 4px 8px; border-radius: 4px; display: inline-block; width: fit-content; }
         .btn-marcar-enviado { background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
-        .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; gap: 3px; overflow-x: auto; padding-bottom: 3px; scrollbar-width: thin; }
+        .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; gap: 3px; overflow-x: auto; padding-bottom: 3px; }
         .tab-btn { flex: 1; padding: 8px 8px; border: none; background: var(--tab-bg); font-weight: bold; font-size: 11px; cursor: pointer; border-radius: 8px 8px 0 0; color: var(--tab-text); white-space: nowrap; text-align: center; }
         .tab-btn.active { background: #007bff; color: white; }
         .tab-content { display: none; }
@@ -80,7 +80,6 @@
         <button class="tab-btn" onclick="alternarAba(event, 'abaHistorico')">👥 Pessoas (<span id="countTotal">0</span>)</button>
         <button class="tab-btn" onclick="alternarAba(event, 'abaLogs')">📁 Histórico</button>
         <button class="tab-btn" onclick="alternarAba(event, 'abaComparativo')">📊 Comparativo</button>
-        <button class="tab-btn" onclick="alternarAba(event, 'abaRanking')">🏆 Ranking</button>
         <button class="tab-btn" onclick="alternarAba(event, 'abaNotas')">📝 Avisos</button>
         <button class="tab-btn" onclick="alternarAba(event, 'abaClan')">🛡️ Clã</button>
         <button class="tab-btn" onclick="alternarAba(event, 'abaDev')">👨‍💻 Dev</button>
@@ -91,14 +90,18 @@
         <h2>1. Cole a Lista de Nomes</h2>
         <div style="margin-bottom: 8px;">
             <label style="font-size: 13px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                <input type="checkbox" id="chkApenasSistema" onchange="processarETocalhar()"> 🛡️ Filtrar na escala apenas quem está no Sistema
+                <input type="checkbox" id="chkApenasSistema"> 🛡️ Filtrar na escala apenas quem está no Sistema
             </label>
         </div>
         <textarea id="listaTexto" placeholder="Cole a lista aqui..."></textarea>
-        <div id="alertaInvalido" class="alert-box">⚠️ Atenção: Detectamos pontuações negativas ou valores inválidos na lista.</div>
-        <div id="resultado" class="result-box">A escala aparecerá aqui assim que colar a lista...</div>
         
-        <button class="action-btn" id="botoesZap" onclick="compartilharZap()" style="background:#25d366; display:none; margin-top: 15px;">📤 Enviar Escala para o WhatsApp</button>
+        <!-- NOVO BOTÃO PARA GERAR A ESCALA SEM DUPLICIDADE -->
+        <button class="action-btn" style="background:#007bff; margin-bottom: 15px;" onclick="processarETocalhar()">⚙️ Gerar e Salvar Escala</button>
+        
+        <div id="alertaInvalido" class="alert-box">⚠️ Atenção: Detectamos pontuações negativas ou valores inválidos na lista.</div>
+        <div id="resultado" class="result-box">A escala aparecerá aqui assim que gerar...</div>
+        
+        <button class="action-btn" id="botoesZap" onclick="compartilharZap()" style="background:#25d366; display:none; margin-top: 15px;">📤 Enviar Escala Completa para o WhatsApp</button>
     </div>
 
     <!-- ABA 2: JOGADORES -->
@@ -163,20 +166,8 @@
             </table>
         </div>
     </div>
-    
-    <!-- ABA 5: RANKING -->
-    <div id="abaRanking" class="tab-content">
-        <h3>🏆 Hall da Fama (Ranking de Desempenho)</h3>
-        <p style="font-size: 13px; opacity: 0.8; margin-bottom: 15px;">Acompanhe o desempenho geral baseado nos pontos totais e na média de participação de todos os registros salvos no banco.</p>
-        <div class="comp-table-wrapper">
-            <table class="comp-table">
-                <thead><tr><th style="width:40px; text-align:center;">#</th><th>Jogador</th><th>Pts Totais</th><th>Participações</th><th>Média</th></tr></thead>
-                <tbody id="listaRankingContainer"></tbody>
-            </table>
-        </div>
-    </div>
 
-    <!-- ABA 6: AVISOS -->
+    <!-- ABA 5: AVISOS -->
     <div id="abaNotas" class="tab-content">
         <h3>📝 Avisos & Mensagens Prontas</h3>
         <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
@@ -187,7 +178,7 @@
         <div class="notes-grid" id="listaNotasContainer" style="margin-top: 12px;"></div>
     </div>
 
-    <!-- ABA 7: CLÃ -->
+    <!-- ABA 6: CLÃ -->
     <div id="abaClan" class="tab-content">
         <h3>🛡️ Configurações do Clã</h3>
         <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
@@ -200,7 +191,7 @@
         </div>
     </div>
 
-    <!-- ABA 8: MODO DEV -->
+    <!-- ABA 7: MODO DEV -->
     <div id="abaDev" class="tab-content">
         <h3>👨‍💻 Editor de Código (Auto-Commit)</h3>
         
@@ -222,7 +213,7 @@
 <script>
     const DONO_DO_REPO = "RamboFetBB";
     const NOME_DO_REPO = "GvG-automatizada-pocket-contest";
-    const CAMINHO_ARQUIVO = "index.html";
+    const CAMINHO_ARQUIVO = "Index.html";
     const BRANCH_GIT = "main";
 
     let arquivoSha = "";
@@ -231,12 +222,11 @@
     let subAbaAtualPessoas = 'membros';
     const turnos = ['Sáb Tarde', 'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb Manhã'];
 
-    document.getElementById('listaTexto').addEventListener('input', processarETocalhar);
     window.onload = () => {
         carregarTema(); carregarClan(); 
-        sanitizarBanco(); // Limpa e corrige nomes que foram salvos com erro anteriormente
+        sanitizarBanco();
         renderizarHistorico(); renderizarLogs(); renderizarNotas();
-        renderizarComparativoMensal(); renderizarRanking(); carregarTokenGitLocal();
+        renderizarComparativoMensal(); carregarTokenGitLocal();
         atualizarStatusPremiacao(); setInterval(atualizarStatusPremiacao, 1000);
     };
 
@@ -331,7 +321,6 @@
         document.querySelectorAll('.tab-content, .tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active');
         if(id === 'abaComparativo') renderizarComparativoMensal();
-        if(id === 'abaRanking') renderizarRanking();
     }
 
     const getBanco = () => JSON.parse(localStorage.getItem('gvg_banco_jogadores')) || {};
@@ -350,7 +339,6 @@
         return existente || nomeTrim;
     }
 
-    // SANITIZAÇÃO AUTOMÁTICA DE DADOS CORROMPIDOS NO LOCALSTORAGE
     function sanitizarBanco() {
         let banco = getBanco();
         let alterado = false;
@@ -409,7 +397,7 @@
         let btnZap = document.getElementById('botoesZap');
 
         if (!texto) {
-            divResult.innerText = "A escala aparecerá aqui assim que colar a lista...";
+            divResult.innerText = "A escala aparecerá aqui assim que gerar...";
             divAlert.style.display = 'none';
             btnZap.style.display = 'none';
             textoEscalaCache = "";
@@ -474,77 +462,120 @@
             let turno = turnos[index % totalTurnos];
             let ehSys = banco[j.nome] && banco[j.nome].isSistema;
             escalaStr += `• *${j.nome}* ${ehSys ? '🛡️' : ''} - ${turno} (${j.pts} pts)\n`;
-
-            banco[j.nome].participacoes += 1;
-            banco[j.nome].pontos += j.pts;
+            
+            banco[j.nome].pontos = (banco[j.nome].pontos || 0) + j.pts;
+            banco[j.nome].participacoes = (banco[j.nome].participacoes || 0) + 1;
         });
 
         saveBanco(banco);
-        renderizarHistorico();
-        renderizarRanking();
-
         textoEscalaCache = escalaStr;
-        divResult.innerText = obterCabecalhoLider() + escalaStr;
+        divResult.innerText = escalaStr;
         btnZap.style.display = 'block';
 
-        salvarLogAutomatico(jogadores.length, escalaStr);
+        salvarLogAutomatico(escalaStr, jogadores.length);
+        renderizarHistorico();
+        renderizarLogs();
+        renderizarComparativoMensal();
     }
 
     function compartilharZap() {
-        let textoFinal = obterCabecalhoLider() + textoEscalaCache;
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textoFinal)}`, '_blank');
+        if(!textoEscalaCache) return;
+        let finalStr = obterCabecalhoLider() + textoEscalaCache + `\n\nPreparem-se para a entrega dos prêmios!`;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(finalStr)}`, '_blank');
     }
 
-    function alternarSubAbaPessoas(sub) {
-        subAbaAtualPessoas = sub;
-        document.getElementById('btnSubMembros').classList.toggle('active', sub === 'membros');
-        document.getElementById('btnSubSistema').classList.toggle('active', sub === 'sistema');
+    function salvarLogAutomatico(texto, totalPlayers) {
+        let logs = getLogs();
+        let agora = new Date();
+        let mm = String(agora.getMonth() + 1).padStart(2, '0');
+        let dia = String(agora.getDate()).padStart(2, '0');
+        let hora = String(agora.getHours()).padStart(2, '0');
+        let min = String(agora.getMinutes()).padStart(2, '0');
+
+        let msg = `${texto}`;
+        
+        logs.unshift({
+            id: Date.now(),
+            data: `${dia}/${mm}/${agora.getFullYear()} - ${hora}:${min}`,
+            texto: msg,
+            total: totalPlayers
+        });
+
+        if(logs.length > 50) logs = logs.slice(0, 50);
+        saveLogs(logs);
+    }
+
+    function alternarSubAbaPessoas(tipo) {
+        subAbaAtualPessoas = tipo;
+        document.getElementById('btnSubMembros').classList.toggle('active', tipo === 'membros');
+        document.getElementById('btnSubSistema').classList.toggle('active', tipo === 'sistema');
         pag.sis = 1;
+        renderizarHistorico();
+    }
+
+    function adicionarManualSistema() {
+        let input = document.getElementById('novoNomeSistema');
+        let nomeRaw = input.value.trim();
+        if (!nomeRaw) return;
+
+        let banco = getBanco();
+        let chave = encontrarChaveBanco(banco, nomeRaw);
+
+        if (!banco[chave]) {
+            banco[chave] = { participacoes: 0, pontos: 0, isSistema: true };
+        } else {
+            banco[chave].isSistema = true;
+        }
+
+        saveBanco(banco);
+        input.value = '';
         renderizarHistorico();
     }
 
     function renderizarHistorico() {
         let banco = getBanco();
-        let todasChaves = Object.keys(banco);
-        let filtro = (document.getElementById('filtroJogador').value || '').toLowerCase();
-
-        let totalMembros = todasChaves.length;
-        let totalSistema = todasChaves.filter(k => banco[k] && banco[k].isSistema).length;
-
-        document.getElementById('countTotal').innerText = totalMembros;
-        document.getElementById('countMembros').innerText = totalMembros;
-        document.getElementById('countSistema').innerText = totalSistema;
-
-        let chavesFiltradas = todasChaves.filter(nome => {
-            let p = banco[nome];
-            if (subAbaAtualPessoas === 'sistema' && (!p || !p.isSistema)) return false;
-            return nome.toLowerCase().includes(filtro);
-        });
-
+        let filtro = document.getElementById('filtroJogador').value.toLowerCase();
         let container = document.getElementById('listaHistoricoContainer');
+        let perPage = parseInt(document.getElementById('itensPorPaginaSistema').value);
         container.innerHTML = '';
 
-        let porPagina = parseInt(document.getElementById('itensPorPaginaSistema').value, 10);
-        let inicio = (pag.sis - 1) * porPagina;
-        let itensPagina = chavesFiltradas.slice(inicio, inicio + porPagina);
+        let chaves = Object.keys(banco);
+        
+        let filtroSistema = chaves.filter(k => banco[k].isSistema);
+        let filtroMembros = chaves.filter(k => !banco[k].isSistema);
 
-        if(itensPagina.length === 0) {
-            container.innerHTML = `<div style="text-align:center; padding:15px; opacity:0.6;">Nenhum jogador em ${subAbaAtualPessoas === 'sistema' ? 'Sistema' : 'Membros'}.</div>`;
-            document.getElementById('paginacaoSistema').innerHTML = '';
-            return;
+        document.getElementById('countSistema').innerText = filtroSistema.length;
+        document.getElementById('countMembros').innerText = filtroMembros.length;
+        document.getElementById('countTotal').innerText = chaves.length;
+
+        let listaAtiva = subAbaAtualPessoas === 'membros' ? filtroMembros : filtroSistema;
+
+        if (filtro) {
+            listaAtiva = listaAtiva.filter(k => k.toLowerCase().includes(filtro));
+        }
+
+        listaAtiva.sort((a,b) => a.localeCompare(b));
+
+        let totalPags = Math.ceil(listaAtiva.length / perPage) || 1;
+        if(pag.sis > totalPags) pag.sis = totalPags;
+        
+        let inicio = (pag.sis - 1) * perPage;
+        let itensPagina = listaAtiva.slice(inicio, inicio + perPage);
+
+        if (itensPagina.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding: 20px; opacity:0.6;">Nenhum jogador encontrado.</div>`;
         }
 
         itensPagina.forEach(nome => {
             let p = banco[nome];
-            let isSys = p && p.isSistema;
+            let isSys = p.isSistema;
             let div = document.createElement('div');
             div.className = 'player-item';
 
             if (subAbaAtualPessoas === 'membros') {
                 div.innerHTML = `
                     <div>
-                        <strong>${nome}</strong><br>
-                        <span style="font-size:12px; opacity:0.8;">Pontos Totais: ${p.pontos || 0}</span>
+                        <strong>${nome}</strong>
                     </div>
                     <div class="btn-group">
                         <button onclick="alternarStatusSistema('${nome}')" class="btn-icon" style="background:${isSys ? '#ffc107' : '#17a2b8'}; color:#000;" title="${isSys ? 'Remover do Sistema' : 'Marcar no Sistema'}">
@@ -556,1178 +587,445 @@
             } else {
                 div.innerHTML = `
                     <div>
-                        <strong>${nome}</strong> <span class="badge-sys">🛡️ Sistema</span>
+                        <strong>${nome}</strong>
+                        <br><span class="badge-sys">⭐ Sistema</span>
                     </div>
                     <div class="btn-group">
-                        <button onclick="alternarStatusSistema('${nome}')" class="btn-icon" style="background:#ffc107; color:#000;" title="Remover do Sistema">
-                            ⭐ Sistema
-                        </button>
-                        <button onclick="excluirJogadorSistema('${nome}')" class="btn-icon btn-del" title="Excluir do Banco">🗑️</button>
+                        <button onclick="alternarStatusSistema('${nome}')" class="btn-icon btn-del" title="Remover do Sistema">✖️ Remover</button>
                     </div>
                 `;
             }
-
             container.appendChild(div);
         });
-
-        renderizarPaginacao('paginacaoSistema', chavesFiltradas.length, porPagina, pag.sis, (p) => { pag.sis = p; renderizarHistorico(); });
+        renderizarPaginacao('paginacaoSistema', totalPags, pag.sis, (p) => { pag.sis = p; renderizarHistorico(); });
     }
 
     function alternarStatusSistema(nome) {
         let banco = getBanco();
         let chave = encontrarChaveBanco(banco, nome);
-        if(banco[chave]) {
+        if (banco[chave]) {
             banco[chave].isSistema = !banco[chave].isSistema;
             saveBanco(banco);
             renderizarHistorico();
-            renderizarRanking();
         }
-    }
-
-    function adicionarManualSistema() {
-        let input = document.getElementById('novoNomeSistema');
-        let rawNome = input.value.trim();
-        if (!rawNome) return;
-        
-        if (/\bsistema\b/i.test(rawNome)) {
-            rawNome = rawNome.replace(/\bsistema\b/gi, '').trim();
-        }
-
-        let banco = getBanco();
-        let chave = encontrarChaveBanco(banco, rawNome);
-
-        if (!banco[chave]) {
-            banco[chave] = { participacoes: 0, pontos: 0, isSistema: true };
-        } else {
-            banco[chave].isSistema = true;
-        }
-        saveBanco(banco);
-        input.value = '';
-        renderizarHistorico();
-        renderizarRanking();
     }
 
     function excluirJogadorSistema(nome) {
-        if (confirm(`Deseja remover ${nome} do banco de jogadores?`)) {
+        if(confirm(`Tem certeza que deseja apagar ${nome} do banco?`)) {
             let banco = getBanco();
             let chave = encontrarChaveBanco(banco, nome);
             delete banco[chave];
             saveBanco(banco);
             renderizarHistorico();
-            renderizarRanking();
-        }
-    }
-
-    function limparBancoJogadores() {
-        if (confirm('Tem certeza que deseja apagar TODOS os jogadores cadastrados?')) {
-            localStorage.removeItem('gvg_banco_jogadores');
-            renderizarHistorico();
-            renderizarRanking();
-        }
-    }
-
-    function extrairDadosMensais() {
-        let logs = getLogs();
-        let mesesMap = {};
-        let todosPlayers = new Set();
-        let listaMeses = [];
-
-        logs.forEach(log => {
-            let dataObj = new Date(log.id || Date.now());
-            let mesAno = String(dataObj.getMonth() + 1).padStart(2, '0') + '/' + dataObj.getFullYear();
-            
-            if (!mesesMap[mesAno]) {
-                mesesMap[mesAno] = {};
-                listaMeses.push(mesAno);
-            }
-
-            let linhas = (log.texto || '').split('\n');
-            linhas.forEach(linha => {
-                let match = linha.match(/•?\s*\*?([^*\-]+?)\*?\s*-\s*.*?\(([-\d]+)\s*pts\)/i);
-                if (match) {
-                    let nome = match[1].trim();
-                    let pts = parseInt(match[2], 10) || 0;
-                    todosPlayers.add(nome);
-
-                    if (!mesesMap[mesAno][nome]) mesesMap[mesAno][nome] = 0;
-                    mesesMap[mesAno][nome] += pts;
-                }
-            });
-        });
-
-        return { mesesMap, listaMeses, todosPlayers: Array.from(todosPlayers).sort() };
-    }
-
-    function renderizarComparativoMensal() {
-        let { mesesMap, listaMeses, todosPlayers } = extrairDadosMensais();
-        let select = document.getElementById('selectFiltroMesComp');
-        let valorSelecionado = select.value;
-
-        select.innerHTML = '<option value="TODOS">📅 Visão Geral (Todos os Meses)</option>';
-        listaMeses.forEach(m => {
-            let opt = document.createElement('option');
-            opt.value = m;
-            opt.innerText = `🗓️ Mês: ${m}`;
-            if (m === valorSelecionado) opt.selected = true;
-            select.appendChild(opt);
-        });
-
-        let theader = document.getElementById('tableHeaderComp');
-        let tbody = document.getElementById('tableBodyComp');
-        theader.innerHTML = '<th>Jogador</th>';
-        tbody.innerHTML = '';
-
-        if (todosPlayers.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:15px; opacity:0.6;">Nenhum dado encontrado no histórico.</td></tr>';
-            return;
-        }
-
-        let mesesExibicao = (select.value === 'TODOS') ? listaMeses : [select.value];
-
-        mesesExibicao.forEach(m => {
-            let th = document.createElement('th');
-            th.innerText = m;
-            theader.appendChild(th);
-        });
-
-        if (select.value === 'TODOS') {
-            let thTotal = document.createElement('th');
-            thTotal.innerText = 'Total Acumulado';
-            theader.appendChild(thTotal);
-        }
-
-        todosPlayers.forEach(player => {
-            let tr = document.createElement('tr');
-            let tdNome = document.createElement('td');
-            tdNome.innerHTML = `<strong>${player}</strong>`;
-            tr.appendChild(tdNome);
-
-            let totalPlayer = 0;
-            mesesExibicao.forEach(m => {
-                let td = document.createElement('td');
-                let pts = (mesesMap[m] && mesesMap[m][player]) ? mesesMap[m][player] : 0;
-                totalPlayer += pts;
-
-                if (pts > 0) {
-                    td.className = 'val-pts';
-                    td.innerText = `${pts} pts`;
-                } else {
-                    td.className = 'val-zero';
-                    td.innerText = '0 pts';
-                }
-                tr.appendChild(td);
-            });
-
-            if (select.value === 'TODOS') {
-                let tdTotal = document.createElement('td');
-                tdTotal.className = 'val-pts';
-                tdTotal.innerText = `${totalPlayer} pts`;
-                tr.appendChild(tdTotal);
-            }
-
-            tbody.appendChild(tr);
-        });
-    }
-
-    function renderizarRanking() {
-        let banco = getBanco();
-        let jogadores = Object.keys(banco).map(nome => {
-            let p = banco[nome];
-            let media = p.participacoes > 0 ? (p.pontos / p.participacoes).toFixed(1) : 0;
-            return { nome, pontos: p.pontos, participacoes: p.participacoes, media: parseFloat(media), isSistema: p.isSistema };
-        });
-
-        // Ordenar principalmente pelos pontos totais, e depois pela média para critério de desempate
-        jogadores.sort((a, b) => b.pontos - a.pontos || b.media - a.media);
-
-        let container = document.getElementById('listaRankingContainer');
-        container.innerHTML = '';
-
-        if (jogadores.length === 0) {
-            container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:15px; opacity:0.6;">Nenhum dado para o Ranking.</td></tr>';
-            return;
-        }
-
-        jogadores.forEach((j, index) => {
-            let tr = document.createElement('tr');
-            let medalha = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}º`;
-            tr.innerHTML = `
-                <td style="text-align:center; font-weight:bold;">${medalha}</td>
-                <td><strong>${j.nome}</strong> ${j.isSistema ? '<span class="badge-sys">🛡️</span>' : ''}</td>
-                <td class="val-pts">${j.pontos}</td>
-                <td>${j.participacoes}</td>
-                <td style="color:#007bff; font-weight:bold;">${j.media}</td>
-            `;
-            container.appendChild(tr);
-        });
-    }
-
-    function enviarZapComparativo() {
-        let { mesesMap, listaMeses, todosPlayers } = extrairDadosMensais();
-        let mesSelecionado = document.getElementById('selectFiltroMesComp').value;
-
-        if (todosPlayers.length === 0) {
-            alert('Não há dados no histórico para gerar o comparativo.');
-            return;
-        }
-
-        let textoZap = `📊 *COMPARATIVO MENSAL DE PONTUAÇÃO GvG*\n\n`;
-
-        if (mesSelecionado === 'TODOS') {
-            listaMeses.forEach(m => {
-                textoZap += `🗓️ *Mês: ${m}*\n`;
-                todosPlayers.forEach(p => {
-                    let pts = (mesesMap[m] && mesesMap[m][p]) ? mesesMap[m][p] : 0;
-                    if (pts > 0) textoZap += `• *${p}*: ${pts} pts\n`;
-                });
-                textoZap += `\n`;
-            });
-        } else {
-            textoZap += `🗓️ *Mês: ${mesSelecionado}*\n`;
-            todosPlayers.forEach(p => {
-                let pts = (mesesMap[mesSelecionado] && mesesMap[mesSelecionado][p]) ? mesesMap[mesSelecionado][p] : 0;
-                if (pts > 0) textoZap += `• *${p}*: ${pts} pts\n`;
-            });
-        }
-
-        let textoFinal = obterCabecalhoLider() + textoZap;
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textoFinal)}`, '_blank');
-    }
-
-    function salvarLogAutomatico(total, resumo) {
-        let logs = getLogs();
-        logs.unshift({
-            id: Date.now(),
-            data: new Date().toLocaleString('pt-BR'),
-            total: total,
-            texto: resumo
-        });
-        saveLogs(logs);
-        renderizarLogs();
-        renderizarComparativoMensal();
-    }
-
-    function renderizarLogs() {
-        let logs = getLogs();
-        let filtro = (document.getElementById('filtroLogs').value || '').toLowerCase();
-        let filtrados = logs.filter(l => l.data.toLowerCase().includes(filtro) || l.texto.toLowerCase().includes(filtro));
-        
-        let container = document.getElementById('listaLogsContainer');
-        container.innerHTML = '';
-
-        let porPagina = parseInt(document.getElementById('itensPorPaginaLogs').value, 10);
-        let inicio = (pag.log - 1) * porPagina;
-        let itensPagina = filtrados.slice(inicio, inicio + porPagina);
-
-        if(itensPagina.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:10px; opacity:0.6;">Nenhum histórico gravado.</div>';
-            document.getElementById('paginacaoLogs').innerHTML = '';
-            return;
-        }
-
-        itensPagina.forEach(log => {
-            let div = document.createElement('div');
-            div.className = 'history-item';
-            div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                    <strong>📅 ${log.data} (${log.total} Players)</strong>
-                    <div class="btn-group">
-                        <button onclick="copiarLog(${log.id}, 'adm')" class="btn-icon btn-save" title="Copiar p/ ADM (Com Pontos)">📋 ADM</button>
-                        <button onclick="copiarLog(${log.id}, 'players')" class="btn-icon" style="background:#007bff;" title="Copiar p/ Players (Sem Pontos)">📋 Players</button>
-                        <button onclick="excluirLog(${log.id})" class="btn-icon btn-del">🗑️</button>
-                    </div>
-                </div>
-                <div style="font-size:12px; white-space:pre-wrap; max-height:100px; overflow-y:auto; background:var(--box-bg); padding:6px; border-radius:4px;">${log.texto}</div>
-            `;
-            container.appendChild(div);
-        });
-
-        renderizarPaginacao('paginacaoLogs', filtrados.length, porPagina, pag.log, (p) => { pag.log = p; renderizarLogs(); });
-    }
-
-    function copiarLog(id, tipo) {
-        let log = getLogs().find(l => l.id === id);
-        if(!log) return;
-
-        let textoCopiar = log.texto;
-        
-        // Se for para 'players', remove via regex as tags de pontos Ex: "(15 pts)"
-        if (tipo === 'players') {
-            textoCopiar = textoCopiar.replace(/\s*\([-\d]+\s*pts\)/g, '');
-        }
-
-        let textoFinal = obterCabecalhoLider() + textoCopiar;
-
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(textoFinal).then(() => {
-                alert('Escala copiada com sucesso para a área de transferência!');
-            }).catch(err => {
-                alert('Erro ao copiar. Tente selecionar o texto manualmente.');
-            });
-        } else {
-            let textArea = document.createElement("textarea");
-            textArea.value = textoFinal;
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                alert('Escala copiada com sucesso para a área de transferência!');
-            } catch (err) {
-                alert('Erro ao copiar.');
-            }
-            document.body.removeChild(textArea);
-        }
-    }
-
-    function excluirLog(id) {
-        let logs = getLogs().filter(l => l.id !== id);
-        saveLogs(logs);
-        renderizarLogs();
-        renderizarComparativoMensal();
-    }
-
-    function limparLogs() {
-        if (confirm('Deseja apagar todo o histórico de rodízios?')) {
-            localStorage.removeItem('gvg_historico_logs');
-            renderizarLogs();
             renderizarComparativoMensal();
         }
     }
 
-    function exportarBackup() {
-        let dados = {
-            banco: getBanco(), logs: getLogs(), notas: getNotas(),
-            clan: { guilda: localStorage.getItem('gvg_nome_guilda'), lider: localStorage.getItem('gvg_nome_lider'), saudacao: localStorage.getItem('gvg_texto_saudacao') }
-        };
-        let blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
-        let a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `backup_gvg_${new Date().toISOString().slice(0,10)}.json`;
-        a.click();
-    }
-
-    function importarBackup(e) {
-        let file = e.target.files[0];
-        if (!file) return;
-        let reader = new FileReader();
-        reader.onload = (evt) => {
-            try {
-                let dados = JSON.parse(evt.target.result);
-                let bancoAtual = getBanco();
-
-                let novoBanco = null;
-                let novosLogs = null;
-                let novasNotas = null;
-
-                if (dados.banco) {
-                    novoBanco = dados.banco;
-                } else if (Array.isArray(dados)) {
-                    novoBanco = {};
-                    dados.forEach(item => {
-                        let n = item.nome || item.player || item.name;
-                        if (n) {
-                            novoBanco[n] = {
-                                participacoes: item.participacoes || 1,
-                                pontos: item.pontos || item.pts || 0,
-                                isSistema: !!item.isSistema
-                            };
-                        }
-                    });
-                } else if (typeof dados === 'object' && !dados.logs && !dados.notas) {
-                    novoBanco = dados;
-                }
-
-                if (dados.logs) novosLogs = dados.logs;
-                if (dados.notas) novasNotas = dados.notas;
-
-                if (novoBanco && typeof novoBanco === 'object') {
-                    Object.keys(novoBanco).forEach(k => {
-                        let item = novoBanco[k];
-                        let chave = encontrarChaveBanco(bancoAtual, k);
-
-                        if (typeof item === 'number') {
-                            item = { participacoes: 1, pontos: item, isSistema: false };
-                        }
-
-                        if (!bancoAtual[chave]) {
-                            bancoAtual[chave] = {
-                                participacoes: item.participacoes || 0,
-                                pontos: item.pontos || 0,
-                                isSistema: item.isSistema || false
-                            };
-                        } else {
-                            bancoAtual[chave].participacoes = Math.max(bancoAtual[chave].participacoes || 0, item.participacoes || 0);
-                            bancoAtual[chave].pontos = Math.max(bancoAtual[chave].pontos || 0, item.pontos || 0);
-                            if (item.isSistema) bancoAtual[chave].isSistema = true;
-                        }
-                    });
-                    saveBanco(bancoAtual);
-                }
-
-                if (novosLogs && Array.isArray(novosLogs)) {
-                    let logsAtuais = getLogs();
-                    let ids = new Set(logsAtuais.map(l => l.id));
-                    novosLogs.forEach(l => { if (!ids.has(l.id)) logsAtuais.push(l); });
-                    saveLogs(logsAtuais);
-                }
-
-                if (novasNotas && Array.isArray(novasNotas)) {
-                    let notasAtuais = getNotas();
-                    let ids = new Set(notasAtAqui está o arquivo `index.html` completo e atualizado com o que você havia pedido antes[span_0](start_span)[span_0](end_span). Adicionei a nova aba de **Ranking (Hall da Fama)** que calcula automaticamente a média de desempenho (pontos divididos pelas participações), e incluí os botões de **Cópia para ADM** (com pontos) e **Cópia para Players** (sem pontos) diretamente nos itens do histórico de logs[span_1](start_span)[span_1](end_span).
-
-Basta substituir o conteúdo do seu arquivo atual por este:
-
-```html
-<!DOCTYPE html>
-<html lang="pt-br" data-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GvG - Rodízio & Gerenciador</title>
-    <style>
-        :root {
-            --bg-color: #f0f2f5; --container-bg: #fff; --text-color: #333;
-            --border-color: #ccc; --tab-bg: #f1f1f1; --tab-text: #555;
-            --box-bg: #f8f9fa; --item-bg: #fff; --item-border: #eee; --input-bg: #fff;
-        }
-        [data-theme="dark"] {
-            --bg-color: #121212; --container-bg: #1e1e1e; --text-color: #e0e0e0;
-            --border-color: #444; --tab-bg: #2d2d2d; --tab-text: #b0b0b0;
-            --box-bg: #252525; --item-bg: #2a2a2a; --item-border: #383838; --input-bg: #2a2a2a;
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 15px; padding-bottom: 70px; background: var(--bg-color); color: var(--text-color); transition: 0.3s; margin: 0; }
-        .container { max-width: 800px; margin: auto; background: var(--container-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .theme-btn { background: none; border: 1px solid var(--border-color); color: var(--text-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
-        .next-turn-banner { background: #007bff; color: white; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
-        .banner-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; flex-wrap: wrap; gap: 5px; }
-        .banner-timer { font-size: 13px; opacity: 0.95; background: rgba(0,0,0,0.15); padding: 4px 8px; border-radius: 4px; display: inline-block; width: fit-content; }
-        .btn-marcar-enviado { background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
-        .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; gap: 3px; overflow-x: auto; padding-bottom: 3px; }
-        .tab-btn { flex: 1; padding: 8px 8px; border: none; background: var(--tab-bg); font-weight: bold; font-size: 11px; cursor: pointer; border-radius: 8px 8px 0 0; color: var(--tab-text); white-space: nowrap; text-align: center; }
-        .tab-btn.active { background: #007bff; color: white; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        textarea, .search-box, .select-per-page { width: 100%; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--input-bg); color: var(--text-color); }
-        textarea { height: 130px; padding: 10px; font-size: 14px; resize: vertical; }
-        .search-box { padding: 8px; margin-bottom: 12px; }
-        button.action-btn { cursor: pointer; padding: 12px; margin-top: 10px; border: none; border-radius: 6px; color: white; font-weight: bold; width: 100%; font-size: 15px; }
-        .result-box { margin-top: 20px; padding: 15px; background: var(--box-bg); border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
-        .alert-box { background: #fff3cd; color: #856404; padding: 10px; border-radius: 6px; border: 1px solid #ffeeba; margin-top: 10px; font-size: 13px; display: none; }
-        [data-theme="dark"] .alert-box { background: #332701; color: #ffda6a; border-color: #664d03; }
-        .controls-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; flex-wrap: wrap; }
-        .select-per-page { padding: 6px; font-size: 13px; cursor: pointer; width: auto; }
-        .player-grid, .history-grid, .notes-grid { min-height: 200px; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: var(--box-bg); }
-        .player-item, .history-item, .note-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--item-border); background: var(--item-bg); margin-bottom: 6px; border-radius: 6px; }
-        .history-item, .note-item { flex-direction: column; align-items: stretch; }
-        .badge-sys { background: #17a2b8; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; margin-top: 3px; }
-        .btn-group { display: flex; gap: 5px; flex-wrap: wrap; }
-        .btn-icon { border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; color: white; }
-        .btn-del { background: #dc3545; } .btn-save { background: #28a745; }
-        .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 15px; }
-        .page-btn { padding: 5px 10px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); cursor: pointer; border-radius: 4px; font-weight: bold; }
-        .page-btn.active { background: #007bff; color: white; border-color: #007bff; }
-        
-        .comp-table-wrapper { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 8px; margin-top: 15px; }
-        .comp-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
-        .comp-table th, .comp-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); }
-        .comp-table th { background: var(--tab-bg); color: var(--text-color); font-weight: bold; }
-        .comp-table tr:nth-child(even) { background: var(--box-bg); }
-        .val-pts { font-weight: bold; color: #28a745; }
-        .val-zero { opacity: 0.4; }
-        .sub-nav-btn { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; background: var(--tab-bg); color: var(--text-color); }
-        .sub-nav-btn.active { background: #007bff; color: white; border-color: #007bff; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="top-bar">
-        <h2 style="margin:0; font-size: 18px;">Gerenciador GvG</h2>
-        <button class="theme-btn" onclick="alternarTema()">🌙 Modo Escuro</button>
-    </div>
-
-    <div id="bannerProximoTurno" class="next-turn-banner" style="display:none;">
-        <div class="banner-header">
-            <span>⏰ Turno Atual: <strong id="txtTurnoNome">Carregando...</strong></span>
-            <button class="btn-marcar-enviado" id="btnMarcarEnviado" onclick="marcarComoEnviado()">✅ Já Enviei</button>
-        </div>
-        <div id="txtTurnoTimer" class="banner-timer">Calculando tempo...</div>
-    </div>
-
-    <div class="tabs">
-        <button class="tab-btn active" onclick="alternarAba(event, 'abaRodizio')">📅 Rodízio</button>
-        <button class="tab-btn" onclick="alternarAba(event, 'abaHistorico')">👥 Pessoas (<span id="countTotal">0</span>)</button>
-        <button class="tab-btn" onclick="alternarAba(event, 'abaLogs')">📁 Histórico</button>
-        <button class="tab-btn" onclick="alternarAba(event, 'abaComparativo')">📊 Comparativo</button>
-        <button class="tab-btn" onclick="alternarAba(event, 'abaRanking')">🏆 Ranking</button>
-        <button class="tab-btn" onclick="alternarAba(event, 'abaNotas')">📝 Avisos</button>
-        <button class="tab-btn" onclick="alternarAba(event, 'abaClan')">🛡️ Clã</button>
-        <button class="tab-btn" onclick="alternarAba(event, 'abaDev')">👨‍💻 Dev</button>
-    </div>
-
-    <!-- ABA 1: RODÍZIO -->
-    <div id="abaRodizio" class="tab-content active">
-        <h2>1. Cole a Lista de Nomes</h2>
-        <div style="margin-bottom: 8px;">
-            <label style="font-size: 13px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                <input type="checkbox" id="chkApenasSistema" onchange="processarETocalhar()"> 🛡️ Filtrar na escala apenas quem está no Sistema
-            </label>
-        </div>
-        <textarea id="listaTexto" placeholder="Cole a lista aqui..."></textarea>
-        <div id="alertaInvalido" class="alert-box">⚠️ Atenção: Detectamos pontuações negativas ou valores inválidos na lista.</div>
-        <div id="resultado" class="result-box">A escala aparecerá aqui assim que colar a lista...</div>
-        
-        <button class="action-btn" id="botoesZap" onclick="compartilharZap()" style="background:#25d366; display:none; margin-top: 15px;">📤 Enviar Escala para o WhatsApp</button>
-    </div>
-
-    <!-- ABA 2: JOGADORES -->
-    <div id="abaHistorico" class="tab-content">
-        <h3>⚙️ Gerenciador de Pessoas</h3>
-        
-        <div style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-            <button id="btnSubMembros" class="sub-nav-btn active" onclick="alternarSubAbaPessoas('membros')">👥 Membros (<span id="countMembros">0</span>)</button>
-            <button id="btnSubSistema" class="sub-nav-btn" onclick="alternarSubAbaPessoas('sistema')">🛡️ Sistema (<span id="countSistema">0</span>)</button>
-        </div>
-
-        <div style="display: flex; gap: 5px; margin-bottom: 12px;">
-            <input type="text" id="novoNomeSistema" class="search-box" placeholder="Adicionar player diretamente ao Sistema..." style="margin-bottom:0;">
-            <button onclick="adicionarManualSistema()" class="btn-icon btn-save" style="padding: 0 15px; font-size: 16px;" title="Adicionar ao Sistema">✅</button>
-        </div>
-        <div class="controls-header">
-            <input type="text" id="filtroJogador" class="search-box" placeholder="🔍 Buscar..." oninput="pag.sis=1; renderizarHistorico()" style="margin-bottom:0; flex: 1;">
-            <select id="itensPorPaginaSistema" class="select-per-page" onchange="pag.sis=1; renderizarHistorico()">
-                <option value="5">5</option><option value="10">10</option><option value="20" selected>20</option>
-            </select>
-        </div>
-        <div class="player-grid" id="listaHistoricoContainer" style="margin-top: 12px;"></div>
-        <div class="pagination" id="paginacaoSistema"></div>
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button onclick="exportarBackup()" class="action-btn" style="background:#17a2b8; margin:0; padding:10px; font-size:14px;">💾 Exportar</button>
-            <button onclick="document.getElementById('inputImportar').click()" class="action-btn" style="background:#ffc107; color:#000; margin:0; padding:10px; font-size:14px;">📂 Importar</button>
-            <input type="file" id="inputImportar" accept=".json" style="display:none" onchange="importarBackup(event)">
-        </div>
-        <button onclick="limparBancoJogadores()" class="action-btn" style="background:#dc3545; margin-top:10px; padding:8px;">🗑️ Limpar Banco</button>
-    </div>
-
-    <!-- ABA 3: HISTÓRICO DE LOGS -->
-    <div id="abaLogs" class="tab-content">
-        <h3>📁 Histórico de Rodízios</h3>
-        <div class="controls-header" style="margin-top: 10px;">
-            <input type="text" id="filtroLogs" class="search-box" placeholder="🔍 Buscar histórico..." oninput="pag.log=1; renderizarLogs()" style="margin-bottom:0; flex: 1;">
-            <select id="itensPorPaginaLogs" class="select-per-page" onchange="pag.log=1; renderizarLogs()">
-                <option value="5">5</option><option value="10">10</option><option value="20" selected>20</option>
-            </select>
-        </div>
-        <div class="history-grid" id="listaLogsContainer" style="margin-top: 12px;"></div>
-        <div class="pagination" id="paginacaoLogs"></div>
-        <button onclick="limparLogs()" class="action-btn" style="background:#dc3545; margin-top:15px; padding:8px;">🗑️ Limpar Todo o Histórico</button>
-    </div>
-
-    <!-- ABA 4: COMPARATIVO MENSAL -->
-    <div id="abaComparativo" class="tab-content">
-        <h3>📊 Comparativo Mensal (Mês a Mês)</h3>
-        <p style="font-size: 13px; opacity: 0.8; margin-bottom: 15px;">Acompanhamento automático da pontuação de cada jogador extraído diretamente de todo o histórico salvo.</p>
-
-        <div class="controls-header">
-            <select id="selectFiltroMesComp" class="select-per-page" onchange="renderizarComparativoMensal()" style="flex:1;">
-                <option value="TODOS">📅 Visão Geral (Todos os Meses)</option>
-            </select>
-            <button onclick="enviarZapComparativo()" class="action-btn" style="background:#25d366; margin:0; width:auto; padding:8px 15px; font-size:13px;">📤 Enviar p/ Zap</button>
-        </div>
-
-        <div class="comp-table-wrapper">
-            <table class="comp-table" id="tabelaComparativo">
-                <thead><tr id="tableHeaderComp"><th>Jogador</th></tr></thead>
-                <tbody id="tableBodyComp"></tbody>
-            </table>
-        </div>
-    </div>
-    
-    <!-- ABA RANKING (HALL DA FAMA) -->
-    <div id="abaRanking" class="tab-content">
-        <h3>🏆 Hall da Fama (Ranking de Desempenho)</h3>
-        <p style="font-size: 13px; opacity: 0.8; margin-bottom: 15px;">Acompanhamento dos melhores jogadores com base no total de pontos e cálculo de média de desempenho por participação.</p>
-        
-        <div class="comp-table-wrapper">
-            <table class="comp-table" id="tabelaRanking">
-                <thead>
-                    <tr>
-                        <th style="text-align: center;">Posição</th>
-                        <th>Jogador</th>
-                        <th>Total (Pts)</th>
-                        <th>Participações</th>
-                        <th>Média</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBodyRanking"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- ABA 5: AVISOS -->
-    <div id="abaNotas" class="tab-content">
-        <h3>📝 Avisos & Mensagens Prontas</h3>
-        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
-            <input type="text" id="tituloNota" class="search-box" placeholder="Título..." style="margin-bottom:0;">
-            <textarea id="conteudoNota" placeholder="Escreva o aviso..." style="height: 80px;"></textarea>
-            <button onclick="salvarNotaPronta()" class="action-btn" style="background:#28a745; margin:0; padding:10px;">💾 Salvar Aviso</button>
-        </div>
-        <div class="notes-grid" id="listaNotasContainer" style="margin-top: 12px;"></div>
-    </div>
-
-    <!-- ABA 6: CLÃ -->
-    <div id="abaClan" class="tab-content">
-        <h3>🛡️ Configurações do Clã</h3>
-        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
-            <div><label style="font-size: 13px; font-weight: bold;">Nome da Guilda:</label><input type="text" id="inputNomeGuilda" class="search-box" oninput="salvarDadosClan()"></div>
-            <div><label style="font-size: 13px; font-weight: bold;">Nome do Líder:</label><input type="text" id="inputNomeLider" class="search-box" oninput="salvarDadosClan()"></div>
-            <div><label style="font-size: 13px; font-weight: bold;">Saudação:</label><input type="text" id="inputTextoSaudacao" class="search-box" oninput="salvarDadosClan()"></div>
-        </div>
-        <div style="margin-top: 20px; padding: 12px; background: var(--box-bg); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px;">
-            💡 <strong>Exemplo no Zap:</strong><code id="exemploZapPreview" style="color: #007bff; display: block; margin-top: 5px; white-space: pre-wrap;"></code>
-        </div>
-    </div>
-
-    <!-- ABA 7: MODO DEV -->
-    <div id="abaDev" class="tab-content">
-        <h3>👨‍💻 Editor de Código (Auto-Commit)</h3>
-        
-        <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-            <input type="password" id="inputTokenGit" class="search-box" placeholder="Digite seu Token do GitHub..." style="margin-bottom:0; flex:1;" oninput="salvarTokenGitLocal()">
-            <button onclick="carregarCodigo()" class="action-btn" style="background:#007bff; margin:0; width:auto; padding:8px 15px;">Carregar</button>
-            <button onclick="limparTokenGitLocal()" class="action-btn" style="background:#dc3545; margin:0; width:auto; padding:8px 12px;" title="Remover Token Salvo">🗑️</button>
-        </div>
-
-        <textarea id="editorCodigo" placeholder="O código fonte aparecerá aqui após validar o Token..." style="height: 320px; font-family: monospace; font-size: 12px; white-space: pre; display:none;"></textarea>
-        
-        <div id="boxSalvar" style="display:none; margin-top: 15px;">
-            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Correção de parsing de nomes e sistema)">
-            <button onclick="commitarCodigo()" class="action-btn" style="background:#28a745; margin-top: 5px;">🚀 Fazer Commit Direto no GitHub</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    const DONO_DO_REPO = "RamboFetBB";
-    const NOME_DO_REPO = "GvG-automatizada-pocket-contest";
-    const CAMINHO_ARQUIVO = "index.html";
-    const BRANCH_GIT = "main";
-
-    let arquivoSha = "";
-    let textoEscalaCache = "";
-    let pag = { sis: 1, log: 1 };
-    let subAbaAtualPessoas = 'membros';
-    const turnos = ['Sáb Tarde', 'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb Manhã'];
-
-    document.getElementById('listaTexto').addEventListener('input', processarETocalhar);
-    window.onload = () => {
-        carregarTema(); carregarClan(); 
-        sanitizarBanco();
-        renderizarHistorico(); renderizarLogs(); renderizarNotas();
-        renderizarComparativoMensal(); carregarTokenGitLocal();
-        renderizarRanking();
-        atualizarStatusPremiacao(); setInterval(atualizarStatusPremiacao, 1000);
-    };
-
-    function alternarTema() {
-        let novo = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', novo);
-        localStorage.setItem('gvg_tema', novo);
-        document.querySelector('.theme-btn').innerText = novo === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro';
-    }
-    function carregarTema() {
-        let salvo = localStorage.getItem('gvg_tema') || 'light';
-        document.documentElement.setAttribute('data-theme', salvo);
-        document.querySelector('.theme-btn').innerText = salvo === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro';
-    }
-
-    function salvarDadosClan() {
-        localStorage.setItem('gvg_nome_guilda', document.getElementById('inputNomeGuilda').value.trim());
-        localStorage.setItem('gvg_nome_lider', document.getElementById('inputNomeLider').value.trim());
-        localStorage.setItem('gvg_texto_saudacao', document.getElementById('inputTextoSaudacao').value);
-        atualizarPreview(); renderizarNotas();
-    }
-    function carregarClan() {
-        document.getElementById('inputNomeGuilda').value = localStorage.getItem('gvg_nome_guilda') || '';
-        document.getElementById('inputNomeLider').value = localStorage.getItem('gvg_nome_lider') || '';
-        document.getElementById('inputTextoSaudacao').value = localStorage.getItem('gvg_texto_saudacao') || 'Olá guilda [Guilda], segue:';
-        atualizarPreview();
-    }
-    function atualizarPreview() {
-        document.getElementById('exemploZapPreview').innerText = `${obterCabecalhoLider()}...`;
-    }
-    function obterCabecalhoLider() {
-        let lider = localStorage.getItem('gvg_nome_lider') || 'Líder';
-        let guilda = localStorage.getItem('gvg_nome_guilda') || 'Guilda';
-        let saudacao = (localStorage.getItem('gvg_texto_saudacao') || 'Olá guilda [Guilda], segue:').replace(/\[Guilda\]/g, guilda);
-        return `*${lider}*: ${saudacao}\n\n`;
-    }
-
-    function salvarTokenGitLocal() {
-        let token = document.getElementById('inputTokenGit').value.trim();
-        if(token) localStorage.setItem('gvg_git_token', token);
-        else localStorage.removeItem('gvg_git_token');
-    }
-    function carregarTokenGitLocal() {
-        let tokenSalvo = localStorage.getItem('gvg_git_token') || '';
-        if(tokenSalvo) document.getElementById('inputTokenGit').value = tokenSalvo;
-    }
-    function limparTokenGitLocal() {
-        localStorage.removeItem('gvg_git_token');
-        document.getElementById('inputTokenGit').value = '';
-        alert('Token removido do armazenamento local!');
-    }
-
-    function marcarComoEnviado() {
-        localStorage.setItem('gvg_ultimo_envio_timestamp', new Date().getTime());
-        let btn = document.getElementById('btnMarcarEnviado');
-        btn.innerText = "✨ Salvo!"; setTimeout(() => btn.innerText = "✅ Já Enviei", 1500);
-        atualizarStatusPremiacao();
-    }
-    function atualizarStatusPremiacao() {
-        let agora = new Date(), dia = agora.getDay(), hora = agora.getHours();
-        let turnoNome = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"][dia];
-        if(dia === 6) turnoNome = hora < 11 ? "Sáb Manhã" : (hora < 18 ? "Sáb Tarde (Em breve)" : "Sáb Tarde");
-
-        let inicioJanela = new Date(agora);
-        inicioJanela.setHours(dia === 6 && hora >= 18 ? 18 : (dia === 6 && hora >= 11 ? 11 : 1), 0, 0, 0);
-        if(hora < 1 && dia !== 6) inicioJanela.setDate(inicioJanela.getDate() - 1);
-
-        let ultimoEnvio = parseInt(localStorage.getItem('gvg_ultimo_envio_timestamp')) || 0;
-        let enviado = ultimoEnvio >= inicioJanela.getTime();
-
-        let target = new Date(agora);
-        if(enviado) {
-            target.setDate(target.getDate() + 1); target.setHours(1,0,0,0);
-        } else {
-            target.setHours(dia === 6 && hora < 11 ? 11 : (dia === 6 && hora >= 11 && hora < 18 ? 18 : 1), 0,0,0);
-            if(hora >= target.getHours()) target.setDate(target.getDate() + 1);
-        }
-
-        let diff = target - agora;
-        let timerStr = enviado ? "✅ Premiação enviada! Próxima liberação em: " : "⏳ Libera em: ";
-        document.getElementById('bannerProximoTurno').style.display = 'flex';
-        document.getElementById('txtTurnoNome').innerText = turnoNome;
-        document.getElementById('txtTurnoTimer').innerText = timerStr + formatarMs(diff);
-    }
-    function formatarMs(ms) {
-        if(ms < 0) return "00h 00m 00s";
-        let s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
-        return `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s%60).padStart(2,'0')}s`;
-    }
-
-    function alternarAba(e, id) {
-        document.querySelectorAll('.tab-content, .tab-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active');
-        if(id === 'abaComparativo') renderizarComparativoMensal();
-        if(id === 'abaRanking') renderizarRanking();
-    }
-
-    const getBanco = () => JSON.parse(localStorage.getItem('gvg_banco_jogadores')) || {};
-    const saveBanco = (dados) => localStorage.setItem('gvg_banco_jogadores', JSON.stringify(dados));
-
-    const getLogs = () => JSON.parse(localStorage.getItem('gvg_historico_logs')) || [];
-    const saveLogs = (dados) => localStorage.setItem('gvg_historico_logs', JSON.stringify(dados));
-
-    const getNotas = () => JSON.parse(localStorage.getItem('gvg_notas_prontas')) || [];
-    const saveNotas = (dados) => localStorage.setItem('gvg_notas_prontas', JSON.stringify(dados));
-
-    function encontrarChaveBanco(banco, nome) {
-        if (!nome) return '';
-        let nomeTrim = nome.trim();
-        let existente = Object.keys(banco).find(k => k.trim().toLowerCase() === nomeTrim.toLowerCase());
-        return existente || nomeTrim;
-    }
-
-    // SANITIZAÇÃO AUTOMÁTICA DE DADOS CORROMPIDOS NO LOCALSTORAGE
-    function sanitizarBanco() {
-        let banco = getBanco();
-        let alterado = false;
-        let novoBanco = {};
-
-        Object.keys(banco).forEach(chaveAntiga => {
-            let item = banco[chaveAntiga];
-            let nomeLimpo = chaveAntiga;
-            let ehSistema = item.isSistema || false;
-            let pontos = item.pontos || 0;
-
-            if (/\bsistema\b/i.test(nomeLimpo)) {
-                ehSistema = true;
-                nomeLimpo = nomeLimpo.replace(/\bsistema\b/gi, '').trim();
-            }
-
-            let matchNum = nomeLimpo.match(/^(.+?)\s+([-\d]+)$/);
-            if (matchNum) {
-                nomeLimpo = matchNum[1].trim();
-                let ptsExtraidos = parseInt(matchNum[2], 10);
-                if (pontos === 0 && !isNaN(ptsExtraidos)) {
-                    pontos = ptsExtraidos;
-                }
-            }
-
-            if (!nomeLimpo) return;
-
-            let chaveExistente = Object.keys(novoBanco).find(k => k.trim().toLowerCase() === nomeLimpo.toLowerCase());
-            let chaveFinal = chaveExistente || nomeLimpo;
-
-            if (!novoBanco[chaveFinal]) {
-                novoBanco[chaveFinal] = { participacoes: 0, pontos: 0, isSistema: ehSistema };
-            }
-            novoBanco[chaveFinal].participacoes += (item.participacoes || 0);
-            novoBanco[chaveFinal].pontos += pontos;
-            novoBanco[chaveFinal].isSistema = novoBanco[chaveFinal].isSistema || ehSistema;
-
-            if (chaveAntiga !== chaveFinal || banco[chaveAntiga].pontos !== pontos || banco[chaveAntiga].isSistema !== ehSistema) {
-                alterado = true;
+    function agruparPorTurno(texto) {
+        let linhas = texto.split('\n');
+        let turnosMap = {};
+        linhas.forEach(l => {
+            let m = l.match(/• \*(.*?)\*(?: 🛡️)? - (.*?) \(([-\d]+) pts\)/);
+            if(m) {
+                let nome = m[1];
+                let turno = m[2];
+                let pts = m[3];
+                if(!turnosMap[turno]) turnosMap[turno] = [];
+                turnosMap[turno].push({ nome, pts });
             }
         });
-
-        if (alterado) {
-            saveBanco(novoBanco);
-            console.log("Banco de dados sanitizado e unificado.");
-        }
+        return turnosMap;
     }
 
-    function processarETocalhar() {
-        let text = document.getElementById('listaTexto').value;
-        let resultado = document.getElementById('resultado');
-        let alerta = document.getElementById('alertaInvalido');
-        
-        let jogadores = text.split('\n')
-            .filter(linha => linha.includes('  '))
-            .map(linha => {
-                let p = linha.split('  ');
-                return { nome: p[0].trim(), pts: parseInt(p[1]) || 0 };
-            })
-            .filter(j => j.nome !== '');
-
-        if (jogadores.length === 0) {
-            resultado.innerHTML = 'A escala aparecerá aqui assim que colar a lista...';
-            alerta.style.display = 'none';
-            document.getElementById('botoesZap').style.display = 'none';
-            return;
-        }
-
-        let temInvalido = jogadores.some(j => j.pts < 0 || isNaN(j.pts));
-        alerta.style.display = temInvalido ? 'block' : 'none';
-
-        let banco = getBanco();
-        let bancoOriginal = JSON.parse(JSON.stringify(banco));
-        let mudou = false;
-
-        jogadores.forEach(j => {
-            let chave = encontrarChaveBanco(banco, j.nome);
-            if(chave !== j.nome) { j.nome = chave; }
-            if (!banco[chave]) {
-                banco[chave] = { participacoes: 0, pontos: 0, isSistema: false };
-                mudou = true;
-            }
-        });
-
-        if (document.getElementById('chkApenasSistema').checked) {
-            jogadores = jogadores.filter(j => {
-                let chave = encontrarChaveBanco(banco, j.nome);
-                return banco[chave] && banco[chave].isSistema;
-            });
-        }
-
-        let soma = jogadores.reduce((acc, j) => acc + j.pts, 0);
-        let mediaBase = jogadores.length > 0 ? soma / jogadores.length : 0;
-        
-        jogadores.forEach(j => { j.peso = j.pts + ((banco[encontrarChaveBanco(banco, j.nome)].participacoes || 0) * 10); });
-        jogadores.sort((a, b) => b.peso - a.peso);
-
-        let config = [
-            { turnos: [0, 1, 3], qtd: Math.ceil(jogadores.length * 0.40) },
-            { turnos: [2, 4], qtd: Math.ceil(jogadores.length * 0.30) },
-            { turnos: [5, 6, 7], qtd: jogadores.length - Math.ceil(jogadores.length * 0.40) - Math.ceil(jogadores.length * 0.30) }
-        ];
-
-        let escala = [];
-        let indexCorrente = 0;
-        config.forEach(grupo => {
-            for (let i = 0; i < grupo.qtd && indexCorrente < jogadores.length; i++) {
-                let t = grupo.turnos[i % grupo.turnos.length];
-                let playerNome = jogadores[indexCorrente].nome;
-                let chaveReal = encontrarChaveBanco(banco, playerNome);
-                escala.push({ nome: playerNome, turno: turnos[t], pts: jogadores[indexCorrente].pts, isSistema: banco[chaveReal]?.isSistema });
-                indexCorrente++;
-            }
-        });
-
-        escala.sort((a, b) => turnos.indexOf(a.turno) - turnos.indexOf(b.turno));
-
-        let resHTML = `<strong>Total:</strong> ${jogadores.length} jogadores | <strong>Soma:</strong> ${soma} pts | <strong>Média:</strong> ${mediaBase.toFixed(1)}<br><br>`;
-        let clipboardText = ``;
-
-        escala.forEach(j => {
-            let nomeTag = j.isSistema ? `${j.nome} 🛡️` : j.nome;
-            resHTML += `• <b>${nomeTag}</b> - ${j.turno} <i>(${j.pts} pts)</i><br>`;
-            clipboardText += `• *${nomeTag}* - ${j.turno} (${j.pts} pts)\n`;
-        });
-
-        resultado.innerHTML = resHTML;
-        textoEscalaCache = clipboardText;
-
-        if (JSON.stringify(banco) !== JSON.stringify(bancoOriginal) || text.length > 20) {
-            jogadores.forEach(j => {
-                let chave = encontrarChaveBanco(banco, j.nome);
-                banco[chave].participacoes += 1;
-                banco[chave].pontos += j.pts;
-            });
-            saveBanco(banco);
-            salvarLog(clipboardText, jogadores.length);
-            renderizarHistorico();
-            renderizarLogs();
-            renderizarRanking();
-        }
-
-        document.getElementById('botoesZap').style.display = 'block';
-    }
-
-    function salvarLog(texto, total) {
+    function compartilharDiaZap(logId, turno) {
         let logs = getLogs();
-        let id = Date.now();
-        let df = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+        let log = logs.find(l => String(l.id) === String(logId));
+        if(!log) return;
         
-        let mesExtenso = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(new Date());
-
-        logs.unshift({ id, data: df.format(new Date()), texto, total, timestamp: id, mesRef: mesExtenso.charAt(0).toUpperCase() + mesExtenso.slice(1) });
-        if(logs.length > 50) logs.pop();
-        saveLogs(logs);
-    }
-
-    function alternarSubAbaPessoas(tipo) {
-        subAbaAtualPessoas = tipo;
-        document.getElementById('btnSubMembros').classList.remove('active');
-        document.getElementById('btnSubSistema').classList.remove('active');
-        if(tipo==='membros') document.getElementById('btnSubMembros').classList.add('active');
-        else document.getElementById('btnSubSistema').classList.add('active');
-        pag.sis = 1;
-        renderizarHistorico();
-    }
-
-    function adicionarManualSistema() {
-        let nome = document.getElementById('novoNomeSistema').value.trim();
-        if(!nome) return;
-        let banco = getBanco();
-        let chave = encontrarChaveBanco(banco, nome);
+        let turnosMap = agruparPorTurno(log.texto);
+        let jogadores = turnosMap[turno] || [];
         
-        if(!banco[chave]) {
-            banco[chave] = { participacoes: 0, pontos: 0, isSistema: true };
-        } else {
-            banco[chave].isSistema = true;
-        }
-        saveBanco(banco);
-        document.getElementById('novoNomeSistema').value = '';
-        renderizarHistorico(); renderizarRanking();
-    }
-
-    function atualizarBadgesCount() {
-        let b = getBanco();
-        let chaves = Object.keys(b);
-        let countSys = 0; let countMembros = 0;
-        chaves.forEach(k => {
-            if(b[k].isSistema) countSys++;
-            else countMembros++;
+        let textoZap = `📢 *Aviso GvG - ${turno}*\n\n`;
+        textoZap += `Olá equipe! Segue a escala do dia *${turno}*:\n\n`;
+        
+        jogadores.forEach(j => {
+            textoZap += `- ${j.nome} (${j.pts})\n`;
         });
-        document.getElementById('countSistema').innerText = countSys;
-        document.getElementById('countMembros').innerText = countMembros;
-        document.getElementById('countTotal').innerText = countSys + countMembros;
-    }
-
-    function renderizarHistorico() {
-        atualizarBadgesCount();
-        let container = document.getElementById('listaHistoricoContainer');
-        container.innerHTML = '';
-        let b = getBanco();
-        let filtro = document.getElementById('filtroJogador').value.toLowerCase();
-        let it = parseInt(document.getElementById('itensPorPaginaSistema').value);
         
-        let list = Object.keys(b).filter(n => n.toLowerCase().includes(filtro));
+        textoZap += `\nPreparem-se para a entrega dos prêmios!`;
         
-        if(subAbaAtualPessoas === 'membros') {
-            list = list.filter(n => !b[n].isSistema);
-        } else {
-            list = list.filter(n => b[n].isSistema);
-        }
-
-        list.sort();
-
-        let tp = Math.ceil(list.length / it);
-        let start = (pag.sis - 1) * it;
-        let paged = list.slice(start, start + it);
-
-        paged.forEach(n => {
-            let p = b[n];
-            let div = document.createElement('div');
-            div.className = 'player-item';
-            div.innerHTML = `
-                <div>
-                    <strong>${n}</strong> ${p.isSistema ? '<span class="badge-sys">🛡️</span>' : ''}<br>
-                    <span style="font-size:12px; opacity:0.7">Participações: ${p.participacoes} | Pts Totais: ${p.pontos}</span>
-                </div>
-                <div class="btn-group">
-                    <button onclick="toggleSistema('${n}')" class="btn-icon ${p.isSistema ? 'btn-del' : 'btn-save'}" title="${p.isSistema ? 'Tirar do Sistema' : 'Por no Sistema'}">🛡️</button>
-                    <button onclick="editarJogador('${n}')" class="btn-icon" style="background:#ffc107;" title="Editar Nome">✏️</button>
-                    <button onclick="removerJogador('${n}')" class="btn-icon btn-del" title="Excluir Jogador">🗑️</button>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-        renderizarPaginacao('paginacaoSistema', tp, pag.sis, (np) => { pag.sis = np; renderizarHistorico(); });
+        let textoFinal = obterCabecalhoLider() + textoZap;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textoFinal)}`, '_blank');
     }
-
-    function toggleSistema(n) { let b = getBanco(); b[n].isSistema = !b[n].isSistema; saveBanco(b); renderizarHistorico(); renderizarRanking(); }
-    
-    function editarJogador(n) {
-        let b = getBanco();
-        let novoNome = prompt("Editar nome do jogador:", n);
-        if(novoNome && novoNome.trim() !== "" && novoNome !== n) {
-            let chave = encontrarChaveBanco(b, novoNome);
-            if(b[chave]) {
-                alert("Já existe um jogador com este nome!");
-                return;
-            }
-            b[novoNome] = b[n];
-            delete b[n];
-            saveBanco(b);
-            renderizarHistorico(); renderizarRanking();
-        }
-    }
-    
-    function removerJogador(n) { if(confirm(`Excluir ${n}?`)) { let b = getBanco(); delete b[n]; saveBanco(b); renderizarHistorico(); renderizarRanking(); } }
-    function limparBancoJogadores() { if(confirm("Certeza? Apagará todos!")) { saveBanco({}); renderizarHistorico(); renderizarRanking(); } }
 
     function renderizarLogs() {
-        let container = document.getElementById('listaLogsContainer');
-        container.innerHTML = '';
         let logs = getLogs();
         let filtro = document.getElementById('filtroLogs').value.toLowerCase();
-        let it = parseInt(document.getElementById('itensPorPaginaLogs').value);
+        let container = document.getElementById('listaLogsContainer');
+        let perPage = parseInt(document.getElementById('itensPorPaginaLogs').value);
+        container.innerHTML = '';
 
-        let filtrados = logs.filter(l => l.texto.toLowerCase().includes(filtro) || l.data.includes(filtro));
-        let tp = Math.ceil(filtrados.length / it);
-        let start = (pag.log - 1) * it;
-        let itensPagina = filtrados.slice(start, start + it);
+        if(filtro) {
+            logs = logs.filter(l => l.data.toLowerCase().includes(filtro) || l.texto.toLowerCase().includes(filtro));
+        }
+
+        let totalPags = Math.ceil(logs.length / perPage) || 1;
+        if(pag.log > totalPags) pag.log = totalPags;
+        
+        let inicio = (pag.log - 1) * perPage;
+        let itensPagina = logs.slice(inicio, inicio + perPage);
+
+        if (itensPagina.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding: 20px; opacity:0.6;">Nenhum histórico encontrado.</div>`;
+        }
 
         itensPagina.forEach(log => {
             let div = document.createElement('div');
             div.className = 'history-item';
+            
+            let turnosMap = agruparPorTurno(log.texto);
+            let botoesDias = '';
+            Object.keys(turnosMap).forEach(turno => {
+                botoesDias += `<button onclick="compartilharDiaZap('${log.id}', '${turno}')" class="btn-icon" style="background:#25d366; color:#fff; font-weight:bold; margin-right:5px; margin-top:5px; padding:4px 8px; border-radius:4px;">📢 ${turno}</button>`;
+            });
+
             div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:8px; width: 100%;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; width:100%;">
                     <strong>📅 ${log.data} (${log.total} Players)</strong>
-                    <div class="btn-group">
-                        <button onclick="copiarTextoLog(${log.id}, 'adm')" class="btn-icon" style="background:#007bff;" title="Copiar com Pontos (ADM)">📋 ADM</button>
-                        <button onclick="copiarTextoLog(${log.id}, 'player')" class="btn-icon" style="background:#17a2b8;" title="Copiar sem Pontos (Players)">📋 Players</button>
-                        <button onclick="excluirLog(${log.id})" class="btn-icon btn-del" title="Excluir Histórico">🗑️</button>
-                    </div>
+                    <button onclick="excluirLog(${log.id})" class="btn-icon btn-del">🗑️</button>
                 </div>
-                <div style="font-size:12px; white-space:pre-wrap; max-height:100px; overflow-y:auto; background:var(--box-bg); padding:6px; border-radius:4px; width: 100%; box-sizing: border-box;">${log.texto}</div>
+                <div style="font-size:12px; white-space:pre-wrap; max-height:100px; overflow-y:auto; background:var(--box-bg); padding:6px; border-radius:4px; width:100%; box-sizing:border-box;">${log.texto}</div>
+                <div style="margin-top: 8px; display: flex; flex-wrap: wrap;">
+                    ${botoesDias}
+                </div>
             `;
             container.appendChild(div);
         });
-        renderizarPaginacao('paginacaoLogs', tp, pag.log, (np) => { pag.log = np; renderizarLogs(); });
+        renderizarPaginacao('paginacaoLogs', totalPags, pag.log, (p) => { pag.log = p; renderizarLogs(); });
     }
 
-    function copiarTextoLog(id, tipo) {
-        let logs = getLogs();
-        let log = logs.find(l => l.id === id);
-        if (!log) return;
+    function excluirLog(id) {
+        if(confirm('Tem certeza que deseja apagar este rodízio do histórico?')) {
+            let logs = getLogs().filter(l => l.id !== id);
+            saveLogs(logs); renderizarLogs(); renderizarComparativoMensal();
+        }
+    }
+    
+    function limparLogs() {
+        if(confirm('Isso apagará TODO o histórico. Tem certeza?')) {
+            saveLogs([]); renderizarLogs(); renderizarComparativoMensal();
+        }
+    }
 
-        let texto = log.texto;
-        if (tipo === 'player') {
-            texto = texto.replace(/\s*\([-\d]+\s*pts\)/gi, '');
+    function limparBancoJogadores() {
+        if(confirm('Tem certeza que deseja apagar TODOS os jogadores e pontuações do banco?')) {
+            saveBanco({}); renderizarHistorico(); renderizarComparativoMensal();
+        }
+    }
+
+    function exportarBackup() {
+        let dados = { banco: getBanco(), logs: getLogs(), notas: getNotas(), config: { guilda: localStorage.getItem('gvg_nome_guilda'), lider: localStorage.getItem('gvg_nome_lider'), saudacao: localStorage.getItem('gvg_texto_saudacao') } };
+        let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dados));
+        let dlAnchorElem = document.createElement('a');
+        dlAnchorElem.setAttribute("href", dataStr);
+        dlAnchorElem.setAttribute("download", "backup_gvg.json");
+        dlAnchorElem.click();
+    }
+    
+    function importarBackup(event) {
+        let file = event.target.files[0];
+        if(!file) return;
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                let json = JSON.parse(e.target.result);
+                if(json.banco) saveBanco(json.banco);
+                if(json.logs) saveLogs(json.logs);
+                if(json.notas) saveNotas(json.notas);
+                if(json.config) {
+                    localStorage.setItem('gvg_nome_guilda', json.config.guilda || '');
+                    localStorage.setItem('gvg_nome_lider', json.config.lider || '');
+                    localStorage.setItem('gvg_texto_saudacao', json.config.saudacao || '');
+                    carregarClan();
+                }
+                sanitizarBanco();
+                renderizarHistorico(); renderizarLogs(); renderizarNotas(); renderizarComparativoMensal();
+                alert('Backup importado com sucesso!');
+            } catch(err) {
+                alert('Erro ao importar arquivo. Certifique-se de que é o arquivo correto.');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function renderizarPaginacao(containerId, total, atual, callback) {
+        let c = document.getElementById(containerId);
+        c.innerHTML = '';
+        if(total <= 1) return;
+        
+        let start = Math.max(1, atual - 2);
+        let end = Math.min(total, atual + 2);
+        
+        if (start > 1) {
+            let b = document.createElement('button'); b.className = 'page-btn'; b.innerText = '1';
+            b.onclick = () => callback(1); c.appendChild(b);
+            if (start > 2) { let s = document.createElement('span'); s.innerText='...'; c.appendChild(s); }
         }
         
-        let textoFinal = obterCabecalhoLider() + texto;
-
-        navigator.clipboard.writeText(textoFinal).then(() => {
-            let label = tipo === 'adm' ? 'ADM (com pontos)' : 'Players (sem pontos)';
-            alert(`Copiado formato ${label} com sucesso!`);
-        }).catch(err => {
-            alert('Erro ao copiar: ' + err);
-        });
-    }
-
-    function excluirLog(id) { if(confirm("Apagar este registro?")) { let l = getLogs(); saveLogs(l.filter(x => x.id !== id)); renderizarLogs(); } }
-    function limparLogs() { if(confirm("Apagar TUDO?")) { saveLogs([]); renderizarLogs(); } }
-
-    function renderizarPaginacao(idCont, tp, pa, callback) {
-        let c = document.getElementById(idCont);
-        c.innerHTML = '';
-        if(tp <= 1) return;
-        for(let i=1; i<=tp; i++){
-            let b = document.createElement('button');
-            b.className = 'page-btn' + (i === pa ? ' active' : '');
-            b.innerText = i;
-            b.onclick = () => callback(i);
-            c.appendChild(b);
+        for(let i=start; i<=end; i++) {
+            let b = document.createElement('button'); b.className = `page-btn ${i===atual?'active':''}`; b.innerText = i;
+            b.onclick = () => callback(i); c.appendChild(b);
+        }
+        
+        if (end < total) {
+            if (end < total - 1) { let s = document.createElement('span'); s.innerText='...'; c.appendChild(s); }
+            let b = document.createElement('button'); b.className = 'page-btn'; b.innerText = total;
+            b.onclick = () => callback(total); c.appendChild(b);
         }
     }
 
-    function renderizarNotas() {
-        let container = document.getElementById('listaNotasContainer');
-        container.innerHTML = '';
-        let notas = getNotas();
-        notas.forEach(n => {
-            let div = document.createElement('div');
-            div.className = 'note-item';
-            div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                    <strong>📌 ${n.titulo}</strong>
-                    <div class="btn-group">
-                        <button onclick="copiarNota(${n.id})" class="btn-icon btn-save" title="Copiar p/ Zap">📋</button>
-                        <button onclick="excluirNota(${n.id})" class="btn-icon btn-del" title="Excluir">🗑️</button>
-                    </div>
-                </div>
-                <div style="font-size:12px; white-space:pre-wrap;">${n.texto}</div>
-            `;
-            container.appendChild(div);
+    function processarDadosComparativo() {
+        let logs = getLogs();
+        let banco = getBanco();
+        let analise = {}; 
+        let mesesEncontrados = new Set();
+        
+        logs.forEach(log => {
+            let ptMatch = log.data.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+            if(!ptMatch) return;
+            let chaveMes = `${ptMatch[2]}/${ptMatch[3]}`; 
+            mesesEncontrados.add(chaveMes);
+
+            let linhas = log.texto.split('\n');
+            linhas.forEach(l => {
+                let m = l.match(/• \*(.*?)\*(?: 🛡️)? - .*? \(([-\d]+) pts\)/);
+                if(m) {
+                    let nomeOriginal = m[1].trim();
+                    let pts = parseInt(m[2], 10);
+                    let chaveNome = encontrarChaveBanco(banco, nomeOriginal);
+
+                    if(!analise[chaveNome]) analise[chaveNome] = { meses: {}, total: 0 };
+                    if(!analise[chaveNome].meses[chaveMes]) analise[chaveNome].meses[chaveMes] = 0;
+                    
+                    analise[chaveNome].meses[chaveMes] += pts;
+                    analise[chaveNome].total += pts;
+                }
+            });
         });
+
+        return {
+            dados: analise,
+            meses: Array.from(mesesEncontrados).sort((a,b) => {
+                let [m1, y1] = a.split('/'); let [m2, y2] = b.split('/');
+                return new Date(y2, m2-1) - new Date(y1, m1-1);
+            })
+        };
+    }
+
+    function renderizarComparativoMensal() {
+        let result = processarDadosComparativo();
+        let filtroMes = document.getElementById('selectFiltroMesComp').value;
+        let select = document.getElementById('selectFiltroMesComp');
+        
+        let optionsHtml = `<option value="TODOS">📅 Visão Geral (Todos os Meses)</option>`;
+        result.meses.forEach(m => { optionsHtml += `<option value="${m}">${m}</option>`; });
+        select.innerHTML = optionsHtml;
+        select.value = filtroMes || "TODOS";
+        if(!result.meses.includes(filtroMes) && filtroMes !== "TODOS") select.value = "TODOS";
+        
+        filtroMes = select.value;
+
+        let thHtml = `<th>Jogador</th>`;
+        if (filtroMes === "TODOS") {
+            result.meses.forEach(m => { thHtml += `<th>${m}</th>`; });
+            thHtml += `<th>Total Geral</th>`;
+        } else {
+            thHtml += `<th>Total no Mês (${filtroMes})</th>`;
+        }
+        document.getElementById('tableHeaderComp').innerHTML = thHtml;
+
+        let tbody = document.getElementById('tableBodyComp');
+        tbody.innerHTML = '';
+
+        let jogadoresArr = Object.keys(result.dados).map(nome => ({
+            nome: nome,
+            ...result.dados[nome]
+        }));
+
+        if (filtroMes !== "TODOS") {
+            jogadoresArr = jogadoresArr.filter(j => j.meses[filtroMes] && j.meses[filtroMes] > 0);
+            jogadoresArr.sort((a, b) => (b.meses[filtroMes] || 0) - (a.meses[filtroMes] || 0));
+        } else {
+            jogadoresArr.sort((a, b) => b.total - a.total);
+        }
+
+        if(jogadoresArr.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="100%" style="text-align:center; opacity:0.6;">Nenhum dado encontrado.</td></tr>`;
+            return;
+        }
+
+        jogadoresArr.forEach(j => {
+            let tr = document.createElement('tr');
+            let tdHtml = `<td><strong>${j.nome}</strong></td>`;
+            
+            if (filtroMes === "TODOS") {
+                result.meses.forEach(m => {
+                    let pts = j.meses[m] || 0;
+                    tdHtml += `<td class="${pts > 0 ? 'val-pts' : 'val-zero'}">${pts > 0 ? pts : '-'}</td>`;
+                });
+                tdHtml += `<td class="val-pts" style="color:#007bff;">${j.total}</td>`;
+            } else {
+                let pts = j.meses[filtroMes] || 0;
+                tdHtml += `<td class="val-pts">${pts}</td>`;
+            }
+
+            tr.innerHTML = tdHtml;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function enviarZapComparativo() {
+        let result = processarDadosComparativo();
+        let filtroMes = document.getElementById('selectFiltroMesComp').value;
+        let jogadoresArr = Object.keys(result.dados).map(nome => ({ nome: nome, ...result.dados[nome] }));
+        
+        let texto = `📊 *Resumo de Pontuação - ${filtroMes === "TODOS" ? "Geral" : filtroMes}*\n\n`;
+        
+        if (filtroMes !== "TODOS") {
+            jogadoresArr = jogadoresArr.filter(j => j.meses[filtroMes] && j.meses[filtroMes] > 0);
+            jogadoresArr.sort((a, b) => (b.meses[filtroMes] || 0) - (a.meses[filtroMes] || 0));
+            jogadoresArr.forEach(j => { texto += `• ${j.nome}: ${j.meses[filtroMes]} pts\n`; });
+        } else {
+            jogadoresArr.sort((a, b) => b.total - a.total);
+            jogadoresArr.forEach(j => { texto += `• ${j.nome}: ${j.total} pts\n`; });
+        }
+
+        if(jogadoresArr.length === 0) {
+            alert('Não há dados para enviar.'); return;
+        }
+
+        let finalStr = obterCabecalhoLider() + texto;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(finalStr)}`, '_blank');
     }
 
     function salvarNotaPronta() {
         let tit = document.getElementById('tituloNota').value.trim();
-        let txt = document.getElementById('conteudoNota').value.trim();
-        if(!tit || !txt) return alert("Preencha título e texto!");
+        let cont = document.getElementById('conteudoNota').value.trim();
+        if(!tit || !cont) { alert('Preencha título e conteúdo!'); return; }
+
         let notas = getNotas();
-        notas.push({ id: Date.now(), titulo: tit, texto: txt });
+        notas.push({ id: Date.now(), titulo: tit, conteudo: cont });
         saveNotas(notas);
-        document.getElementById('tituloNota').value = '';
-        document.getElementById('conteudoNota').value = '';
+        document.getElementById('tituloNota').value = ''; document.getElementById('conteudoNota').value = '';
         renderizarNotas();
     }
-    function copiarNota(id) {
+
+    function renderizarNotas() {
+        let notas = getNotas();
+        let cont = document.getElementById('listaNotasContainer');
+        cont.innerHTML = '';
+        if(notas.length === 0) {
+            cont.innerHTML = `<div style="text-align:center; padding: 20px; opacity:0.6;">Nenhum aviso salvo.</div>`; return;
+        }
+        notas.forEach(n => {
+            let div = document.createElement('div');
+            div.className = 'note-item';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>📌 ${n.titulo}</strong>
+                    <button onclick="excluirNota(${n.id})" class="btn-icon btn-del">🗑️</button>
+                </div>
+                <div style="font-size:13px; margin-top:8px; white-space:pre-wrap; opacity:0.9;">${n.conteudo}</div>
+                <button onclick="enviarNotaZap(${n.id})" class="action-btn" style="background:#25d366; padding:6px; margin-top:10px; font-size:13px;">📤 Enviar Aviso no Zap</button>
+            `;
+            cont.appendChild(div);
+        });
+    }
+
+    function excluirNota(id) {
+        let notas = getNotas().filter(n => n.id !== id);
+        saveNotas(notas); renderizarNotas();
+    }
+
+    function enviarNotaZap(id) {
         let nota = getNotas().find(n => n.id === id);
-        if(nota) {
-            let texto = obterCabecalhoLider() + "\n" + nota.texto;
-            navigator.clipboard.writeText(texto).then(() => alert("Copiado com cabeçalho da Guilda!"));
+        if(!nota) return;
+        let finalStr = obterCabecalhoLider() + `📢 *${nota.titulo}*\n\n${nota.conteudo}`;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(finalStr)}`, '_blank');
+    }
+
+    async function carregarCodigo() {
+        const token = document.getElementById('inputTokenGit').value.trim();
+        if(!token) { alert("Digite o token do GitHub primeiro!"); return; }
+
+        const url = `https://api.github.com/repos/${DONO_DO_REPO}/${NOME_DO_REPO}/contents/${CAMINHO_ARQUIVO}?ref=${BRANCH_GIT}`;
+        
+        try {
+            const resposta = await fetch(url, {
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+            if (!resposta.ok) throw new Error("Erro ao acessar repositório. Verifique Token, Nome do Repo ou Caminho.");
+
+            const dados = await resposta.json();
+            arquivoSha = dados.sha; 
+            
+            const conteudoDecodificado = decodeURIComponent(escape(atob(dados.content)));
+            
+            document.getElementById('editorCodigo').value = conteudoDecodificado;
+            document.getElementById('editorCodigo').style.display = 'block';
+            document.getElementById('boxSalvar').style.display = 'block';
+            
+            alert("Código carregado com sucesso!");
+        } catch (erro) {
+            alert(erro.message);
         }
     }
-    function excluirNota(id) { let n = getNotas(); saveNotas(n.filter(x => x.id !== id)); renderizarNotas(); }
 
-    function renderizarRanking() {
-        let banco = getBanco();
-        let players = Object.keys(banco).map(nome => {
-            let p = banco[nome];
-            let media = p.participacoes > 0 ? (p.pontos / p.participacoes).toFixed(2) : '0.00';
-            return { nome, pontos: p.pontos || 0, participacoes: p.participacoes || 0, media: parseFloat(media), isSistema: p.isSistema };
+    async function commitarCodigo() {
+        const token = document.getElementById('inputTokenGit').value.trim();
+        const mensagem = document.getElementById('inputMensagemCommit').value.trim() || "Atualização via App Gerenciador";
+        const novoConteudo = document.getElementById('editorCodigo').value;
+
+        if(!token || !novoConteudo || !arquivoSha) {
+            alert("Carregue o código antes de commitar!"); return;
+        }
+
+        const url = `https://api.github.com/repos/${DONO_DO_REPO}/${NOME_DO_REPO}/contents/${CAMINHO_ARQUIVO}`;
+        
+        const conteudoCodificado = btoa(unescape(encodeURIComponent(novoConteudo)));
+
+        const body = JSON.stringify({
+            message: mensagem,
+            content: conteudoCodificado,
+            sha: arquivoSha,
+            branch: BRANCH_GIT
         });
 
-        players.sort((a, b) => {
-            if (b.media !== a.media) return b.media - a.media;
-            return b.pontos - a.pontos;
-        });
+        try {
+            document.querySelector('#boxSalvar button').innerText = "Enviando... ⏳";
+            const resposta = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: body
+            });
 
-        let tbody = document.getElementById('tableBodyRanking');
-        tbody.innerHTML = '';
+            if (!resposta.ok) throw new Error("Falha ao salvar no GitHub.");
 
-        if (players.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:15px; opacity:Opa! Como o nosso histórico de mensagens anteriores não foi puxado para esta sessão, eu acabei perdendo o contexto exato do que você havia pedido antes para este arquivo. 
-
-Você poderia me lembrar rapidamente quais foram as atualizações ou novas funcionalidades que você solicitou para este **Gerenciador GvG**? 
-
-Assim que você me confirmar, eu aplico as mudanças diretamente neste código que você anexou e te mando o arquivo `index.html` completo e prontinho!
+            const dados = await resposta.json();
+            arquivoSha = dados.content.sha; 
+            
+            alert("✅ Atualização salva no GitHub com sucesso!");
+            document.getElementById('inputMensagemCommit').value = "";
+        } catch (erro) {
+            alert(erro.message);
+        } finally {
+            document.querySelector('#boxSalvar button').innerText = "🚀 Fazer Commit Direto no GitHub";
+        }
+    }
+</script>
+</body>
+</html>
