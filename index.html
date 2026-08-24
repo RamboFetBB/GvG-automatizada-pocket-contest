@@ -1,1033 +1,1016 @@
 <!DOCTYPE html>
-<html lang="pt-br" data-theme="light">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GvG - Rodízio & Gerenciador</title>
+    <title>GvG Pocket Contest - Gestor de Escala & Rodízio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --bg-color: #f0f2f5; --container-bg: #fff; --text-color: #333;
-            --border-color: #ccc; --tab-bg: #f1f1f1; --tab-text: #555;
-            --box-bg: #f8f9fa; --item-bg: #fff; --item-border: #eee; --input-bg: #fff;
-        }
-        [data-theme="dark"] {
-            --bg-color: #121212; --container-bg: #1e1e1e; --text-color: #e0e0e0;
-            --border-color: #444; --tab-bg: #2d2d2d; --tab-text: #b0b0b0;
-            --box-bg: #252525; --item-bg: #2a2a2a; --item-border: #383838; --input-bg: #2a2a2a;
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 15px; padding-bottom: 70px; background: var(--bg-color); color: var(--text-color); transition: 0.3s; margin: 0; }
-        .container { max-width: 800px; margin: auto; background: var(--container-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .theme-btn { background: none; border: 1px solid var(--border-color); color: var(--text-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
-        .next-turn-banner { background: #007bff; color: white; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
-        .banner-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; flex-wrap: wrap; gap: 5px; }
-        .banner-timer { font-size: 13px; opacity: 0.95; background: rgba(0,0,0,0.15); padding: 4px 8px; border-radius: 4px; display: inline-block; width: fit-content; }
-        .btn-marcar-enviado { background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
-        .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; gap: 3px; overflow-x: auto; padding-bottom: 3px; }
-        .tab-btn { flex: 1; padding: 8px 8px; border: none; background: var(--tab-bg); font-weight: bold; font-size: 11px; cursor: pointer; border-radius: 8px 8px 0 0; color: var(--tab-text); white-space: nowrap; text-align: center; }
-        .tab-btn.active { background: #007bff; color: white; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        textarea, .search-box, .select-per-page { width: 100%; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--input-bg); color: var(--text-color); }
-        textarea { height: 130px; padding: 10px; font-size: 14px; resize: vertical; }
-        .search-box { padding: 8px; margin-bottom: 12px; }
-        button.action-btn { cursor: pointer; padding: 12px; margin-top: 10px; border: none; border-radius: 6px; color: white; font-weight: bold; width: 100%; font-size: 15px; }
-        .result-box { margin-top: 20px; padding: 15px; background: var(--box-bg); border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
-        .alert-box { background: #fff3cd; color: #856404; padding: 10px; border-radius: 6px; border: 1px solid #ffeeba; margin-top: 10px; font-size: 13px; display: none; }
-        [data-theme="dark"] .alert-box { background: #332701; color: #ffda6a; border-color: #664d03; }
-        .controls-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; flex-wrap: wrap; }
-        .select-per-page { padding: 6px; font-size: 13px; cursor: pointer; width: auto; }
-        .player-grid, .history-grid, .notes-grid { min-height: 200px; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: var(--box-bg); }
-        .player-item, .history-item, .note-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--item-border); background: var(--item-bg); margin-bottom: 6px; border-radius: 6px; }
-        .history-item, .note-item { flex-direction: column; align-items: stretch; }
-        .badge-sys { background: #17a2b8; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; margin-top: 3px; }
-        .btn-group { display: flex; gap: 5px; flex-wrap: wrap; }
-        .btn-icon { border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; color: white; }
-        .btn-del { background: #dc3545; } .btn-save { background: #28a745; }
-        .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 15px; }
-        .page-btn { padding: 5px 10px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); cursor: pointer; border-radius: 4px; font-weight: bold; }
-        .page-btn.active { background: #007bff; color: white; border-color: #007bff; }
-        
-        .comp-table-wrapper { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 8px; margin-top: 15px; }
-        .comp-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
-        .comp-table th, .comp-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); }
-        .comp-table th { background: var(--tab-bg); color: var(--text-color); font-weight: bold; }
-        .comp-table tr:nth-child(even) { background: var(--box-bg); }
-        .val-pts { font-weight: bold; color: #28a745; }
-        .val-zero { opacity: 0.4; }
-        .sub-nav-btn { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; background: var(--tab-bg); color: var(--text-color); }
-        .sub-nav-btn.active { background: #007bff; color: white; border-color: #007bff; }
+        .subtab-content { display: none; }
+        .subtab-content.active { display: block; }
     </style>
 </head>
-<body>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col">
 
-<div class="container">
-    <div class="top-bar">
-        <h2 style="margin:0; font-size: 18px;">Gerenciador GvG</h2>
-        <button class="theme-btn" onclick="alternarTema()">🌙 Modo Escuro</button>
-    </div>
-
-    <div id="bannerProximoTurno" class="next-turn-banner" style="display:none;">
-        <div class="banner-header">
-            <span>⏰ Turno Atual: <strong id="txtTurnoNome">Carregando...</strong></span>
-            <button class="btn-marcar-enviado" id="btnMarcarEnviado" onclick="marcarComoEnviado()">✅ Já Enviei</button>
+    <!-- HEADER / NAVIGATION -->
+    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid me-2 fa-shield-halved text-amber-500 text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-wide text-white" id="header-guilda-title">GvG Pocket Contest</h1>
+            </div>
+            <nav class="flex flex-wrap gap-2 text-sm font-medium" id="main-nav">
+                <button onclick="switchTab('rodizio')" class="nav-btn px-3 py-2 rounded-lg bg-amber-600 text-white font-semibold flex items-center gap-2" data-tab="rodizio"><i class="fa-solid fa-calendar-days"></i> Escala & Rodízio</button>
+                <button onclick="switchTab('pessoas')" class="nav-btn px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 flex items-center gap-2" data-tab="pessoas"><i class="fa-solid fa-users"></i> Pessoas</button>
+                <button onclick="switchTab('historico')" class="nav-btn px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 flex items-center gap-2" data-tab="historico"><i class="fa-solid fa-clock-rotate-left"></i> Histórico & Comparativo</button>
+                <button onclick="switchTab('avisos')" class="nav-btn px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 flex items-center gap-2" data-tab="avisos"><i class="fa-solid fa-bullhorn"></i> Mensagens</button>
+                <button onclick="switchTab('config')" class="nav-btn px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 flex items-center gap-2" data-tab="config"><i class="fa-solid fa-gear"></i> Configurações</button>
+                <button onclick="switchTab('dev')" class="nav-btn px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 flex items-center gap-2" data-tab="dev"><i class="fa-solid fa-code"></i> Modo Dev</button>
+            </nav>
         </div>
-        <div id="txtTurnoTimer" class="banner-timer">Calculando tempo...</div>
-    </div>
+    </header>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="alternarAba(event, 'abaRodizio')">📅 Rodízio</button>
-        <button class="tab-btn" onclick="alternarAba(event, 'abaHistorico')">👥 Pessoas (<span id="countTotal">0</span>)</button>
-        <button class="tab-btn" onclick="alternarAba(event, 'abaLogs')">📁 Histórico</button>
-        <button class="tab-btn" onclick="alternarAba(event, 'abaComparativo')">📊 Comparativo</button>
-        <button class="tab-btn" onclick="alternarAba(event, 'abaNotas')">📝 Avisos</button>
-        <button class="tab-btn" onclick="alternarAba(event, 'abaClan')">🛡️ Clã</button>
-        <button class="tab-btn" onclick="alternarAba(event, 'abaDev')">👨‍💻 Dev</button>
-    </div>
-
-    <!-- ABA 1: RODÍZIO -->
-    <div id="abaRodizio" class="tab-content active">
-        <h2>1. Cole a Lista de Nomes</h2>
-        <div style="margin-bottom: 8px;">
-            <label style="font-size: 13px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                <input type="checkbox" id="chkApenasSistema" onchange="processarETocalhar()"> 🛡️ Filtrar na escala apenas quem está no Sistema
-            </label>
+    <!-- BANNER DO TURNO & CRONÔMETRO -->
+    <section class="bg-slate-800/60 border-b border-slate-700/80 py-3 px-4">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4 text-sm">
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <i class="fa-solid fa-award me-1"></i> Turno Ativo
+                </span>
+                <span id="banner-turno-nome" class="font-bold text-slate-200">Sáb Tarde</span>
+                <span class="text-slate-400">| Próxima Premiação em: <strong id="cronometro-turno" class="text-amber-400 font-mono">00:00:00</strong></span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="ultimo-envio-status" class="text-xs text-slate-400">Nenhum envio registrado</span>
+                <button onclick="registrarEnvioTurno()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded flex items-center gap-1 transition">
+                    <i class="fa-solid fa-check-double"></i> Já Enviei
+                </button>
+            </div>
         </div>
-        <textarea id="listaTexto" placeholder="Cole a lista aqui..."></textarea>
-        <div id="alertaInvalido" class="alert-box">⚠️ Atenção: Detectamos pontuações negativas ou valores inválidos na lista.</div>
-        <div id="resultado" class="result-box">A escala aparecerá aqui assim que colar a lista...</div>
-        
-        <button class="action-btn" id="botoesZap" onclick="compartilharZap()" style="background:#25d366; display:none; margin-top: 15px;">📤 Enviar Escala para o WhatsApp</button>
-    </div>
+    </section>
 
-    <!-- ABA 2: JOGADORES -->
-    <div id="abaHistorico" class="tab-content">
-        <h3>⚙️ Gerenciador de Pessoas</h3>
-        
-        <div style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-            <button id="btnSubMembros" class="sub-nav-btn active" onclick="alternarSubAbaPessoas('membros')">👥 Membros (<span id="countMembros">0</span>)</button>
-            <button id="btnSubSistema" class="sub-nav-btn" onclick="alternarSubAbaPessoas('sistema')">🛡️ Sistema (<span id="countSistema">0</span>)</button>
-        </div>
+    <!-- CONTAINER PRINCIPAL -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
 
-        <div style="display: flex; gap: 5px; margin-bottom: 12px;">
-            <input type="text" id="novoNomeSistema" class="search-box" placeholder="Adicionar player diretamente ao Sistema..." style="margin-bottom:0;">
-            <button onclick="adicionarManualSistema()" class="btn-icon btn-save" style="padding: 0 15px; font-size: 16px;" title="Adicionar ao Sistema">✅</button>
-        </div>
-        <div class="controls-header">
-            <input type="text" id="filtroJogador" class="search-box" placeholder="🔍 Buscar..." oninput="pag.sis=1; renderizarHistorico()" style="margin-bottom:0; flex: 1;">
-            <select id="itensPorPaginaSistema" class="select-per-page" onchange="pag.sis=1; renderizarHistorico()">
-                <option value="5">5</option><option value="10">10</option><option value="20" selected>20</option>
-            </select>
-        </div>
-        <div class="player-grid" id="listaHistoricoContainer" style="margin-top: 12px;"></div>
-        <div class="pagination" id="paginacaoSistema"></div>
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button onclick="exportarBackup()" class="action-btn" style="background:#17a2b8; margin:0; padding:10px; font-size:14px;">💾 Exportar</button>
-            <button onclick="document.getElementById('inputImportar').click()" class="action-btn" style="background:#ffc107; color:#000; margin:0; padding:10px; font-size:14px;">📂 Importar</button>
-            <input type="file" id="inputImportar" accept=".json" style="display:none" onchange="importarBackup(event)">
-        </div>
-        <button onclick="limparBancoJogadores()" class="action-btn" style="background:#dc3545; margin-top:10px; padding:8px;">🗑️ Limpar Banco</button>
-    </div>
+        <!-- TAB 1: RODÍZIO & ESCALA -->
+        <section id="tab-rodizio" class="tab-content active space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Entrada e Controles -->
+                <div class="lg:col-span-1 bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
+                    <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-sliders"></i> Gerar Rodízio</h2>
+                    
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Selecione o Turno</label>
+                        <select id="select-turno" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-amber-500">
+                            <option value="Sáb Tarde">Sáb Tarde</option>
+                            <option value="Sáb Noite">Sáb Noite</option>
+                            <option value="Sáb Madrugada">Sáb Madrugada</option>
+                            <option value="Sáb Manhã">Sáb Manhã</option>
+                            <option value="Dom Tarde">Dom Tarde</option>
+                            <option value="Dom Noite">Dom Noite</option>
+                            <option value="Dom Madrugada">Dom Madrugada</option>
+                            <option value="Dom Manhã">Dom Manhã</option>
+                        </select>
+                    </div>
 
-    <!-- ABA 3: HISTÓRICO DE LOGS -->
-    <div id="abaLogs" class="tab-content">
-        <h3>📁 Histórico de Rodízios</h3>
-        <div class="controls-header" style="margin-top: 10px;">
-            <input type="text" id="filtroLogs" class="search-box" placeholder="🔍 Buscar histórico..." oninput="pag.log=1; renderizarLogs()" style="margin-bottom:0; flex: 1;">
-            <select id="itensPorPaginaLogs" class="select-per-page" onchange="pag.log=1; renderizarLogs()">
-                <option value="5">5</option><option value="10">10</option><option value="20" selected>20</option>
-            </select>
-        </div>
-        <div class="history-grid" id="listaLogsContainer" style="margin-top: 12px;"></div>
-        <div class="pagination" id="paginacaoLogs"></div>
-        <button onclick="limparLogs()" class="action-btn" style="background:#dc3545; margin-top:15px; padding:8px;">🗑️ Limpar Todo o Histórico</button>
-    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Lista de Membros / Pontos (Cole aqui)</label>
+                        <textarea id="input-rodizio-bruto" rows="8" placeholder="Cole a lista de membros ou pontuações aqui...&#10;Exemplo:&#10;Player1 1500 sistema&#10;Player2 2000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 font-mono focus:outline-none focus:border-amber-500"></textarea>
+                    </div>
 
-    <!-- ABA 4: COMPARATIVO MENSAL -->
-    <div id="abaComparativo" class="tab-content">
-        <h3>📊 Comparativo Mensal (Mês a Mês)</h3>
-        <p style="font-size: 13px; opacity: 0.8; margin-bottom: 15px;">Acompanhamento automático da pontuação de cada jogador extraído diretamente de todo o histórico salvo.</p>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="check-filtrar-sistema" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 bg-slate-900 border-slate-700">
+                        <label for="check-filtrar-sistema" class="text-xs text-slate-300">Filtrar na escala apenas quem está no Sistema</label>
+                    </div>
 
-        <div class="controls-header">
-            <select id="selectFiltroMesComp" class="select-per-page" onchange="renderizarComparativoMensal()" style="flex:1;">
-                <option value="TODOS">📅 Visão Geral (Todos os Meses)</option>
-            </select>
-            <button onclick="enviarZapComparativo()" class="action-btn" style="background:#25d366; margin:0; width:auto; padding:8px 15px; font-size:13px;">📤 Enviar p/ Zap</button>
-        </div>
+                    <div id="alerta-pontos-invalidos" class="hidden p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg text-rose-400 text-xs flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-base"></i>
+                        <span>Atenção: Existem pontuações inválidas ou negativas detectadas na lista!</span>
+                    </div>
 
-        <div class="comp-table-wrapper">
-            <table class="comp-table" id="tabelaComparativo">
-                <thead><tr id="tableHeaderComp"><th>Jogador</th></tr></thead>
-                <tbody id="tableBodyComp"></tbody>
-            </table>
-        </div>
-    </div>
+                    <button onclick="gerarEscalaRodizio()" class="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg transition shadow-lg flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Gerar e Salvar Escala
+                    </button>
+                </div>
 
-    <!-- ABA 5: AVISOS -->
-    <div id="abaNotas" class="tab-content">
-        <h3>📝 Avisos & Mensagens Prontas</h3>
-        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
-            <input type="text" id="tituloNota" class="search-box" placeholder="Título..." style="margin-bottom:0;">
-            <textarea id="conteudoNota" placeholder="Escreva o aviso..." style="height: 80px;"></textarea>
-            <button onclick="salvarNotaPronta()" class="action-btn" style="background:#28a745; margin:0; padding:10px;">💾 Salvar Aviso</button>
-        </div>
-        <div class="notes-grid" id="listaNotasContainer" style="margin-top: 12px;"></div>
-    </div>
+                <!-- Preview e Envio WhatsApp -->
+                <div class="lg:col-span-2 bg-slate-800 p-5 rounded-xl border border-slate-700 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-message"></i> Preview da Escala</h2>
+                            <button onclick="copiarPreviewWhatsApp()" class="text-xs px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded font-semibold transition">
+                                <i class="fa-solid fa-copy me-1"></i> Copiar Texto
+                            </button>
+                        </div>
+                        <div id="preview-escala" class="bg-slate-900 border border-slate-700 rounded-lg p-4 font-mono text-sm whitespace-pre-wrap text-slate-300 min-h-[300px]">Nenhuma escala gerada no momento...</div>
+                    </div>
 
-    <!-- ABA 6: CLÃ -->
-    <div id="abaClan" class="tab-content">
-        <h3>🛡️ Configurações do Clã</h3>
-        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
-            <div><label style="font-size: 13px; font-weight: bold;">Nome da Guilda:</label><input type="text" id="inputNomeGuilda" class="search-box" oninput="salvarDadosClan()"></div>
-            <div><label style="font-size: 13px; font-weight: bold;">Nome do Líder:</label><input type="text" id="inputNomeLider" class="search-box" oninput="salvarDadosClan()"></div>
-            <div><label style="font-size: 13px; font-weight: bold;">Saudação:</label><input type="text" id="inputTextoSaudacao" class="search-box" oninput="salvarDadosClan()"></div>
-        </div>
-        <div style="margin-top: 20px; padding: 12px; background: var(--box-bg); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px;">
-            💡 <strong>Exemplo no Zap:</strong><code id="exemploZapPreview" style="color: #007bff; display: block; margin-top: 5px; white-space: pre-wrap;"></code>
-        </div>
-    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-700 flex justify-end">
+                        <button onclick="enviarWhatsAppRodizio()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-lg flex items-center gap-2 transition">
+                            <i class="fa-brands fa-whatsapp text-lg"></i> Enviar Escala para WhatsApp
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    <!-- ABA 7: MODO DEV -->
-    <div id="abaDev" class="tab-content">
-        <h3>👨‍💻 Editor de Código (Auto-Commit)</h3>
-        
-        <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-            <input type="password" id="inputTokenGit" class="search-box" placeholder="Digite seu Token do GitHub..." style="margin-bottom:0; flex:1;" oninput="salvarTokenGitLocal()">
-            <button onclick="carregarCodigo()" class="action-btn" style="background:#007bff; margin:0; width:auto; padding:8px 15px;">Carregar</button>
-            <button onclick="limparTokenGitLocal()" class="action-btn" style="background:#dc3545; margin:0; width:auto; padding:8px 12px;" title="Remover Token Salvo">🗑️</button>
-        </div>
+        <!-- TAB 2: GERENCIADOR DE PESSOAS -->
+        <section id="tab-pessoas" class="tab-content space-y-6">
+            <div class="bg-slate-800 p-5 rounded-xl border border-slate-700">
+                <!-- Subtabs Header -->
+                <div class="flex border-b border-slate-700 mb-5 gap-4">
+                    <button onclick="switchSubTab('membros')" class="subtab-btn pb-3 border-b-2 border-amber-500 text-amber-400 font-bold text-sm flex items-center gap-2" data-subtab="membros">
+                        <i class="fa-solid fa-user-group"></i> Membros (<span id="cnt-membros">0</span>)
+                    </button>
+                    <button onclick="switchSubTab('sistema')" class="subtab-btn pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-bold text-sm flex items-center gap-2" data-subtab="sistema">
+                        <i class="fa-solid fa-server"></i> Sistema (<span id="cnt-sistema">0</span>)
+                    </button>
+                </div>
 
-        <textarea id="editorCodigo" placeholder="O código fonte aparecerá aqui após validar o Token..." style="height: 320px; font-family: monospace; font-size: 12px; white-space: pre; display:none;"></textarea>
-        
-        <div id="boxSalvar" style="display:none; margin-top: 15px;">
-            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Correção de parsing de nomes e sistema)">
-            <button onclick="commitarCodigo()" class="action-btn" style="background:#28a745; margin-top: 5px;">🚀 Fazer Commit Direto no GitHub</button>
-        </div>
-    </div>
-</div>
+                <!-- SUBTAB MEMBROS -->
+                <div id="subtab-membros" class="subtab-content active space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="md:col-span-1 space-y-3">
+                            <label class="block text-xs font-semibold text-slate-400">Adicionar Membro(s)</label>
+                            <textarea id="input-novos-membros" rows="5" placeholder="Digite um nome por linha..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500"></textarea>
+                            <button onclick="adicionarMembros()" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg text-sm transition">
+                                <i class="fa-solid fa-plus me-1"></i> Adicionar à Lista
+                            </button>
+                        </div>
+                        <div class="md:col-span-2 space-y-3">
+                            <div class="flex justify-between gap-2">
+                                <input type="text" id="busca-membros" oninput="renderMembros()" placeholder="Buscar membro..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
+                                <select id="paginacao-membros" onchange="renderMembros()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 text-sm text-slate-200">
+                                    <option value="5">5 por pág.</option>
+                                    <option value="10" selected>10 por pág.</option>
+                                    <option value="20">20 por pág.</option>
+                                </select>
+                            </div>
+                            <div class="bg-slate-900 rounded-lg border border-slate-700 overflow-hidden">
+                                <ul id="lista-membros" class="divide-y divide-slate-800 text-sm"></ul>
+                            </div>
+                            <div class="flex justify-between items-center text-xs text-slate-400">
+                                <button onclick="limparMembros()" class="text-rose-400 hover:underline"><i class="fa-solid fa-trash me-1"></i> Limpar Todos</button>
+                                <div id="paginador-membros-controls" class="flex gap-1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-<script>
-    const DONO_DO_REPO = "RamboFetBB";
-    const NOME_DO_REPO = "GvG-automatizada-pocket-contest";
-    const CAMINHO_ARQUIVO = "index.html";
-    const BRANCH_GIT = "main";
+                <!-- SUBTAB SISTEMA -->
+                <div id="subtab-sistema" class="subtab-content space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="md:col-span-1 space-y-3">
+                            <label class="block text-xs font-semibold text-slate-400">Adicionar ao Sistema (Nome Pontos)</label>
+                            <textarea id="input-novo-sistema" rows="5" placeholder="Exemplo:&#10;João 1500 sistema&#10;Maria 2000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500"></textarea>
+                            <button onclick="adicionarSistema()" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg text-sm transition">
+                                <i class="fa-solid fa-plus me-1"></i> Salvar no Sistema
+                            </button>
+                        </div>
+                        <div class="md:col-span-2 space-y-3">
+                            <div class="flex justify-between gap-2">
+                                <input type="text" id="busca-sistema" oninput="renderSistema()" placeholder="Buscar no sistema..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
+                                <select id="paginacao-sistema" onchange="renderSistema()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 text-sm text-slate-200">
+                                    <option value="5">5 por pág.</option>
+                                    <option value="10" selected>10 por pág.</option>
+                                    <option value="20">20 por pág.</option>
+                                </select>
+                            </div>
+                            <div class="bg-slate-900 rounded-lg border border-slate-700 overflow-hidden">
+                                <ul id="lista-sistema" class="divide-y divide-slate-800 text-sm"></ul>
+                            </div>
+                            <div class="flex justify-between items-center text-xs text-slate-400">
+                                <button onclick="limparSistema()" class="text-rose-400 hover:underline"><i class="fa-solid fa-trash me-1"></i> Limpar Banco Sistema</button>
+                                <div id="paginador-sistema-controls" class="flex gap-1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    let arquivoSha = "";
-    let textoEscalaCache = "";
-    let pag = { sis: 1, log: 1 };
-    let subAbaAtualPessoas = 'membros';
-    const turnos = ['Sáb Tarde', 'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb Manhã'];
+                <!-- Backup Bar -->
+                <div class="mt-6 pt-4 border-t border-slate-700 flex flex-wrap justify-between items-center gap-3">
+                    <span class="text-xs text-slate-400"><i class="fa-solid fa-database me-1"></i> Backup de Dados Integrado</span>
+                    <div class="flex gap-2">
+                        <button onclick="exportarBackupJSON()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded transition flex items-center gap-1">
+                            <i class="fa-solid fa-download"></i> Exportar Backup (JSON)
+                        </button>
+                        <label class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded cursor-pointer transition flex items-center gap-1">
+                            <i class="fa-solid fa-upload"></i> Importar Backup
+                            <input type="file" id="import-json-file" accept=".json" onchange="importarBackupJSON(event)" class="hidden">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    document.getElementById('listaTexto').addEventListener('input', processarETocalhar);
-    window.onload = () => {
-        carregarTema(); carregarClan(); 
-        sanitizarBanco(); // Limpa e corrige nomes que foram salvos com erro anteriormente
-        renderizarHistorico(); renderizarLogs(); renderizarNotas();
-        renderizarComparativoMensal(); carregarTokenGitLocal();
-        atualizarStatusPremiacao(); setInterval(atualizarStatusPremiacao, 1000);
-    };
+        <!-- TAB 3: HISTÓRICO & COMPARATIVO MENSAL -->
+        <section id="tab-historico" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Histórico de Logs -->
+                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-list-check"></i> Histórico de Logs</h2>
+                        <button onclick="limparHistorico()" class="text-xs text-rose-400 hover:underline"><i class="fa-solid fa-trash me-1"></i> Limpar Histórico</button>
+                    </div>
+                    <input type="text" id="busca-historico" oninput="renderHistorico()" placeholder="Filtrar por data, turno..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
+                    <div class="bg-slate-900 rounded-lg border border-slate-700 overflow-y-auto max-h-[400px]">
+                        <ul id="lista-historico-logs" class="divide-y divide-slate-800 text-sm"></ul>
+                    </div>
+                </div>
 
-    function alternarTema() {
-        let novo = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', novo);
-        localStorage.setItem('gvg_tema', novo);
-        document.querySelector('.theme-btn').innerText = novo === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro';
-    }
-    function carregarTema() {
-        let salvo = localStorage.getItem('gvg_tema') || 'light';
-        document.documentElement.setAttribute('data-theme', salvo);
-        document.querySelector('.theme-btn').innerText = salvo === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro';
-    }
+                <!-- Comparativo Mensal (DINÂMICO) -->
+                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-chart-column"></i> Comparativo Mensal</h2>
+                            <span class="text-xs text-emerald-400"><i class="fa-solid fa-rotate me-1"></i> Calculado do Histórico</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4">A soma mensal é recalculada em tempo real com base estrita no Histórico de Logs ativo.</p>
+                        
+                        <div class="bg-slate-900 rounded-lg border border-slate-700 overflow-hidden">
+                            <table class="w-full text-left text-sm text-slate-300">
+                                <thead class="bg-slate-950 text-slate-400 text-xs uppercase font-semibold">
+                                    <tr>
+                                        <th class="p-3">Mês / Ano</th>
+                                        <th class="p-3 text-center">Rodízios</th>
+                                        <th class="p-3 text-right">Pontuação Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-comparativo-mensal" class="divide-y divide-slate-800"></tbody>
+                            </table>
+                        </div>
+                    </div>
 
-    function salvarDadosClan() {
-        localStorage.setItem('gvg_nome_guilda', document.getElementById('inputNomeGuilda').value.trim());
-        localStorage.setItem('gvg_nome_lider', document.getElementById('inputNomeLider').value.trim());
-        localStorage.setItem('gvg_texto_saudacao', document.getElementById('inputTextoSaudacao').value);
-        atualizarPreview(); renderizarNotas();
-    }
-    function carregarClan() {
-        document.getElementById('inputNomeGuilda').value = localStorage.getItem('gvg_nome_guilda') || '';
-        document.getElementById('inputNomeLider').value = localStorage.getItem('gvg_nome_lider') || '';
-        document.getElementById('inputTextoSaudacao').value = localStorage.getItem('gvg_texto_saudacao') || 'Olá guilda [Guilda], segue:';
-        atualizarPreview();
-    }
-    function atualizarPreview() {
-        document.getElementById('exemploZapPreview').innerText = `${obterCabecalhoLider()}...`;
-    }
-    function obterCabecalhoLider() {
-        let lider = localStorage.getItem('gvg_nome_lider') || 'Líder';
-        let guilda = localStorage.getItem('gvg_nome_guilda') || 'Guilda';
-        let saudacao = (localStorage.getItem('gvg_texto_saudacao') || 'Olá guilda [Guilda], segue:').replace(/\[Guilda\]/g, guilda);
-        return `*${lider}*: ${saudacao}\n\n`;
-    }
+                    <button onclick="enviarWhatsAppComparativo()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-lg flex items-center justify-center gap-2 transition mt-4">
+                        <i class="fa-brands fa-whatsapp text-lg"></i> Enviar Comparativo para WhatsApp
+                    </button>
+                </div>
+            </div>
+        </section>
 
-    function salvarTokenGitLocal() {
-        let token = document.getElementById('inputTokenGit').value.trim();
-        if(token) localStorage.setItem('gvg_git_token', token);
-        else localStorage.removeItem('gvg_git_token');
-    }
-    function carregarTokenGitLocal() {
-        let tokenSalvo = localStorage.getItem('gvg_git_token') || '';
-        if(tokenSalvo) document.getElementById('inputTokenGit').value = tokenSalvo;
-    }
-    function limparTokenGitLocal() {
-        localStorage.removeItem('gvg_git_token');
-        document.getElementById('inputTokenGit').value = '';
-        alert('Token removido do armazenamento local!');
-    }
+        <!-- TAB 4: AVISOS & MENSAGENS -->
+        <section id="tab-avisos" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Criar Mensagem -->
+                <div class="lg:col-span-1 bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
+                    <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-pen-to-square"></i> Nova Mensagem Pronta</h2>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Título do Aviso</label>
+                        <input type="text" id="msg-titulo" placeholder="Ex: Regras da GvG" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Conteúdo da Mensagem</label>
+                        <textarea id="msg-texto" rows="6" placeholder="Escreva a mensagem..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500"></textarea>
+                    </div>
+                    <button onclick="salvarMensagemPronta()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg text-sm transition">
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Salvar Mensagem
+                    </button>
+                </div>
 
-    function marcarComoEnviado() {
-        localStorage.setItem('gvg_ultimo_envio_timestamp', new Date().getTime());
-        let btn = document.getElementById('btnMarcarEnviado');
-        btn.innerText = "✨ Salvo!"; setTimeout(() => btn.innerText = "✅ Já Enviei", 1500);
-        atualizarStatusPremiacao();
-    }
-    function atualizarStatusPremiacao() {
-        let agora = new Date(), dia = agora.getDay(), hora = agora.getHours();
-        let turnoNome = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"][dia];
-        if(dia === 6) turnoNome = hora < 11 ? "Sáb Manhã" : (hora < 18 ? "Sáb Tarde (Em breve)" : "Sáb Tarde");
+                <!-- Lista de Mensagens -->
+                <div class="lg:col-span-2 bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
+                    <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i> Mensagens Salvas</h2>
+                    <div id="container-mensagens-prontas" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+            </div>
+        </section>
 
-        let inicioJanela = new Date(agora);
-        inicioJanela.setHours(dia === 6 && hora >= 18 ? 18 : (dia === 6 && hora >= 11 ? 11 : 1), 0, 0, 0);
-        if(hora < 1 && dia !== 6) inicioJanela.setDate(inicioJanela.getDate() - 1);
+        <!-- TAB 5: CONFIGURAÇÕES -->
+        <section id="tab-config" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
+                    <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-sliders"></i> Dados da Guilda & Líder</h2>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Nome da Guilda</label>
+                        <input type="text" id="cfg-guilda" oninput="atualizarConfiguracoes()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Nome do Líder</label>
+                        <input type="text" id="cfg-lider" oninput="atualizarConfiguracoes()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Saudação / Mensagem de Boas-Vindas</label>
+                        <textarea id="cfg-saudacao" oninput="atualizarConfiguracoes()" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-slate-200"></textarea>
+                    </div>
+                </div>
 
-        let ultimoEnvio = parseInt(localStorage.getItem('gvg_ultimo_envio_timestamp')) || 0;
-        let enviado = ultimoEnvio >= inicioJanela.getTime();
+                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
+                    <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-eye"></i> Preview do Cabeçalho WhatsApp</h2>
+                    <div id="preview-cabecalho-whatsapp" class="bg-slate-900 border border-slate-700 rounded-lg p-4 font-mono text-sm whitespace-pre-wrap text-slate-300"></div>
+                </div>
+            </div>
+        </section>
 
-        let target = new Date(agora);
-        if(enviado) {
-            target.setDate(target.getDate() + 1); target.setHours(1,0,0,0);
-        } else {
-            target.setHours(dia === 6 && hora < 11 ? 11 : (dia === 6 && hora >= 11 && hora < 18 ? 18 : 1), 0,0,0);
-            if(hora >= target.getHours()) target.setDate(target.getDate() + 1);
+        <!-- TAB 6: MODO DEV -->
+        <section id="tab-dev" class="tab-content space-y-6">
+            <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
+                <div class="flex justify-between items-center flex-wrap gap-2">
+                    <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2"><i class="fa-solid fa-code-branch"></i> Auto-Commit GitHub</h2>
+                    <span class="text-xs text-slate-400 font-mono">Repositório: RamboFetBB/GvG-automatizada-pocket-contest (main)</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input type="password" id="gh-token-input" placeholder="Cole seu GitHub Personal Access Token..." class="md:col-span-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
+                    <div class="flex gap-2">
+                        <button onclick="salvarTokenGH()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition">Salvar Token</button>
+                        <button onclick="removerTokenGH()" class="w-full py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg text-xs transition">Remover</button>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button onclick="carregarCodigoGitHub()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold rounded-lg transition flex items-center gap-1">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> Carregar do GitHub
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Editor de Código (index.html)</label>
+                    <textarea id="dev-code-editor" rows="15" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-xs font-mono text-amber-300 focus:outline-none"></textarea>
+                </div>
+
+                <button onclick="commitCodigoGitHub()" class="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg transition shadow-lg flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Fazer Commit Direto na Main
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- JAVASCRIPT PRINCIPAL -->
+    <script>
+        // ESTADO GLOBAL DA APLICAÇÃO
+        let state = {
+            config: JSON.parse(localStorage.getItem('gvg_config')) || {
+                guilda: 'Pocket Contest',
+                lider: 'RamboFet',
+                saudacao: 'Atenção membros! Confiram a escala atualizada do nosso turno de GvG:'
+            },
+            membros: JSON.parse(localStorage.getItem('gvg_membros')) || [],
+            sistema: JSON.parse(localStorage.getItem('gvg_sistema')) || [],
+            historicoLogs: JSON.parse(localStorage.getItem('gvg_historico')) || [],
+            mensagens: JSON.parse(localStorage.getItem('gvg_mensagens')) || [],
+            envioBanner: JSON.parse(localStorage.getItem('gvg_envio_banner')) || null,
+            ghToken: localStorage.getItem('gvg_gh_token') || '',
+            pagMembros: 1,
+            pagSistema: 1,
+            escalaGeradaAtual: null
+        };
+
+        // INICIALIZAÇÃO
+        document.addEventListener('DOMContentLoaded', () => {
+            sanitizarBanco();
+            carregarConfiguracoes();
+            renderTudo();
+            iniciarCronometro();
+        });
+
+        function salvar(chave) {
+            localStorage.setItem('gvg_' + chave, JSON.stringify(state[chave]));
         }
 
-        let diff = target - agora;
-        let timerStr = enviado ? "✅ Premiação enviada! Próxima liberação em: " : "⏳ Libera em: ";
-        document.getElementById('bannerProximoTurno').style.display = 'flex';
-        document.getElementById('txtTurnoNome').innerText = turnoNome;
-        document.getElementById('txtTurnoTimer').innerText = timerStr + formatarMs(diff);
-    }
-    function formatarMs(ms) {
-        if(ms < 0) return "00h 00m 00s";
-        let s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
-        return `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s%60).padStart(2,'0')}s`;
-    }
-
-    function alternarAba(e, id) {
-        document.querySelectorAll('.tab-content, .tab-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active');
-        if(id === 'abaComparativo') renderizarComparativoMensal();
-    }
-
-    const getBanco = () => JSON.parse(localStorage.getItem('gvg_banco_jogadores')) || {};
-    const saveBanco = (dados) => localStorage.setItem('gvg_banco_jogadores', JSON.stringify(dados));
-
-    const getLogs = () => JSON.parse(localStorage.getItem('gvg_historico_logs')) || [];
-    const saveLogs = (dados) => localStorage.setItem('gvg_historico_logs', JSON.stringify(dados));
-
-    const getNotas = () => JSON.parse(localStorage.getItem('gvg_notas_prontas')) || [];
-    const saveNotas = (dados) => localStorage.setItem('gvg_notas_prontas', JSON.stringify(dados));
-
-    function encontrarChaveBanco(banco, nome) {
-        if (!nome) return '';
-        let nomeTrim = nome.trim();
-        let existente = Object.keys(banco).find(k => k.trim().toLowerCase() === nomeTrim.toLowerCase());
-        return existente || nomeTrim;
-    }
-
-    // SANITIZAÇÃO AUTOMÁTICA DE DADOS CORROMPIDOS NO LOCALSTORAGE
-    function sanitizarBanco() {
-        let banco = getBanco();
-        let alterado = false;
-        let novoBanco = {};
-
-        Object.keys(banco).forEach(chaveAntiga => {
-            let item = banco[chaveAntiga];
-            let nomeLimpo = chaveAntiga;
-            let ehSistema = item.isSistema || false;
-            let pontos = item.pontos || 0;
-
-            if (/\bsistema\b/i.test(nomeLimpo)) {
-                ehSistema = true;
-                nomeLimpo = nomeLimpo.replace(/\bsistema\b/gi, '').trim();
-            }
-
-            let matchNum = nomeLimpo.match(/^(.+?)\s+([-\d]+)$/);
-            if (matchNum) {
-                nomeLimpo = matchNum[1].trim();
-                let ptsExtraidos = parseInt(matchNum[2], 10);
-                if (pontos === 0 && !isNaN(ptsExtraidos)) {
-                    pontos = ptsExtraidos;
+        // SANITIZAÇÃO DE BANCO E LINHAS
+        function sanitizarBanco() {
+            let alterado = false;
+            state.sistema = state.sistema.map(item => {
+                if (typeof item.nome === 'string' && /sistema/i.test(item.nome)) {
+                    item.nome = item.nome.replace(/sistema/gi, '').trim();
+                    alterado = true;
                 }
+                return item;
+            });
+            if (alterado) salvar('sistema');
+        }
+
+        function sanitizarLinha(linha) {
+            return linha.replace(/sistema/gi, '').trim();
+        }
+
+        // NAVEGAÇÃO DE TABS
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-amber-600', 'text-white');
+                btn.classList.add('bg-slate-700', 'text-slate-200');
+            });
+
+            document.getElementById('tab-' + tabId).classList.add('active');
+            const targetBtn = document.querySelector(`[data-tab="${tabId}"]`);
+            if (targetBtn) {
+                targetBtn.classList.remove('bg-slate-700', 'text-slate-200');
+                targetBtn.classList.add('bg-amber-600', 'text-white');
             }
+        }
 
-            if (!nomeLimpo) return;
+        function switchSubTab(subId) {
+            document.querySelectorAll('.subtab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.subtab-btn').forEach(btn => {
+                btn.classList.remove('border-amber-500', 'text-amber-400');
+                btn.classList.add('border-transparent', 'text-slate-400');
+            });
 
-            let chaveExistente = Object.keys(novoBanco).find(k => k.trim().toLowerCase() === nomeLimpo.toLowerCase()) || nomeLimpo;
-
-            if (!novoBanco[chaveExistente]) {
-                novoBanco[chaveExistente] = {
-                    participacoes: item.participacoes || 0,
-                    pontos: pontos,
-                    isSistema: ehSistema
-                };
-            } else {
-                novoBanco[chaveExistente].participacoes = Math.max(novoBanco[chaveExistente].participacoes || 0, item.participacoes || 0);
-                novoBanco[chaveExistente].pontos = Math.max(novoBanco[chaveExistente].pontos || 0, pontos);
-                if (ehSistema) novoBanco[chaveExistente].isSistema = true;
+            document.getElementById('subtab-' + subId).classList.add('active');
+            const targetBtn = document.querySelector(`[data-subtab="${subId}"]`);
+            if (targetBtn) {
+                targetBtn.classList.remove('border-transparent', 'text-slate-400');
+                targetBtn.classList.add('border-amber-500', 'text-amber-400');
             }
-
-            if (chaveAntiga !== chaveExistente || item.isSistema !== ehSistema || item.pontos !== pontos) {
-                alterado = true;
-            }
-        });
-
-        if (alterado) {
-            saveBanco(novoBanco);
-        }
-    }
-
-    function processarETocalhar() {
-        let texto = document.getElementById('listaTexto').value.trim();
-        let divResult = document.getElementById('resultado');
-        let divAlert = document.getElementById('alertaInvalido');
-        let btnZap = document.getElementById('botoesZap');
-
-        if (!texto) {
-            divResult.innerText = "A escala aparecerá aqui assim que colar a lista...";
-            divAlert.style.display = 'none';
-            btnZap.style.display = 'none';
-            textoEscalaCache = "";
-            return;
         }
 
-        let linhas = texto.split('\n');
-        let jogadores = [];
-        let temInvalido = false;
-        let banco = getBanco();
-
-        let apenasSistema = document.getElementById('chkApenasSistema').checked;
-
-        linhas.forEach(linha => {
-            linha = linha.trim();
-            if(!linha) return;
-
-            let ehSistemaLinha = false;
-            if (/\bsistema\b/i.test(linha)) {
-                ehSistemaLinha = true;
-                linha = linha.replace(/\bsistema\b/gi, '').trim();
-            }
-
-            let match = linha.match(/^(.+?)\s+([-\d]+)$/);
-            let nomeRaw = "", pts = 0;
-
-            if(match) {
-                nomeRaw = match[1].trim();
-                pts = parseInt(match[2], 10);
-                if(isNaN(pts) || pts < 0) temInvalido = true;
-            } else {
-                nomeRaw = linha;
-                pts = 0;
-            }
-
-            if (!nomeRaw) return;
-
-            let chave = encontrarChaveBanco(banco, nomeRaw);
-
-            if (!banco[chave]) {
-                banco[chave] = { participacoes: 0, pontos: 0, isSistema: ehSistemaLinha };
-            } else if (ehSistemaLinha) {
-                banco[chave].isSistema = true;
-            }
-
-            if (apenasSistema && !banco[chave].isSistema) return;
-
-            jogadores.push({ nome: chave, pts });
-        });
-
-        divAlert.style.display = temInvalido ? 'block' : 'none';
-        if(jogadores.length === 0) {
-            divResult.innerText = apenasSistema ? "Nenhum jogador da lista está marcado no Sistema." : "Nenhum jogador válido encontrado.";
-            btnZap.style.display = 'none';
-            return;
-        }
-
-        let totalTurnos = turnos.length;
-        let escalaStr = "📅 *ESCALA DO RODÍZIO GvG*\n\n";
-
-        jogadores.forEach((j, index) => {
-            let turno = turnos[index % totalTurnos];
-            let ehSys = banco[j.nome] && banco[j.nome].isSistema;
-            escalaStr += `• *${j.nome}* ${ehSys ? '🛡️' : ''} - ${turno} (${j.pts} pts)\n`;
-
-            banco[j.nome].participacoes += 1;
-            banco[j.nome].pontos += j.pts;
-        });
-
-        saveBanco(banco);
-        renderizarHistorico();
-
-        textoEscalaCache = escalaStr;
-        divResult.innerText = obterCabecalhoLider() + escalaStr;
-        btnZap.style.display = 'block';
-
-        salvarLogAutomatico(jogadores.length, escalaStr);
-    }
-
-    function compartilharZap() {
-        let textoFinal = obterCabecalhoLider() + textoEscalaCache;
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textoFinal)}`, '_blank');
-    }
-
-    function alternarSubAbaPessoas(sub) {
-        subAbaAtualPessoas = sub;
-        document.getElementById('btnSubMembros').classList.toggle('active', sub === 'membros');
-        document.getElementById('btnSubSistema').classList.toggle('active', sub === 'sistema');
-        pag.sis = 1;
-        renderizarHistorico();
-    }
-
-    function renderizarHistorico() {
-        let banco = getBanco();
-        let todasChaves = Object.keys(banco);
-        let filtro = (document.getElementById('filtroJogador').value || '').toLowerCase();
-
-        let totalMembros = todasChaves.length;
-        let totalSistema = todasChaves.filter(k => banco[k] && banco[k].isSistema).length;
-
-        document.getElementById('countTotal').innerText = totalMembros;
-        document.getElementById('countMembros').innerText = totalMembros;
-        document.getElementById('countSistema').innerText = totalSistema;
-
-        let chavesFiltradas = todasChaves.filter(nome => {
-            let p = banco[nome];
-            if (subAbaAtualPessoas === 'sistema' && (!p || !p.isSistema)) return false;
-            return nome.toLowerCase().includes(filtro);
-        });
-
-        let container = document.getElementById('listaHistoricoContainer');
-        container.innerHTML = '';
-
-        let porPagina = parseInt(document.getElementById('itensPorPaginaSistema').value, 10);
-        let inicio = (pag.sis - 1) * porPagina;
-        let itensPagina = chavesFiltradas.slice(inicio, inicio + porPagina);
-
-        if(itensPagina.length === 0) {
-            container.innerHTML = `<div style="text-align:center; padding:15px; opacity:0.6;">Nenhum jogador em ${subAbaAtualPessoas === 'sistema' ? 'Sistema' : 'Membros'}.</div>`;
-            document.getElementById('paginacaoSistema').innerHTML = '';
-            return;
-        }
-
-        itensPagina.forEach(nome => {
-            let p = banco[nome];
-            let isSys = p && p.isSistema;
-            let div = document.createElement('div');
-            div.className = 'player-item';
-
-            if (subAbaAtualPessoas === 'membros') {
-                div.innerHTML = `
-                    <div>
-                        <strong>${nome}</strong><br>
-                        <span style="font-size:12px; opacity:0.8;">Pontos Totais: ${p.pontos || 0}</span>
-                    </div>
-                    <div class="btn-group">
-                        <button onclick="alternarStatusSistema('${nome}')" class="btn-icon" style="background:${isSys ? '#ffc107' : '#17a2b8'}; color:#000;" title="${isSys ? 'Remover do Sistema' : 'Marcar no Sistema'}">
-                            ${isSys ? '⭐ Sistema' : '➕ Sistema'}
-                        </button>
-                        <button onclick="excluirJogadorSistema('${nome}')" class="btn-icon btn-del" title="Excluir do Banco">🗑️</button>
-                    </div>
-                `;
-            } else {
-                div.innerHTML = `
-                    <div>
-                        <strong>${nome}</strong> <span class="badge-sys">🛡️ Sistema</span>
-                    </div>
-                    <div class="btn-group">
-                        <button onclick="alternarStatusSistema('${nome}')" class="btn-icon" style="background:#ffc107; color:#000;" title="Remover do Sistema">
-                            ⭐ Sistema
-                        </button>
-                        <button onclick="excluirJogadorSistema('${nome}')" class="btn-icon btn-del" title="Excluir do Banco">🗑️</button>
-                    </div>
-                `;
-            }
-
-            container.appendChild(div);
-        });
-
-        renderizarPaginacao('paginacaoSistema', chavesFiltradas.length, porPagina, pag.sis, (p) => { pag.sis = p; renderizarHistorico(); });
-    }
-
-    function alternarStatusSistema(nome) {
-        let banco = getBanco();
-        let chave = encontrarChaveBanco(banco, nome);
-        if(banco[chave]) {
-            banco[chave].isSistema = !banco[chave].isSistema;
-            saveBanco(banco);
-            renderizarHistorico();
-        }
-    }
-
-    function adicionarManualSistema() {
-        let input = document.getElementById('novoNomeSistema');
-        let rawNome = input.value.trim();
-        if (!rawNome) return;
-        
-        if (/\bsistema\b/i.test(rawNome)) {
-            rawNome = rawNome.replace(/\bsistema\b/gi, '').trim();
-        }
-
-        let banco = getBanco();
-        let chave = encontrarChaveBanco(banco, rawNome);
-
-        if (!banco[chave]) {
-            banco[chave] = { participacoes: 0, pontos: 0, isSistema: true };
-        } else {
-            banco[chave].isSistema = true;
-        }
-        saveBanco(banco);
-        input.value = '';
-        renderizarHistorico();
-    }
-
-    function excluirJogadorSistema(nome) {
-        if (confirm(`Deseja remover ${nome} do banco de jogadores?`)) {
-            let banco = getBanco();
-            let chave = encontrarChaveBanco(banco, nome);
-            delete banco[chave];
-            saveBanco(banco);
-            renderizarHistorico();
-        }
-    }
-
-    function limparBancoJogadores() {
-        if (confirm('Tem certeza que deseja apagar TODOS os jogadores cadastrados?')) {
-            localStorage.removeItem('gvg_banco_jogadores');
-            renderizarHistorico();
-        }
-    }
-
-    function extrairDadosMensais() {
-        let logs = getLogs();
-        let mesesMap = {};
-        let todosPlayers = new Set();
-        let listaMeses = [];
-
-        logs.forEach(log => {
-            let dataObj = new Date(log.id || Date.now());
-            let mesAno = String(dataObj.getMonth() + 1).padStart(2, '0') + '/' + dataObj.getFullYear();
+        // GERAR ESCALA & RODÍZIO
+        function gerarEscalaRodizio() {
+            const turno = document.getElementById('select-turno').value;
+            const textoBruto = document.getElementById('input-rodizio-bruto').value;
+            const filtrarSistema = document.getElementById('check-filtrar-sistema').checked;
             
-            if (!mesesMap[mesAno]) {
-                mesesMap[mesAno] = {};
-                listaMeses.push(mesAno);
-            }
+            const linhas = textoBruto.split('\n').filter(l => l.trim() !== '');
+            let listaProcessada = [];
+            let invalidoDetectado = false;
 
-            let linhas = (log.texto || '').split('\n');
             linhas.forEach(linha => {
-                let match = linha.match(/•?\s*\*?([^*\-]+?)\*?\s*-\s*.*?\(([-\d]+)\s*pts\)/i);
-                if (match) {
-                    let nome = match[1].trim();
-                    let pts = parseInt(match[2], 10) || 0;
-                    todosPlayers.add(nome);
+                const linhaLimpa = sanitizarLinha(linha);
+                const partes = linhaLimpa.split(/\s+/);
+                
+                let pontos = 0;
+                let nome = '';
 
-                    if (!mesesMap[mesAno][nome]) mesesMap[mesAno][nome] = 0;
-                    mesesMap[mesAno][nome] += pts;
-                }
-            });
-        });
-
-        return { mesesMap, listaMeses, todosPlayers: Array.from(todosPlayers).sort() };
-    }
-
-    function renderizarComparativoMensal() {
-        let { mesesMap, listaMeses, todosPlayers } = extrairDadosMensais();
-        let select = document.getElementById('selectFiltroMesComp');
-        let valorSelecionado = select.value;
-
-        select.innerHTML = '<option value="TODOS">📅 Visão Geral (Todos os Meses)</option>';
-        listaMeses.forEach(m => {
-            let opt = document.createElement('option');
-            opt.value = m;
-            opt.innerText = `🗓️ Mês: ${m}`;
-            if (m === valorSelecionado) opt.selected = true;
-            select.appendChild(opt);
-        });
-
-        let theader = document.getElementById('tableHeaderComp');
-        let tbody = document.getElementById('tableBodyComp');
-        theader.innerHTML = '<th>Jogador</th>';
-        tbody.innerHTML = '';
-
-        if (todosPlayers.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:15px; opacity:0.6;">Nenhum dado encontrado no histórico.</td></tr>';
-            return;
-        }
-
-        let mesesExibicao = (select.value === 'TODOS') ? listaMeses : [select.value];
-
-        mesesExibicao.forEach(m => {
-            let th = document.createElement('th');
-            th.innerText = m;
-            theader.appendChild(th);
-        });
-
-        if (select.value === 'TODOS') {
-            let thTotal = document.createElement('th');
-            thTotal.innerText = 'Total Acumulado';
-            theader.appendChild(thTotal);
-        }
-
-        todosPlayers.forEach(player => {
-            let tr = document.createElement('tr');
-            let tdNome = document.createElement('td');
-            tdNome.innerHTML = `<strong>${player}</strong>`;
-            tr.appendChild(tdNome);
-
-            let totalPlayer = 0;
-            mesesExibicao.forEach(m => {
-                let td = document.createElement('td');
-                let pts = (mesesMap[m] && mesesMap[m][player]) ? mesesMap[m][player] : 0;
-                totalPlayer += pts;
-
-                if (pts > 0) {
-                    td.className = 'val-pts';
-                    td.innerText = `${pts} pts`;
+                const ultimoElem = partes[partes.length - 1];
+                if (!isNaN(ultimoElem)) {
+                    pontos = parseInt(ultimoElem, 10);
+                    nome = partes.slice(0, partes.length - 1).join(' ');
                 } else {
-                    td.className = 'val-zero';
-                    td.innerText = '0 pts';
+                    nome = linhaLimpa;
                 }
-                tr.appendChild(td);
+
+                if (pontos < 0 || isNaN(pontos)) invalidoDetectado = true;
+
+                if (nome) {
+                    if (filtrarSistema) {
+                        const existeNoSistema = state.sistema.some(s => s.nome.toLowerCase() === nome.toLowerCase());
+                        if (existeNoSistema) listaProcessada.push({ nome, pontos });
+                    } else {
+                        listaProcessada.push({ nome, pontos });
+                    }
+                }
             });
 
-            if (select.value === 'TODOS') {
-                let tdTotal = document.createElement('td');
-                tdTotal.className = 'val-pts';
-                tdTotal.innerText = `${totalPlayer} pts`;
-                tr.appendChild(tdTotal);
-            }
+            document.getElementById('alerta-pontos-invalidos').classList.toggle('hidden', !invalidoDetectado);
 
-            tbody.appendChild(tr);
-        });
-    }
+            // Monta objeto do Log
+            const somaPontosTotal = listaProcessada.reduce((acc, curr) => acc + (curr.pontos || 0), 0);
+            const novoLog = {
+                id: Date.now(),
+                data: new Date().toISOString(),
+                turno: turno,
+                lider: state.config.lider,
+                membros: listaProcessada,
+                pontosTotal: somaPontosTotal
+            };
 
-    function enviarZapComparativo() {
-        let { mesesMap, listaMeses, todosPlayers } = extrairDadosMensais();
-        let mesSelecionado = document.getElementById('selectFiltroMesComp').value;
+            state.historicoLogs.unshift(novoLog);
+            salvar('historicoLogs');
 
-        if (todosPlayers.length === 0) {
-            alert('Não há dados no histórico para gerar o comparativo.');
-            return;
+            state.escalaGeradaAtual = novoLog;
+            renderPreviewEscala(novoLog);
+            renderHistorico();
+            renderComparativo();
         }
 
-        let textoZap = `📊 *COMPARATIVO MENSAL DE PONTUAÇÃO GvG*\n\n`;
+        function renderPreviewEscala(log) {
+            let texto = `🛡️ *${state.config.guilda}* - *ESCALA GVG*\n`;
+            texto += `👑 *Líder:* ${state.config.lider}\n`;
+            texto += `📅 *Turno:* ${log.turno}\n`;
+            texto += `💬 ${state.config.saudacao}\n`;
+            texto += `-----------------------------------\n`;
 
-        if (mesSelecionado === 'TODOS') {
-            listaMeses.forEach(m => {
-                textoZap += `🗓️ *Mês: ${m}*\n`;
-                todosPlayers.forEach(p => {
-                    let pts = (mesesMap[m] && mesesMap[m][p]) ? mesesMap[m][p] : 0;
-                    if (pts > 0) textoZap += `• *${p}*: ${pts} pts\n`;
+            if (log.membros.length === 0) {
+                texto += `Nenhum membro escalado.\n`;
+            } else {
+                log.membros.forEach((m, idx) => {
+                    texto += `${idx + 1}. *${m.nome}* ${m.pontos ? `[${m.pontos} pts]` : ''}\n`;
                 });
-                textoZap += `\n`;
-            });
-        } else {
-            textoZap += `🗓️ *Mês: ${mesSelecionado}*\n`;
-            todosPlayers.forEach(p => {
-                let pts = (mesesMap[mesSelecionado] && mesesMap[mesSelecionado][p]) ? mesesMap[mesSelecionado][p] : 0;
-                if (pts > 0) textoZap += `• *${p}*: ${pts} pts\n`;
-            });
-        }
-
-        let textoFinal = obterCabecalhoLider() + textoZap;
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textoFinal)}`, '_blank');
-    }
-
-    function salvarLogAutomatico(total, resumo) {
-        let logs = getLogs();
-        logs.unshift({
-            id: Date.now(),
-            data: new Date().toLocaleString('pt-BR'),
-            total: total,
-            texto: resumo
-        });
-        saveLogs(logs);
-        renderizarLogs();
-        renderizarComparativoMensal();
-    }
-
-    function renderizarLogs() {
-        let logs = getLogs();
-        let filtro = (document.getElementById('filtroLogs').value || '').toLowerCase();
-        let filtrados = logs.filter(l => l.data.toLowerCase().includes(filtro) || l.texto.toLowerCase().includes(filtro));
-        
-        let container = document.getElementById('listaLogsContainer');
-        container.innerHTML = '';
-
-        let porPagina = parseInt(document.getElementById('itensPorPaginaLogs').value, 10);
-        let inicio = (pag.log - 1) * porPagina;
-        let itensPagina = filtrados.slice(inicio, inicio + porPagina);
-
-        if(itensPagina.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:10px; opacity:0.6;">Nenhum histórico gravado.</div>';
-            document.getElementById('paginacaoLogs').innerHTML = '';
-            return;
-        }
-
-        itensPagina.forEach(log => {
-            let div = document.createElement('div');
-            div.className = 'history-item';
-            div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                    <strong>📅 ${log.data} (${log.total} Players)</strong>
-                    <button onclick="excluirLog(${log.id})" class="btn-icon btn-del">🗑️</button>
-                </div>
-                <div style="font-size:12px; white-space:pre-wrap; max-height:100px; overflow-y:auto; background:var(--box-bg); padding:6px; border-radius:4px;">${log.texto}</div>
-            `;
-            container.appendChild(div);
-        });
-
-        renderizarPaginacao('paginacaoLogs', filtrados.length, porPagina, pag.log, (p) => { pag.log = p; renderizarLogs(); });
-    }
-
-    function excluirLog(id) {
-        let logs = getLogs().filter(l => l.id !== id);
-        saveLogs(logs);
-        renderizarLogs();
-        renderizarComparativoMensal();
-    }
-
-    function limparLogs() {
-        if (confirm('Deseja apagar todo o histórico de rodízios?')) {
-            localStorage.removeItem('gvg_historico_logs');
-            renderizarLogs();
-            renderizarComparativoMensal();
-        }
-    }
-
-    function exportarBackup() {
-        let dados = {
-            banco: getBanco(), logs: getLogs(), notas: getNotas(),
-            clan: { guilda: localStorage.getItem('gvg_nome_guilda'), lider: localStorage.getItem('gvg_nome_lider'), saudacao: localStorage.getItem('gvg_texto_saudacao') }
-        };
-        let blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
-        let a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `backup_gvg_${new Date().toISOString().slice(0,10)}.json`;
-        a.click();
-    }
-
-    function importarBackup(e) {
-        let file = e.target.files[0];
-        if (!file) return;
-        let reader = new FileReader();
-        reader.onload = (evt) => {
-            try {
-                let dados = JSON.parse(evt.target.result);
-                let bancoAtual = getBanco();
-
-                let novoBanco = null;
-                let novosLogs = null;
-                let novasNotas = null;
-
-                if (dados.banco) {
-                    novoBanco = dados.banco;
-                } else if (Array.isArray(dados)) {
-                    novoBanco = {};
-                    dados.forEach(item => {
-                        let n = item.nome || item.player || item.name;
-                        if (n) {
-                            novoBanco[n] = {
-                                participacoes: item.participacoes || 1,
-                                pontos: item.pontos || item.pts || 0,
-                                isSistema: !!item.isSistema
-                            };
-                        }
-                    });
-                } else if (typeof dados === 'object' && !dados.logs && !dados.notas) {
-                    novoBanco = dados;
-                }
-
-                if (dados.logs) novosLogs = dados.logs;
-                if (dados.notas) novasNotas = dados.notas;
-
-                if (novoBanco && typeof novoBanco === 'object') {
-                    Object.keys(novoBanco).forEach(k => {
-                        let item = novoBanco[k];
-                        let chave = encontrarChaveBanco(bancoAtual, k);
-
-                        if (typeof item === 'number') {
-                            item = { participacoes: 1, pontos: item, isSistema: false };
-                        }
-
-                        if (!bancoAtual[chave]) {
-                            bancoAtual[chave] = {
-                                participacoes: item.participacoes || 0,
-                                pontos: item.pontos || 0,
-                                isSistema: item.isSistema || false
-                            };
-                        } else {
-                            bancoAtual[chave].participacoes = Math.max(bancoAtual[chave].participacoes || 0, item.participacoes || 0);
-                            bancoAtual[chave].pontos = Math.max(bancoAtual[chave].pontos || 0, item.pontos || 0);
-                            if (item.isSistema) bancoAtual[chave].isSistema = true;
-                        }
-                    });
-                    saveBanco(bancoAtual);
-                }
-
-                if (novosLogs && Array.isArray(novosLogs)) {
-                    let logsAtuais = getLogs();
-                    let ids = new Set(logsAtuais.map(l => l.id));
-                    novosLogs.forEach(l => { if (!ids.has(l.id)) logsAtuais.push(l); });
-                    saveLogs(logsAtuais);
-                }
-
-                if (novasNotas && Array.isArray(novasNotas)) {
-                    let notasAtuais = getNotas();
-                    let ids = new Set(notasAtuais.map(n => n.id));
-                    novasNotas.forEach(n => { if (!ids.has(n.id)) notasAtuais.push(n); });
-                    saveNotas(notasAtuais);
-                }
-
-                if (dados.clan) {
-                    if (dados.clan.guilda) localStorage.setItem('gvg_nome_guilda', dados.clan.guilda);
-                    if (dados.clan.lider) localStorage.setItem('gvg_nome_lider', dados.clan.lider);
-                    if (dados.clan.saudacao) localStorage.setItem('gvg_texto_saudacao', dados.clan.saudacao);
-                    carregarClan();
-                }
-
-                sanitizarBanco();
-                alert('✅ Backup restaurado e unificado com sucesso!');
-                renderizarHistorico(); renderizarLogs(); renderizarNotas(); renderizarComparativoMensal();
-            } catch (err) {
-                alert('❌ Erro ao ler o arquivo de backup: ' + err.message);
             }
-        };
-        reader.readAsText(file);
-        e.target.value = '';
-    }
 
-    function salvarNotaPronta() {
-        let titulo = document.getElementById('tituloNota').value.trim();
-        let conteudo = document.getElementById('conteudoNota').value.trim();
-        if(!titulo || !conteudo) { alert('Preencha o título e o conteúdo!'); return; }
+            texto += `-----------------------------------\n`;
+            texto += `🔥 *Total de Integrantes:* ${log.membros.length}\n`;
+            texto += `🏆 *Pontuação Acumulada:* ${log.pontosTotal} pts`;
 
-        let notas = getNotas();
-        notas.unshift({ id: Date.now(), titulo, conteudo });
-        saveNotas(notas);
-
-        document.getElementById('tituloNota').value = '';
-        document.getElementById('conteudoNota').value = '';
-        renderizarNotas();
-    }
-
-    function renderizarNotas() {
-        let notas = getNotas();
-        let container = document.getElementById('listaNotasContainer');
-        container.innerHTML = '';
-
-        if(notas.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:10px; opacity:0.6;">Nenhum aviso salvo.</div>';
-            return;
+            document.getElementById('preview-escala').innerText = texto;
         }
 
-        notas.forEach(nota => {
-            let div = document.createElement('div');
-            div.className = 'note-item';
-            div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                    <strong>📌 ${nota.titulo}</strong>
-                    <div class="btn-group">
-                        <button onclick="enviarZapNota('${encodeURIComponent(nota.conteudo)}')" class="btn-icon btn-save">📤 Zap</button>
-                        <button onclick="excluirNota(${nota.id})" class="btn-icon btn-del">🗑️</button>
-                    </div>
-                </div>
-                <div style="font-size:13px; white-space:pre-wrap;">${nota.conteudo}</div>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    function excluirNota(id) {
-        let notas = getNotas().filter(n => n.id !== id);
-        saveNotas(notas);
-        renderizarNotas();
-    }
-
-    function enviarZapNota(textoEnc) {
-        let texto = decodeURIComponent(textoEnc);
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(obterCabecalhoLider() + texto)}`, '_blank');
-    }
-
-    function renderizarPaginacao(elementId, totalItens, porPagina, paginaAtual, callback) {
-        let container = document.getElementById(elementId);
-        container.innerHTML = '';
-        let totalPaginas = Math.ceil(totalItens / porPagina);
-        if (totalPaginas <= 1) return;
-
-        for (let i = 1; i <= totalPaginas; i++) {
-            let btn = document.createElement('button');
-            btn.className = `page-btn ${i === paginaAtual ? 'active' : ''}`;
-            btn.innerText = i;
-            btn.onclick = () => callback(i);
-            container.appendChild(btn);
+        function copiarPreviewWhatsApp() {
+            const texto = document.getElementById('preview-escala').innerText;
+            navigator.clipboard.writeText(texto);
+            alert('Texto copiado com sucesso!');
         }
-    }
 
-    async function carregarCodigo() {
-        const token = document.getElementById('inputTokenGit').value.trim();
-        if (!token) { alert('Digite o Token!'); return; }
+        function enviarWhatsAppRodizio() {
+            const texto = document.getElementById('preview-escala').innerText;
+            const encoded = encodeURIComponent(texto);
+            window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+        }
 
-        salvarTokenGitLocal();
-
-        const url = `https://api.github.com/repos/${DONO_DO_REPO}/${NOME_DO_REPO}/contents/${CAMINHO_ARQUIVO}?ref=${BRANCH_GIT}`;
-
-        try {
-            const resp = await fetch(url, {
-                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+        // GERENCIADOR DE PESSOAS (MEMBROS & SISTEMA)
+        function adicionarMembros() {
+            const raw = document.getElementById('input-novos-membros').value;
+            const linhas = raw.split('\n').map(l => l.trim()).filter(l => l !== '');
+            
+            linhas.forEach(nome => {
+                if (!state.membros.includes(nome)) state.membros.push(nome);
             });
 
-            if (!resp.ok) throw new Error(`Erro na API do GitHub (Status ${resp.status})`);
+            salvar('membros');
+            document.getElementById('input-novos-membros').value = '';
+            renderMembros();
+        }
 
-            const data = await resp.json();
-            arquivoSha = data.sha;
+        function renderMembros() {
+            const busca = document.getElementById('busca-membros').value.toLowerCase();
+            const porPag = parseInt(document.getElementById('paginacao-membros').value, 10);
+            
+            const filtrados = state.membros.filter(m => m.toLowerCase().includes(busca));
+            document.getElementById('cnt-membros').innerText = state.membros.length;
 
-            const conteudoDecodificado = decodeURIComponent(escape(atob(data.content.replace(/\s/g, ''))));
-            const editor = document.getElementById('editorCodigo');
-            editor.value = conteudoDecodificado;
-            editor.style.display = 'block';
-            document.getElementById('boxSalvar').style.display = 'block';
-            alert('✅ Código carregado com sucesso!');
-        } catch (err) { alert('❌ Erro ao carregar: ' + err.message); }
-    }
+            const totalPags = Math.ceil(filtrados.length / porPag) || 1;
+            if (state.pagMembros > totalPags) state.pagMembros = totalPags;
 
-    async function commitarCodigo() {
-        const token = document.getElementById('inputTokenGit').value.trim();
-        const conteudo = document.getElementById('editorCodigo').value;
-        const msg = document.getElementById('inputMensagemCommit').value.trim() || 'Correção de parsing de nomes e higienização automática do banco';
+            const inicio = (state.pagMembros - 1) * porPag;
+            const paginados = filtrados.slice(inicio, inicio + porPag);
 
-        if (!token || !arquivoSha) { alert('Carregue o código e insira o token!'); return; }
+            const ul = document.getElementById('lista-membros');
+            ul.innerHTML = '';
 
-        const url = `https://api.github.com/repos/${DONO_DO_REPO}/${NOME_DO_REPO}/contents/${CAMINHO_ARQUIVO}`;
-        const conteudoBase64 = btoa(unescape(encodeURIComponent(conteudo)));
+            if (paginados.length === 0) {
+                ul.innerHTML = `<li class="p-3 text-slate-500 text-center">Nenhum membro encontrado</li>`;
+            } else {
+                paginados.forEach(m => {
+                    ul.innerHTML += `
+                        <li class="p-3 flex justify-between items-center hover:bg-slate-800/50">
+                            <span class="font-medium text-slate-200">${m}</span>
+                            <button onclick="removerMembro('${m}')" class="text-rose-400 hover:text-rose-300"><i class="fa-solid fa-trash"></i></button>
+                        </li>`;
+                });
+            }
 
-        try {
-            const resp = await fetch(url, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ message: msg, content: conteudoBase64, sha: arquivoSha, branch: BRANCH_GIT })
+            renderPaginacaoControls('paginador-membros-controls', totalPags, state.pagMembros, (p) => {
+                state.pagMembros = p;
+                renderMembros();
+            });
+        }
+
+        function removerMembro(nome) {
+            state.membros = state.membros.filter(m => m !== nome);
+            salvar('membros');
+            renderMembros();
+        }
+
+        function limparMembros() {
+            if (confirm('Deseja apagar TODOS os membros?')) {
+                state.membros = [];
+                salvar('membros');
+                renderMembros();
+            }
+        }
+
+        function adicionarSistema() {
+            const raw = document.getElementById('input-novo-sistema').value;
+            const linhas = raw.split('\n').map(l => l.trim()).filter(l => l !== '');
+
+            linhas.forEach(linha => {
+                const limpa = sanitizarLinha(linha);
+                const partes = limpa.split(/\s+/);
+                const ultimoElem = partes[partes.length - 1];
+                
+                let pontos = 0;
+                let nome = '';
+
+                if (!isNaN(ultimoElem)) {
+                    pontos = parseInt(ultimoElem, 10);
+                    nome = partes.slice(0, partes.length - 1).join(' ');
+                } else {
+                    nome = limpa;
+                }
+
+                if (nome) {
+                    const idx = state.sistema.findIndex(s => s.nome.toLowerCase() === nome.toLowerCase());
+                    if (idx >= 0) {
+                        state.sistema[idx].pontos = pontos;
+                    } else {
+                        state.sistema.push({ id: Date.now() + Math.random(), nome, pontos });
+                    }
+                }
             });
 
-            if (!resp.ok) throw new Error(`Erro ao salvar (Status ${resp.status})`);
+            salvar('sistema');
+            document.getElementById('input-novo-sistema').value = '';
+            renderSistema();
+        }
 
-            const data = await resp.json();
-            arquivoSha = data.content.sha;
-            alert('🚀 Commit realizado com sucesso no GitHub!');
-        } catch (err) { alert('❌ Erro no commit: ' + err.message); }
-    }
-</script>
+        function renderSistema() {
+            const busca = document.getElementById('busca-sistema').value.toLowerCase();
+            const porPag = parseInt(document.getElementById('paginacao-sistema').value, 10);
+            
+            const filtrados = state.sistema.filter(s => s.nome.toLowerCase().includes(busca));
+            document.getElementById('cnt-sistema').innerText = state.sistema.length;
+
+            const totalPags = Math.ceil(filtrados.length / porPag) || 1;
+            if (state.pagSistema > totalPags) state.pagSistema = totalPags;
+
+            const inicio = (state.pagSistema - 1) * porPag;
+            const paginados = filtrados.slice(inicio, inicio + porPag);
+
+            const ul = document.getElementById('lista-sistema');
+            ul.innerHTML = '';
+
+            if (paginados.length === 0) {
+                ul.innerHTML = `<li class="p-3 text-slate-500 text-center">Nenhum registro no sistema</li>`;
+            } else {
+                paginados.forEach(s => {
+                    ul.innerHTML += `
+                        <li class="p-3 flex justify-between items-center hover:bg-slate-800/50">
+                            <span class="font-medium text-slate-200">${s.nome}</span>
+                            <span class="bg-amber-500/10 text-amber-400 text-xs px-2 py-1 rounded font-mono font-bold">${s.pontos} pts</span>
+                            <button onclick="removerSistema(${s.id})" class="text-rose-400 hover:text-rose-300"><i class="fa-solid fa-trash"></i></button>
+                        </li>`;
+                });
+            }
+
+            renderPaginacaoControls('paginador-sistema-controls', totalPags, state.pagSistema, (p) => {
+                state.pagSistema = p;
+                renderSistema();
+            });
+        }
+
+        function removerSistema(id) {
+            state.sistema = state.sistema.filter(s => s.id !== id);
+            salvar('sistema');
+            renderSistema();
+        }
+
+        function limparSistema() {
+            if (confirm('Deseja limpar todo o banco do Sistema?')) {
+                state.sistema = [];
+                salvar('sistema');
+                renderSistema();
+            }
+        }
+
+        // HISTÓRICO & COMPARATIVO MENSAL (CÁLCULO DINÂMICO REQUERIDO)
+        function renderHistorico() {
+            const busca = document.getElementById('busca-historico').value.toLowerCase();
+            const filtrados = state.historicoLogs.filter(h => 
+                h.turno.toLowerCase().includes(busca) || 
+                new Date(h.data).toLocaleDateString('pt-BR').includes(busca)
+            );
+
+            const ul = document.getElementById('lista-historico-logs');
+            ul.innerHTML = '';
+
+            if (filtrados.length === 0) {
+                ul.innerHTML = `<li class="p-4 text-slate-500 text-center">Nenhum log gravado.</li>`;
+                return;
+            }
+
+            filtrados.forEach(log => {
+                const dataFormatada = new Date(log.data).toLocaleString('pt-BR');
+                ul.innerHTML += `
+                    <li class="p-3 flex justify-between items-center hover:bg-slate-800/50">
+                        <div>
+                            <div class="font-bold text-slate-200 text-sm">${log.turno} - <span class="text-amber-400">${log.pontosTotal} pts</span></div>
+                            <div class="text-xs text-slate-400">${dataFormatada} | ${log.membros.length} membros</div>
+                        </div>
+                        <button onclick="excluirLog(${log.id})" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1 bg-rose-500/10 rounded">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </li>`;
+            });
+        }
+
+        function excluirLog(id) {
+            state.historicoLogs = state.historicoLogs.filter(h => h.id !== id);
+            salvar('historicoLogs');
+            renderHistorico();
+            renderComparativo(); // Recalcula o comparativo dinamicamente
+        }
+
+        function limparHistorico() {
+            if (confirm('Deseja limpar todo o histórico de logs? Isso atualizará o comparativo mensal!')) {
+                state.historicoLogs = [];
+                salvar('historicoLogs');
+                renderHistorico();
+                renderComparativo();
+            }
+        }
+
+        // RENDERIZAÇÃO DO COMPARATIVO MENSAL
+        function renderComparativo() {
+            // Lógica dinamicamente derivada EXCLUSIVAMENTE dos logs ativos
+            const mapaComparativo = {};
+
+            state.historicoLogs.forEach(log => {
+                const d = new Date(log.data || Date.now());
+                const mesAno = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                const chave = mesAno.charAt(0).toUpperCase() + mesAno.slice(1);
+
+                if (!mapaComparativo[chave]) {
+                    mapaComparativo[chave] = { rodizios: 0, pontos: 0 };
+                }
+                mapaComparativo[chave].rodizios += 1;
+                mapaComparativo[chave].pontos += Number(log.pontosTotal || 0);
+            });
+
+            const tbody = document.getElementById('tabela-comparativo-mensal');
+            tbody.innerHTML = '';
+
+            const chaves = Object.keys(mapaComparativo);
+
+            if (chaves.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-slate-500">Nenhum dado acumulado.</td></tr>`;
+                return;
+            }
+
+            chaves.forEach(mes => {
+                const item = mapaComparativo[mes];
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/40">
+                        <td class="p-3 font-semibold text-slate-200">${mes}</td>
+                        <td class="p-3 text-center text-slate-300">${item.rodizios}</td>
+                        <td class="p-3 text-right font-bold text-amber-400">${item.pontos.toLocaleString('pt-BR')} pts</td>
+                    </tr>`;
+            });
+        }
+
+        function enviarWhatsAppComparativo() {
+            const mapaComparativo = {};
+            state.historicoLogs.forEach(log => {
+                const d = new Date(log.data || Date.now());
+                const mesAno = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                const chave = mesAno.charAt(0).toUpperCase() + mesAno.slice(1);
+
+                if (!mapaComparativo[chave]) {
+                    mapaComparativo[chave] = { rodizios: 0, pontos: 0 };
+                }
+                mapaComparativo[chave].rodizios += 1;
+                mapaComparativo[chave].pontos += Number(log.pontosTotal || 0);
+            });
+
+            let texto = `📊 *COMPARATIVO MENSAL DE GVG* - *${state.config.guilda}*\n`;
+            texto += `-----------------------------------\n`;
+
+            const chaves = Object.keys(mapaComparativo);
+            if (chaves.length === 0) {
+                texto += `Nenhum histórico acumulado.\n`;
+            } else {
+                chaves.forEach(mes => {
+                    const item = mapaComparativo[mes];
+                    texto += `🗓️ *${mes}*: ${item.rodizios} rodízios | *${item.pontos} pts*\n`;
+                });
+            }
+
+            texto += `-----------------------------------\n`;
+            texto += `👑 *Líder Responsável:* ${state.config.lider}`;
+
+            const encoded = encodeURIComponent(texto);
+            window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+        }
+
+        // AVISOS & MENSAGENS
+        function salvarMensagemPronta() {
+            const titulo = document.getElementById('msg-titulo').value.trim();
+            const texto = document.getElementById('msg-texto').value.trim();
+
+            if (!titulo || !texto) return alert('Preencha o título e o conteúdo!');
+
+            state.mensagens.push({ id: Date.now(), titulo, texto });
+            salvar('mensagens');
+
+            document.getElementById('msg-titulo').value = '';
+            document.getElementById('msg-texto').value = '';
+            renderMensagens();
+        }
+
+        function renderMensagens() {
+            const container = document.getElementById('container-mensagens-prontas');
+            container.innerHTML = '';
+
+            if (state.mensagens.length === 0) {
+                container.innerHTML = `<div class="col-span-2 text-slate-500 text-center p-4">Nenhuma mensagem salva.</div>`;
+                return;
+            }
+
+            state.mensagens.forEach(msg => {
+                container.innerHTML += `
+                    <div class="bg-slate-900 border border-slate-700 p-4 rounded-lg flex flex-col justify-between space-y-3">
+                        <div>
+                            <h3 class="font-bold text-amber-400 text-sm mb-1">${msg.titulo}</h3>
+                            <p class="text-xs text-slate-300 font-mono whitespace-pre-wrap">${msg.texto}</p>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-slate-800">
+                            <button onclick="enviarMensagemWhatsApp('${encodeURIComponent(msg.texto)}')" class="text-xs px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-bold">
+                                <i class="fa-brands fa-whatsapp me-1"></i> WhatsApp
+                            </button>
+                            <button onclick="excluirMensagem(${msg.id})" class="text-xs text-rose-400 hover:underline">
+                                <i class="fa-solid fa-trash"></i> Excluir
+                            </button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function enviarMensagemWhatsApp(textoEncoded) {
+            window.open(`https://api.whatsapp.com/send?text=${textoEncoded}`, '_blank');
+        }
+
+        function excluirMensagem(id) {
+            state.mensagens = state.mensagens.filter(m => m.id !== id);
+            salvar('mensagens');
+            renderMensagens();
+        }
+
+        // CONFIGURAÇÕES
+        function carregarConfiguracoes() {
+            document.getElementById('cfg-guilda').value = state.config.guilda;
+            document.getElementById('cfg-lider').value = state.config.lider;
+            document.getElementById('cfg-saudacao').value = state.config.saudacao;
+            document.getElementById('gh-token-input').value = state.ghToken;
+            renderPreviewCabecalho();
+        }
+
+        function atualizarConfiguracoes() {
+            state.config.guilda = document.getElementById('cfg-guilda').value;
+            state.config.lider = document.getElementById('cfg-lider').value;
+            state.config.saudacao = document.getElementById('cfg-saudacao').value;
+
+            salvar('config');
+            document.getElementById('header-guilda-title').innerText = state.config.guilda || 'GvG Pocket Contest';
+            renderPreviewCabecalho();
+        }
+
+        function renderPreviewCabecalho() {
+            const preview = `🛡️ *${state.config.guilda}* - *ESCALA GVG*\n👑 *Líder:* ${state.config.lider}\n💬 ${state.config.saudacao}`;
+            document.getElementById('preview-cabecalho-whatsapp').innerText = preview;
+        }
+
+        // BANNER & CRONÔMETRO
+        function iniciarCronometro() {
+            setInterval(() => {
+                const agora = new Date();
+                const proximaHora = new Date(agora);
+                proximaHora.setHours(agora.getHours() + 1, 0, 0, 0);
+
+                const diff = proximaHora - agora;
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+                document.getElementById('cronometro-turno').innerText = 
+                    `00:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }, 1000);
+
+            if (state.envioBanner) {
+                document.getElementById('ultimo-envio-status').innerText = `Último envio: ${state.envioBanner.timestamp}`;
+            }
+        }
+
+        function registrarEnvioTurno() {
+            const dataStr = new Date().toLocaleString('pt-BR');
+            state.envioBanner = { timestamp: dataStr };
+            localStorage.setItem('gvg_envio_banner', JSON.stringify(state.envioBanner));
+            document.getElementById('ultimo-envio-status').innerText = `Último envio: ${dataStr}`;
+            alert('Envio do turno confirmado e registrado!');
+        }
+
+        // BACKUP INTEGRADO (JSON)
+        function exportarBackupJSON() {
+            const backup = {
+                config: state.config,
+                membros: state.membros,
+                sistema: state.sistema,
+                historicoLogs: state.historicoLogs,
+                mensagens: state.mensagens
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `gvg_backup_${new Date().toISOString().slice(0,10)}.json`);
+            dlAnchorElem.click();
+        }
+
+        function importarBackupJSON(event) {
+            const fileReader = new FileReader();
+            fileReader.onload = function (e) {
+                try {
+                    const obj = JSON.parse(e.target.result);
+                    if (obj.config) state.config = obj.config;
+                    if (obj.membros) state.membros = obj.membros;
+                    if (obj.sistema) state.sistema = obj.sistema;
+                    if (obj.historicoLogs) state.historicoLogs = obj.historicoLogs;
+                    if (obj.mensagens) state.mensagens = obj.mensagens;
+
+                    salvar('config'); salvar('membros'); salvar('sistema');
+                    salvar('historicoLogs'); salvar('mensagens');
+
+                    sanitizarBanco();
+                    carregarConfiguracoes();
+                    renderTudo();
+                    alert('Backup importado com sucesso!');
+                } catch (err) {
+                    alert('Erro ao importar o arquivo JSON!');
+                }
+            };
+            fileReader.readAsText(event.target.files[0]);
+        }
+
+        // MODO DEV (GITHUB COMMIT)
+        function salvarTokenGH() {
+            const token = document.getElementById('gh-token-input').value.trim();
+            state.ghToken = token;
+            localStorage.setItem('gvg_gh_token', token);
+            alert('Token salvo com sucesso!');
+        }
+
+        function removerTokenGH() {
+            state.ghToken = '';
+            localStorage.removeItem('gvg_gh_token');
+            document.getElementById('gh-token-input').value = '';
+            alert('Token removido.');
+        }
+
+        async function carregarCodigoGitHub() {
+            try {
+                const res = await fetch('https://api.github.com/repos/RamboFetBB/GvG-automatizada-pocket-contest/contents/index.html');
+                const data = await res.json();
+                const decoded = decodeURIComponent(escape(atob(data.content)));
+                document.getElementById('dev-code-editor').value = decoded;
+                alert('Código atualizado diretamente do GitHub!');
+            } catch (e) {
+                alert('Erro ao carregar código do repositório!');
+            }
+        }
+
+        async function commitCodigoGitHub() {
+            if (!state.ghToken) return alert('Insira e salve o seu GitHub Token primeiro!');
+            const conteudo = document.getElementById('dev-code-editor').value;
+            if (!conteudo) return alert('O editor está vazio!');
+
+            try {
+                // 1. Obter SHA atual do arquivo
+                const resGet = await fetch('https://api.github.com/repos/RamboFetBB/GvG-automatizada-pocket-contest/contents/index.html', {
+                    headers: { 'Authorization': `token ${state.ghToken}` }
+                });
+                const dataGet = await resGet.json();
+                const sha = dataGet.sha;
+
+                // 2. Fazer PUT com novo conteúdo
+                const encoded = btoa(unescape(encodeURIComponent(conteudo)));
+                const resPut = await fetch('https://api.github.com/repos/RamboFetBB/GvG-automatizada-pocket-contest/contents/index.html', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${state.ghToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'auto: atualização de código via painel dev',
+                        content: encoded,
+                        sha: sha,
+                        branch: 'main'
+                    })
+                });
+
+                if (resPut.ok) {
+                    alert('Commit realizado com sucesso na branch main!');
+                } else {
+                    alert('Erro ao realizar o commit no GitHub.');
+                }
+            } catch (e) {
+                alert('Falha na comunicação com a API do GitHub.');
+            }
+        }
+
+        // AUXILIARES DE PAGINAÇÃO
+        function renderPaginacaoControls(containerId, total, atual, callback) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            for (let i = 1; i <= total; i++) {
+                const btn = document.createElement('button');
+                btn.innerText = i;
+                btn.className = `px-2 py-0.5 rounded text-xs ${i === atual ? 'bg-amber-600 text-white font-bold' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`;
+                btn.onclick = () => callback(i);
+                container.appendChild(btn);
+            }
+        }
+
+        // RENDER GERAL
+        function renderTudo() {
+            renderMembros();
+            renderSistema();
+            renderHistorico();
+            renderComparativo();
+            renderMensagens();
+        }
+    </script>
 </body>
 </html>
