@@ -3,86 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GvG - Rodízio, Gerenciador & Histórico</title>
+    <title>GvG - Rodízio & Gerenciador</title>
     <style>
         :root {
-            --bg-color: #f0f2f5;
-            --container-bg: #fff;
-            --text-color: #333;
-            --border-color: #ccc;
-            --tab-bg: #f1f1f1;
-            --tab-text: #555;
-            --box-bg: #f8f9fa;
-            --item-bg: #fff;
-            --item-border: #eee;
-            --input-bg: #fff;
+            --bg-color: #f0f2f5; --container-bg: #fff; --text-color: #333;
+            --border-color: #ccc; --tab-bg: #f1f1f1; --tab-text: #555;
+            --box-bg: #f8f9fa; --item-bg: #fff; --item-border: #eee; --input-bg: #fff;
         }
-
         [data-theme="dark"] {
-            --bg-color: #121212;
-            --container-bg: #1e1e1e;
-            --text-color: #e0e0e0;
-            --border-color: #444;
-            --tab-bg: #2d2d2d;
-            --tab-text: #b0b0b0;
-            --box-bg: #252525;
-            --item-bg: #2a2a2a;
-            --item-border: #383838;
-            --input-bg: #2a2a2a;
+            --bg-color: #121212; --container-bg: #1e1e1e; --text-color: #e0e0e0;
+            --border-color: #444; --tab-bg: #2d2d2d; --tab-text: #b0b0b0;
+            --box-bg: #252525; --item-bg: #2a2a2a; --item-border: #383838; --input-bg: #2a2a2a;
         }
-
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 15px; background: var(--bg-color); color: var(--text-color); transition: background 0.3s, color 0.3s; margin: 0; }
-        .container { max-width: 750px; margin: auto; background: var(--container-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; transition: background 0.3s; }
-        
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 15px; padding-bottom: 70px; background: var(--bg-color); color: var(--text-color); transition: 0.3s; margin: 0; }
+        .container { max-width: 750px; margin: auto; background: var(--container-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .theme-btn { background: none; border: 1px solid var(--border-color); color: var(--text-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
-        
         .next-turn-banner { background: #007bff; color: white; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
         .banner-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; flex-wrap: wrap; gap: 5px; }
         .banner-timer { font-size: 13px; opacity: 0.95; background: rgba(0,0,0,0.15); padding: 4px 8px; border-radius: 4px; display: inline-block; width: fit-content; }
-        .btn-marcar-enviado { background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .btn-marcar-enviado:hover { background: #218838; transform: scale(1.02); }
-
+        .btn-marcar-enviado { background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
         .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; gap: 3px; overflow-x: auto; padding-bottom: 3px; }
-        .tab-btn { flex: 1; padding: 8px 10px; border: none; background: var(--tab-bg); font-weight: bold; font-size: 11px; cursor: pointer; border-radius: 8px 8px 0 0; transition: 0.3s; color: var(--tab-text); white-space: nowrap; text-align: center; }
+        .tab-btn { flex: 1; padding: 8px 10px; border: none; background: var(--tab-bg); font-weight: bold; font-size: 11px; cursor: pointer; border-radius: 8px 8px 0 0; color: var(--tab-text); white-space: nowrap; text-align: center; }
         .tab-btn.active { background: #007bff; color: white; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-
-        textarea { width: 100%; height: 130px; padding: 10px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; background: var(--input-bg); color: var(--text-color); resize: vertical; }
-        button.action-btn { cursor: pointer; padding: 12px; margin-top: 10px; border: none; border-radius: 6px; color: white; font-weight: bold; width: 100%; font-size: 15px; transition: opacity 0.2s; }
-        button.action-btn:hover { opacity: 0.9; }
-        
+        textarea, .search-box, .select-per-page { width: 100%; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--input-bg); color: var(--text-color); }
+        textarea { height: 130px; padding: 10px; font-size: 14px; resize: vertical; }
+        .search-box { padding: 8px; margin-bottom: 12px; }
+        button.action-btn { cursor: pointer; padding: 12px; margin-top: 10px; border: none; border-radius: 6px; color: white; font-weight: bold; width: 100%; font-size: 15px; }
         .result-box { margin-top: 20px; padding: 15px; background: var(--box-bg); border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
         .alert-box { background: #fff3cd; color: #856404; padding: 10px; border-radius: 6px; border: 1px solid #ffeeba; margin-top: 10px; font-size: 13px; display: none; }
         [data-theme="dark"] .alert-box { background: #332701; color: #ffda6a; border-color: #664d03; }
-        
-        .search-box { width: 100%; padding: 8px; margin-bottom: 12px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--input-bg); color: var(--text-color); }
         .controls-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
-        .select-per-page { padding: 6px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--input-bg); color: var(--text-color); font-size: 13px; cursor: pointer; }
-        
+        .select-per-page { padding: 6px; font-size: 13px; cursor: pointer; width: auto; }
         .player-grid, .history-grid, .notes-grid { min-height: 200px; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: var(--box-bg); }
-        .player-item, .history-item, .note-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--item-border); background: var(--item-bg); margin-bottom: 6px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .player-item, .history-item, .note-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--item-border); background: var(--item-bg); margin-bottom: 6px; border-radius: 6px; }
         .history-item, .note-item { flex-direction: column; align-items: stretch; }
         .badge-sys { background: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-        
         .btn-group { display: flex; gap: 5px; flex-wrap: wrap; }
         .btn-icon { border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; color: white; }
-        .btn-edit { background: #ffc107; color: #000; }
-        .btn-del { background: #dc3545; }
-        .btn-save { background: #28a745; }
-        .btn-copy-adm { background: #25d366; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; }
-        .btn-copy-players { background: #007bff; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; }
-        .btn-whatsapp-turno { background: #25d366; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; margin-bottom: 6px; display: inline-flex; align-items: center; gap: 4px; }
-
+        .btn-edit { background: #ffc107; color: #000; } .btn-del { background: #dc3545; } .btn-save { background: #28a745; }
+        .btn-copy-adm, .btn-copy-players, .btn-whatsapp-turno { border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
+        .btn-copy-adm { background: #25d366; padding: 3px 8px; font-size: 11px; }
+        .btn-copy-players { background: #007bff; padding: 3px 8px; font-size: 11px; }
+        .btn-whatsapp-turno { background: #25d366; padding: 4px 8px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 6px; }
         .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 15px; }
         .page-btn { padding: 5px 10px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); cursor: pointer; border-radius: 4px; font-weight: bold; }
         .page-btn.active { background: #007bff; color: white; border-color: #007bff; }
-        .page-btn:disabled { background: #e9ecef; cursor: not-allowed; color: #6c757d; opacity: 0.6; }
-
         #modalEdicao { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
         .modal-box { background: var(--container-bg); color: var(--text-color); padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-        .modal-box textarea { height: 200px; margin-top: 10px; margin-bottom: 10px; }
+        .modal-box textarea { height: 200px; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -109,835 +80,384 @@
         <button class="tab-btn" onclick="alternarAba(event, 'abaClan')">🛡️ Clã</button>
     </div>
 
-    <!-- ABA 1: GERAR RODÍZIO -->
+    <!-- ABA 1: RODÍZIO -->
     <div id="abaRodizio" class="tab-content active">
         <h2>1. Cole a Lista de Nomes</h2>
         <textarea id="listaTexto" placeholder="Cole a lista aqui..."></textarea>
-        
-        <div id="alertaInvalido" class="alert-box">⚠️ Atenção: Detectamos pontuações negativas ou valores inválidos na lista. Verifique os dados.</div>
-        
+        <div id="alertaInvalido" class="alert-box">⚠️ Atenção: Detectamos pontuações negativas ou valores inválidos na lista.</div>
         <div id="resultado" class="result-box">A escala aparecerá aqui assim que colar a lista...</div>
-        
         <div id="botoesZap" style="display:none; margin-top: 15px;">
             <button class="action-btn" onclick="compartilharZap('adm')" style="background:#25d366;">📤 Enviar p/ ADM (Completo)</button>
             <button class="action-btn" onclick="compartilharZap('players')" style="background:#007bff;">📤 Enviar p/ Players (Só Premiação)</button>
         </div>
     </div>
 
-    <!-- ABA 2: GERENCIADOR DE SISTEMA -->
+    <!-- ABA 2: JOGADORES -->
     <div id="abaHistorico" class="tab-content">
         <h3>⚙️ Jogadores do Sistema</h3>
         <div style="display: flex; gap: 5px; margin-bottom: 12px;">
-            <input type="text" id="novoNomeSistema" class="search-box" placeholder="Adicionar player manualmente..." style="margin-bottom:0;">
+            <input type="text" id="novoNomeSistema" class="search-box" placeholder="Adicionar player..." style="margin-bottom:0;">
             <button onclick="adicionarManualSistema()" class="btn-icon btn-save" style="padding: 0 15px; font-size: 16px;">✅</button>
         </div>
-        
         <div class="controls-header">
-            <input type="text" id="filtroJogador" class="search-box" placeholder="🔍 Buscar jogador..." oninput="paginaSistema = 1; renderizarHistorico()" style="margin-bottom:0; flex: 1;">
-            <select id="itensPorPaginaSistema" class="select-per-page" onchange="paginaSistema = 1; renderizarHistorico()">
-                <option value="5">5 p/ pág</option>
-                <option value="10">10 p/ pág</option>
-                <option value="20" selected>20 p/ pág</option>
+            <input type="text" id="filtroJogador" class="search-box" placeholder="🔍 Buscar..." oninput="pag.sis=1; renderizarHistorico()" style="margin-bottom:0; flex: 1;">
+            <select id="itensPorPaginaSistema" class="select-per-page" onchange="pag.sis=1; renderizarHistorico()">
+                <option value="5">5</option><option value="10">10</option><option value="20" selected>20</option>
             </select>
         </div>
-        
         <div class="player-grid" id="listaHistoricoContainer" style="margin-top: 12px;"></div>
         <div class="pagination" id="paginacaoSistema"></div>
-
         <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button onclick="exportarBackup()" class="action-btn" style="background:#17a2b8; margin-top:0; padding:10px; font-size:14px;">💾 Exportar Backup</button>
-            <button onclick="document.getElementById('inputImportar').click()" class="action-btn" style="background:#ffc107; color:#000; margin-top:0; padding:10px; font-size:14px;">📂 Importar</button>
+            <button onclick="exportarBackup()" class="action-btn" style="background:#17a2b8; margin:0; padding:10px; font-size:14px;">💾 Exportar</button>
+            <button onclick="document.getElementById('inputImportar').click()" class="action-btn" style="background:#ffc107; color:#000; margin:0; padding:10px; font-size:14px;">📂 Importar</button>
             <input type="file" id="inputImportar" accept=".json" style="display:none" onchange="importarBackup(event)">
         </div>
-
         <button onclick="limparBancoJogadores()" class="action-btn" style="background:#dc3545; margin-top:10px; padding:8px;">🗑️ Limpar Banco</button>
     </div>
 
-    <!-- ABA 3: HISTÓRICO DE GERAÇÕES -->
+    <!-- ABA 3: HISTÓRICO -->
     <div id="abaLogs" class="tab-content">
         <h3>📁 Histórico de Rodízios</h3>
-        
         <div class="controls-header" style="margin-top: 10px;">
-            <input type="text" id="filtroLogs" class="search-box" placeholder="🔍 Buscar no histórico..." oninput="paginaLogs = 1; renderizarLogs()" style="margin-bottom:0; flex: 1;">
-            <select id="itensPorPaginaLogs" class="select-per-page" onchange="paginaLogs = 1; renderizarLogs()">
-                <option value="5">5 p/ pág</option>
-                <option value="10">10 p/ pág</option>
-                <option value="20" selected>20 p/ pág</option>
+            <input type="text" id="filtroLogs" class="search-box" placeholder="🔍 Buscar histórico..." oninput="pag.log=1; renderizarLogs()" style="margin-bottom:0; flex: 1;">
+            <select id="itensPorPaginaLogs" class="select-per-page" onchange="pag.log=1; renderizarLogs()">
+                <option value="5">5</option><option value="10">10</option><option value="20" selected>20</option>
             </select>
         </div>
-        
         <div class="history-grid" id="listaLogsContainer" style="margin-top: 12px;"></div>
         <div class="pagination" id="paginacaoLogs"></div>
-
         <button onclick="limparLogs()" class="action-btn" style="background:#dc3545; margin-top:15px; padding:8px;">🗑️ Limpar Todo o Histórico</button>
     </div>
 
-    <!-- ABA 4: AVISOS PRONTOS -->
+    <!-- ABA 4: AVISOS -->
     <div id="abaNotas" class="tab-content">
         <h3>📝 Avisos & Mensagens Prontas</h3>
-        <p style="font-size: 13px; color: #777; margin-top: 0;">Salve seus textos fixos, regras ou lembretes para copiar com um toque no celular.</p>
-        
         <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
-            <input type="text" id="tituloNota" class="search-box" placeholder="Título do aviso (ex: Regras GvG)..." style="margin-bottom:0;">
-            <textarea id="conteudoNota" placeholder="Escreva o texto completo da mensagem aqui..." style="height: 80px;"></textarea>
-            <button onclick="salvarNotaPronta()" class="action-btn" style="background:#28a745; margin-top:0; padding:10px;">💾 Salvar Novo Aviso</button>
+            <input type="text" id="tituloNota" class="search-box" placeholder="Título..." style="margin-bottom:0;">
+            <textarea id="conteudoNota" placeholder="Escreva o aviso..." style="height: 80px;"></textarea>
+            <button onclick="salvarNotaPronta()" class="action-btn" style="background:#28a745; margin:0; padding:10px;">💾 Salvar Aviso</button>
         </div>
-
         <div class="notes-grid" id="listaNotasContainer" style="margin-top: 12px;"></div>
     </div>
 
-    <!-- ABA 5: CONFIGURAÇÕES DO CLÃ -->
+    <!-- ABA 5: CLÃ -->
     <div id="abaClan" class="tab-content">
         <h3>🛡️ Configurações do Clã</h3>
-        <p style="font-size: 13px; color: #777; margin-top: 0;">Personalize os dados e a saudação inicial do WhatsApp.</p>
-        
         <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
-            <div>
-                <label style="font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px;">Nome da Guilda:</label>
-                <input type="text" id="inputNomeGuilda" class="search-box" placeholder="Ex: Brasil / Dragons..." style="margin-bottom:0;" oninput="salvarDadosClan()">
-            </div>
-            <div>
-                <label style="font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px;">Nome do Líder:</label>
-                <input type="text" id="inputNomeLider" class="search-box" placeholder="Ex: Rambo / Zeus..." style="margin-bottom:0;" oninput="salvarDadosClan()">
-            </div>
-            <div>
-                <label style="font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px;">Texto de Saudação (Introdução):</label>
-                <input type="text" id="inputTextoSaudacao" class="search-box" placeholder="Ex: Olá guilda [Guilda], segue:" style="margin-bottom:0;" oninput="salvarDadosClan()">
-            </div>
+            <div><label style="font-size: 13px; font-weight: bold;">Nome da Guilda:</label><input type="text" id="inputNomeGuilda" class="search-box" oninput="salvarDadosClan()"></div>
+            <div><label style="font-size: 13px; font-weight: bold;">Nome do Líder:</label><input type="text" id="inputNomeLider" class="search-box" oninput="salvarDadosClan()"></div>
+            <div><label style="font-size: 13px; font-weight: bold;">Saudação:</label><input type="text" id="inputTextoSaudacao" class="search-box" oninput="salvarDadosClan()"></div>
         </div>
-        
         <div style="margin-top: 20px; padding: 12px; background: var(--box-bg); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px;">
-            💡 <strong>Como vai sair no Zap (Exemplo dinâmico):</strong><br>
-            <code id="exemploZapPreview" style="color: #007bff; display: block; margin-top: 5px; white-space: pre-wrap;">*[Nome do Líder]*: Olá guilda [Nome da Guilda], segue: ...</code>
+            💡 <strong>Exemplo no Zap:</strong><code id="exemploZapPreview" style="color: #007bff; display: block; margin-top: 5px; white-space: pre-wrap;"></code>
         </div>
     </div>
 </div>
 
-<!-- MODAL DE EDIÇÃO -->
+<!-- MODAL -->
 <div id="modalEdicao">
     <div class="modal-box">
-        <h3 id="modalTitulo" style="margin-top:0;">✏️ Editar Registro</h3>
+        <h3 id="modalTitulo" style="margin-top:0;">✏️ Editar</h3>
         <textarea id="modalTextoInput"></textarea>
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
-            <button onclick="fecharModal()" class="action-btn" style="background:#6c757d; width:auto; padding:8px 15px; margin-top:0;">Cancelar</button>
-            <button onclick="salvarEdicaoModal()" class="action-btn" style="background:#28a745; width:auto; padding:8px 15px; margin-top:0;">Salvar</button>
+            <button onclick="document.getElementById('modalEdicao').style.display='none'" class="action-btn" style="background:#6c757d; width:auto; padding:8px 15px; margin:0;">Cancelar</button>
+            <button onclick="salvarEdicaoModal()" class="action-btn" style="background:#28a745; width:auto; padding:8px 15px; margin:0;">Salvar</button>
         </div>
     </div>
 </div>
 
 <script>
-    let gradePlayers = "";
-    let gradeCompleta = "";
-    let paginaSistema = 1;
-    let paginaLogs = 1;
-    let editandoTipo = null; 
-    let editandoChaveOuIndex = null;
+    let gradePlayers = "", gradeCompleta = "", editandoTipo = null, editandoChave = null;
+    let pag = { sis: 1, log: 1 };
+    const turnos = ['Sáb Tarde', 'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb Manhã'];
 
     document.getElementById('listaTexto').addEventListener('input', processarETocalhar);
-
     window.onload = () => {
-        carregarTemaSalvo();
-        carregarDadosClanNaTela();
-        renderizarHistorico();
-        renderizarLogs();
-        renderizarNotas();
-        atualizarStatusPremiacao();
-        setInterval(atualizarStatusPremiacao, 1000);
+        carregarTema(); carregarClan(); renderizarHistorico(); renderizarLogs(); renderizarNotas();
+        atualizarStatusPremiacao(); setInterval(atualizarStatusPremiacao, 1000);
     };
 
     function alternarTema() {
-        let atual = document.documentElement.getAttribute('data-theme');
-        let novo = atual === 'dark' ? 'light' : 'dark';
+        let novo = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', novo);
         localStorage.setItem('gvg_tema', novo);
         document.querySelector('.theme-btn').innerText = novo === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro';
     }
-
-    function carregarTemaSalvo() {
+    function carregarTema() {
         let salvo = localStorage.getItem('gvg_tema') || 'light';
         document.documentElement.setAttribute('data-theme', salvo);
         document.querySelector('.theme-btn').innerText = salvo === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro';
     }
 
     function salvarDadosClan() {
-        let guilda = document.getElementById('inputNomeGuilda').value.trim();
-        let lider = document.getElementById('inputNomeLider').value.trim();
-        let saudacao = document.getElementById('inputTextoSaudacao').value;
-        
-        localStorage.setItem('gvg_nome_guilda', guilda);
-        localStorage.setItem('gvg_nome_lider', lider);
-        localStorage.setItem('gvg_texto_saudacao', saudacao);
-        
-        atualizarPreviewSaudacao();
-        renderizarNotas();
+        localStorage.setItem('gvg_nome_guilda', document.getElementById('inputNomeGuilda').value.trim());
+        localStorage.setItem('gvg_nome_lider', document.getElementById('inputNomeLider').value.trim());
+        localStorage.setItem('gvg_texto_saudacao', document.getElementById('inputTextoSaudacao').value);
+        atualizarPreview(); renderizarNotas();
     }
-
-    function carregarDadosClanNaTela() {
+    function carregarClan() {
         document.getElementById('inputNomeGuilda').value = localStorage.getItem('gvg_nome_guilda') || '';
         document.getElementById('inputNomeLider').value = localStorage.getItem('gvg_nome_lider') || '';
-        
-        let saudacaoSalva = localStorage.getItem('gvg_texto_saudacao');
-        if (saudacaoSalva === null) {
-            saudacaoSalva = "Olá guilda [Guilda], segue:";
-            localStorage.setItem('gvg_texto_saudacao', saudacaoSalva);
-        }
-        document.getElementById('inputTextoSaudacao').value = saudacaoSalva;
-        atualizarPreviewSaudacao();
+        document.getElementById('inputTextoSaudacao').value = localStorage.getItem('gvg_texto_saudacao') || 'Olá guilda [Guilda], segue:';
+        atualizarPreview();
     }
-
-    function atualizarPreviewSaudacao() {
-        let lider = document.getElementById('inputNomeLider').value.trim() || '[Nome do Líder]';
-        let preview = obterCabecalhoLider();
-        document.getElementById('exemploZapPreview').innerText = `*${lider}*: ${preview.replace(obterCabecalhoLider(), '')} ...`;
+    function atualizarPreview() {
+        let lider = localStorage.getItem('gvg_nome_lider') || '[Líder]';
+        document.getElementById('exemploZapPreview').innerText = `*${lider}*: ${obterCabecalhoLider().replace(obterCabecalhoLider(), '')}...`;
     }
-
     function obterCabecalhoLider() {
         let lider = localStorage.getItem('gvg_nome_lider') || 'Líder';
         let guilda = localStorage.getItem('gvg_nome_guilda') || 'Guilda';
-        let saudacaoModelo = localStorage.getItem('gvg_texto_saudacao');
-        if (saudacaoModelo === null) saudacaoModelo = "Olá guilda [Guilda], segue:";
-        
-        let saudacaoPronta = saudacaoModelo.replace(/\[Guilda\]/g, guilda);
-        return `*${lider}*: ${saudacaoPronta}\n\n`;
+        let saudacao = (localStorage.getItem('gvg_texto_saudacao') || 'Olá guilda [Guilda], segue:').replace(/\[Guilda\]/g, guilda);
+        return `*${lider}*: ${saudacao}\n\n`;
     }
 
     function marcarComoEnviado() {
-        let agoraMs = new Date().getTime();
-        localStorage.setItem('gvg_ultimo_envio_timestamp', agoraMs);
-        
+        localStorage.setItem('gvg_ultimo_envio_timestamp', new Date().getTime());
         let btn = document.getElementById('btnMarcarEnviado');
-        let originalText = btn.innerText;
-        btn.innerText = "✨ Salvo!";
-        setTimeout(() => btn.innerText = originalText, 1500);
-
+        btn.innerText = "✨ Salvo!"; setTimeout(() => btn.innerText = "✅ Já Enviei", 1500);
         atualizarStatusPremiacao();
     }
-
     function atualizarStatusPremiacao() {
-        let agora = new Date();
-        let diaSemana = agora.getDay(); 
-        let hora = agora.getHours();
+        let agora = new Date(), dia = agora.getDay(), hora = agora.getHours();
+        let turnoNome = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"][dia];
+        if(dia === 6) turnoNome = hora < 11 ? "Sáb Manhã" : (hora < 18 ? "Sáb Tarde (Em breve)" : "Sáb Tarde");
 
-        let turnoNome = "";
-        let statusTexto = "";
-        let targetDate = new Date(agora);
+        let inicioJanela = new Date(agora);
+        inicioJanela.setHours(dia === 6 && hora >= 18 ? 18 : (dia === 6 && hora >= 11 ? 11 : 1), 0, 0, 0);
+        if(hora < 1 && dia !== 6) inicioJanela.setDate(inicioJanela.getDate() - 1);
 
-        if (diaSemana >= 1 && diaSemana <= 5) {
-            let diasSemanaNomes = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            turnoNome = diasSemanaNomes[diaSemana];
-            targetDate.setHours(1, 0, 0, 0);
-        } else if (diaSemana === 6) {
-            if (hora < 11) {
-                turnoNome = "Sáb Manhã";
-                targetDate.setHours(11, 0, 0, 0);
-            } else if (hora >= 11 && hora < 18) {
-                turnoNome = "Sáb Manhã (Encerrado) / Sáb Tarde (Em breve)";
-                targetDate.setHours(18, 0, 0, 0);
-            } else {
-                turnoNome = "Sáb Tarde";
-                targetDate.setHours(1, 0, 0, 0); 
-                targetDate.setDate(targetDate.getDate() + 1);
-            }
-        } else if (diaSemana === 0) {
-            turnoNome = "Domingo";
-            targetDate.setHours(1, 0, 0, 0);
-        }
+        let ultimoEnvio = parseInt(localStorage.getItem('gvg_ultimo_envio_timestamp')) || 0;
+        let enviado = ultimoEnvio >= inicioJanela.getTime();
 
-        let ultimoEnvioMs = parseInt(localStorage.getItem('gvg_ultimo_envio_timestamp')) || 0;
-        let jaEnviadoNestaJanela = false;
-
-        let inicioJanelaAtual = new Date(agora);
-        if (diaSemana === 6 && hora >= 11 && hora < 18) {
-            inicioJanelaAtual.setHours(11, 0, 0, 0);
-        } else if (diaSemana === 6 && hora >= 18) {
-            inicioJanelaAtual.setHours(18, 0, 0, 0);
+        let target = new Date(agora);
+        if(enviado) {
+            target.setDate(target.getDate() + 1); target.setHours(1,0,0,0);
         } else {
-            inicioJanelaAtual.setHours(1, 0, 0, 0);
-            if (hora < 1) inicioJanelaAtual.setDate(inicioJanelaAtual.getDate() - 1);
+            target.setHours(dia === 6 && hora < 11 ? 11 : (dia === 6 && hora >= 11 && hora < 18 ? 18 : 1), 0,0,0);
+            if(hora >= target.getHours()) target.setDate(target.getDate() + 1);
         }
 
-        if (ultimoEnvioMs >= inicioJanelaAtual.getTime()) {
-            jaEnviadoNestaJanela = true;
-        }
-
-        if (jaEnviadoNestaJanela) {
-            statusTexto = "✅ Premiação enviada! Próxima liberação em: " + calcularTempoProximaJanela(agora);
-        } else {
-            if (diaSemana === 6 && hora >= 11 && hora < 18) {
-                let diff = targetDate - agora;
-                statusTexto = "🔒 Fechado. Sáb Tarde libera às 18h (Faltam: " + formatarMilissegundos(diff) + ")";
-            } else {
-                let horaLimite = (diaSemana === 6 && hora < 11) ? 11 : 1;
-                let dataLiberacao = new Date(agora);
-                dataLiberacao.setHours(horaLimite, 0, 0, 0);
-                if (hora >= horaLimite) {
-                    dataLiberacao.setDate(dataLiberacao.getDate() + 1);
-                }
-
-                let diff = dataLiberacao - agora;
-                if (diff > 0) {
-                    statusTexto = "⏳ Libera em: " + formatarMilissegundos(diff);
-                } else {
-                    statusTexto = "✅ Liberado para Envio!";
-                }
-            }
-        }
-
-        let banner = document.getElementById('bannerProximoTurno');
-        banner.style.display = 'flex';
+        let diff = target - agora;
+        let timerStr = enviado ? "✅ Premiação enviada! Próxima liberação em: " : "⏳ Libera em: ";
+        document.getElementById('bannerProximoTurno').style.display = 'flex';
         document.getElementById('txtTurnoNome').innerText = turnoNome;
-        document.getElementById('txtTurnoTimer').innerText = statusTexto;
+        document.getElementById('txtTurnoTimer').innerText = timerStr + formatarMs(diff);
+    }
+    function formatarMs(ms) {
+        if(ms < 0) return "00h 00m 00s";
+        let s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+        return `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s%60).padStart(2,'0')}s`;
     }
 
-    function calcularTempoProximaJanela(agora) {
-        let proxima = new Date(agora);
-        let dia = agora.getDay();
-        let h = agora.getHours();
-
-        if (dia >= 1 && dia <= 4) { 
-            proxima.setDate(proxima.getDate() + 1);
-            proxima.setHours(1, 0, 0, 0);
-        } else if (dia === 5) { 
-            proxima.setDate(proxima.getDate() + 1);
-            proxima.setHours(11, 0, 0, 0);
-        } else if (dia === 6) { 
-            if (h < 11) { 
-                proxima.setHours(18, 0, 0, 0);
-            } else { 
-                proxima.setDate(proxima.getDate() + 1);
-                proxima.setHours(1, 0, 0, 0);
-            }
-        } else if (dia === 0) { 
-            proxima.setDate(proxima.getDate() + 1);
-            proxima.setHours(1, 0, 0, 0);
-        }
-
-        let diff = proxima - agora;
-        return formatarMilissegundos(diff);
+    function alternarAba(e, id) {
+        document.querySelectorAll('.tab-content, .tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active');
     }
 
-    function formatarMilissegundos(ms) {
-        if (ms < 0) return "00h 00m 00s";
-        let totalSegundos = Math.floor(ms / 1000);
-        let horas = Math.floor(totalSegundos / 3600);
-        let minutos = Math.floor((totalSegundos % 3600) / 60);
-        let segundos = totalSegundos % 60;
-        return `${String(horas).padStart(2, '0')}h ${String(minutos).padStart(2, '0')}m ${String(segundos).padStart(2, '0')}s`;
-    }
-
-    function alternarAba(event, abaId) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById(abaId).classList.add('active');
-        event.currentTarget.classList.add('active');
-    }
-
-    function getBancoJogadores() {
-        try {
-            return JSON.parse(localStorage.getItem('gvg_banco_jogadores')) || {};
-        } catch (e) {
-            return {};
-        }
-    }
-
-    function saveBancoJogadores(banco) {
-        localStorage.setItem('gvg_banco_jogadores', JSON.stringify(banco));
-        renderizarHistorico();
-    }
-
+    const getBanco = () => JSON.parse(localStorage.getItem('gvg_banco_jogadores')) || {};
+    const saveBanco = (b) => { localStorage.setItem('gvg_banco_jogadores', JSON.stringify(b)); renderizarHistorico(); };
     function adicionarManualSistema() {
-        let input = document.getElementById('novoNomeSistema');
-        let nome = input.value.trim();
+        let nome = document.getElementById('novoNomeSistema').value.trim();
         if(!nome) return;
-        let banco = getBancoJogadores();
-        banco[nome.toLowerCase()] = { nome: nome, ehSistema: true };
-        saveBancoJogadores(banco);
-        input.value = "";
-        processarETocalhar();
+        let b = getBanco(); b[nome.toLowerCase()] = { nome, ehSistema: true };
+        saveBanco(b); document.getElementById('novoNomeSistema').value = ""; processarETocalhar();
     }
-
-    function deletarSistema(chave) {
-        let banco = getBancoJogadores();
-        delete banco[chave];
-        saveBancoJogadores(banco);
-        processarETocalhar();
-    }
-
-    function abrirModalEdicaoSistema(chaveOriginal) {
-        let banco = getBancoJogadores();
-        editandoTipo = 'sistema';
-        editandoChaveOuIndex = chaveOriginal;
-        document.getElementById('modalTitulo').innerText = "✏️ Editar Nome";
-        let txtInput = document.getElementById('modalTextoInput');
-        txtInput.style.height = "60px";
-        txtInput.value = banco[chaveOriginal].nome;
-        document.getElementById('modalEdicao').style.display = 'flex';
-    }
+    function deletarSistema(k) { let b = getBanco(); delete b[k]; saveBanco(b); processarETocalhar(); }
 
     function renderizarHistorico() {
-        const container = document.getElementById('listaHistoricoContainer');
-        const pagContainer = document.getElementById('paginacaoSistema');
-        const filtro = document.getElementById('filtroJogador').value.toLowerCase();
-        const itensPorPagina = parseInt(document.getElementById('itensPorPaginaSistema').value);
-        const banco = getBancoJogadores();
+        let container = document.getElementById('listaHistoricoContainer'), pagC = document.getElementById('paginacaoSistema');
+        let filtro = document.getElementById('filtroJogador').value.toLowerCase(), porPag = parseInt(document.getElementById('itensPorPaginaSistema').value);
+        let b = getBanco(), chaves = Object.keys(b).sort();
+        if(filtro) chaves = chaves.filter(k => b[k].nome.toLowerCase().includes(filtro));
+        document.getElementById('countTotal').innerText = Object.keys(b).length;
+        container.innerHTML = chaves.length ? "" : "<div style='text-align:center; color:#999; padding:20px;'>Nenhum jogador.</div>";
+        pagC.innerHTML = "";
         
-        let chaves = Object.keys(banco).sort();
-        if(filtro) chaves = chaves.filter(k => banco[k].nome.toLowerCase().includes(filtro));
-        
-        document.getElementById('countTotal').innerText = Object.keys(banco).length;
-        container.innerHTML = "";
-
-        if (chaves.length === 0) {
-            container.innerHTML = "<div style='text-align:center; color:#999; padding:20px;'>Nenhum jogador cadastrado.</div>";
-            pagContainer.innerHTML = "";
-            return;
-        }
-
-        let totalPaginas = Math.ceil(chaves.length / itensPorPagina);
-        if(paginaSistema > totalPaginas) paginaSistema = totalPaginas;
-        let inicio = (paginaSistema - 1) * itensPorPagina;
-        let chavesPagina = chaves.slice(inicio, inicio + itensPorPagina);
-
-        chavesPagina.forEach(chave => {
-            let player = banco[chave];
-            let div = document.createElement('div');
-            div.className = 'player-item';
-            div.innerHTML = `
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span class="badge-sys">SISTEMA</span>
-                    <strong>${player.nome}</strong>
-                </div>
-                <div class="btn-group">
-                    <button class="btn-icon btn-edit" onclick="abrirModalEdicaoSistema('${chave}')">✏️</button>
-                    <button class="btn-icon btn-del" onclick="deletarSistema('${chave}')">❌</button>
-                </div>
-            `;
-            container.appendChild(div);
+        let totalP = Math.ceil(chaves.length / porPag);
+        if(pag.sis > totalP) pag.sis = totalP || 1;
+        chaves.slice((pag.sis - 1)*porPag, pag.sis*porPag).forEach(k => {
+            let p = b[k];
+            container.innerHTML += `<div class='player-item'><div style='display:flex; gap:10px; align-items:center;'><span class='badge-sys'>SISTEMA</span><strong>${p.nome}</strong></div><div class='btn-group'><button class='btn-icon btn-edit' onclick="abrirModal('sistema', '${k}')">✏️</button><button class='btn-icon btn-del' onclick="deletarSistema('${k}')">❌</button></div></div>`;
         });
-
-        renderizarPaginacao(totalPaginas, paginaSistema, pagContainer, (p) => { paginaSistema = p; renderizarHistorico(); });
+        renderPaginacao(totalP, pag.sis, pagC, p => { pag.sis = p; renderizarHistorico(); });
     }
 
     function limparBancoJogadores() {
-        if (confirm("Tem certeza que deseja apagar o banco de jogadores?")) {
-            localStorage.removeItem('gvg_banco_jogadores');
-            renderizarHistorico();
-            processarETocalhar();
-        }
+        if(confirm("Deseja apagar o banco?")) { localStorage.removeItem('gvg_banco_jogadores'); renderizarHistorico(); processarETocalhar(); }
     }
 
-    function exportarBackup() {
-        const dados = { 
-            banco_jogadores: getBancoJogadores(), 
-            historico_logs: getLogs(), 
-            notas_prontas: getNotas(), 
-            clan_info: { 
-                guilda: localStorage.getItem('gvg_nome_guilda'), 
-                lider: localStorage.getItem('gvg_nome_lider'),
-                saudacao: localStorage.getItem('gvg_texto_saudacao')
-            } 
-        };
-        const agora = new Date();
-        const nomeArquivo = `backup_gvg_${String(agora.getDate()).padStart(2, '0')}_${String(agora.getMonth() + 1).padStart(2, '0')}_${agora.getFullYear()}.json`;
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dados, null, 2));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", nomeArquivo);
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-    }
+    const getLogs = () => JSON.parse(localStorage.getItem('gvg_historico_logs')) || [];
+    function deletarLog(i) { if(confirm("Apagar registro?")) { let l = getLogs(); l.splice(i,1); localStorage.setItem('gvg_historico_logs', JSON.stringify(l)); renderizarLogs(); } }
 
-    function importarBackup(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const dadosImportados = JSON.parse(e.target.result);
-                if (dadosImportados.banco_jogadores) localStorage.setItem('gvg_banco_jogadores', JSON.stringify(dadosImportados.banco_jogadores));
-                if (dadosImportados.historico_logs) localStorage.setItem('gvg_historico_logs', JSON.stringify(dadosImportados.historico_logs));
-                if (dadosImportados.notas_prontas) localStorage.setItem('gvg_notas_prontas', JSON.stringify(dadosImportados.notas_prontas));
-                if (dadosImportados.clan_info) {
-                    if (dadosImportados.clan_info.guilda) localStorage.setItem('gvg_nome_guilda', dadosImportados.clan_info.guilda);
-                    if (dadosImportados.clan_info.lider) localStorage.setItem('gvg_nome_lider', dadosImportados.clan_info.lider);
-                    if (dadosImportados.clan_info.saudacao) localStorage.setItem('gvg_texto_saudacao', dadosImportados.clan_info.saudacao);
-                    carregarDadosClanNaTela();
-                }
-                renderizarHistorico();
-                renderizarLogs();
-                renderizarNotas();
-                processarETocalhar();
-                alert("✅ Dados importados com sucesso!");
-            } catch (err) {
-                alert("❌ Erro ao importar arquivo. Formato inválido.");
-            }
-            event.target.value = "";
-        };
-        reader.readAsText(file);
-    }
-
-    function getLogs() {
-        try {
-            return JSON.parse(localStorage.getItem('gvg_historico_logs')) || [];
-        } catch (e) {
-            return [];
-        }
-    }
-
-    function salvarLog(escalaObj, playersTexto, completaTexto) {
+    function renderizarLogs() {
+        let container = document.getElementById('listaLogsContainer'), pagC = document.getElementById('paginacaoLogs');
+        let filtro = document.getElementById('filtroLogs').value.toLowerCase(), porPag = parseInt(document.getElementById('itensPorPaginaLogs').value);
         let logs = getLogs();
-        let agora = new Date();
-        logs.unshift({ 
-            data: agora.toLocaleDateString('pt-BR'), 
-            hora: agora.toLocaleTimeString('pt-BR'), 
-            escalaDados: escalaObj, 
-            conteudo: completaTexto, 
-            conteudoPlayers: playersTexto,
-            timestamp: agora.getTime() 
+        if(filtro) logs = logs.filter(l => l.data.toLowerCase().includes(filtro) || l.conteudo.toLowerCase().includes(filtro));
+        container.innerHTML = logs.length ? "" : "<div style='text-align:center; color:#999; padding:20px;'>Nenhum histórico.</div>";
+        pagC.innerHTML = "";
+
+        let totalP = Math.ceil(logs.length / porPag);
+        if(pag.log > totalP) pag.log = totalP || 1;
+        logs.slice((pag.log - 1)*porPag, pag.log*porPag).forEach((log, idx) => {
+            let realIdx = (pag.log - 1)*porPag + idx;
+            let htmlT = "";
+            for(let t in log.escalaDados) {
+                let lista = log.escalaDados[t];
+                let str = lista.length ? lista.map(m => `- ${m.nome} (${m.pontos})`).join('\n') : "- Ninguém";
+                let b64 = btoa(encodeURIComponent(obterCabecalhoLider() + `📢 *GvG - ${t}*\n\n${str}`));
+                htmlT += `<div style="margin:3px 0; font-size:13px;"><strong>${t}:</strong> <button onclick="enviarZapTurno('${b64}')" class="btn-whatsapp-turno" style="padding:2px 6px; font-size:11px;">💬 Avisar</button></div>`;
+            }
+            let b64Adm = btoa(encodeURIComponent(log.conteudo)), b64Pl = btoa(encodeURIComponent(log.conteudoPlayers || log.conteudo));
+            container.innerHTML += `<div class='history-item'><div style='display:flex; justify-content:space-between; font-size:12px; color:#888; margin-bottom:8px;'><span>📅 <strong>${log.data}</strong> às <strong>${log.hora}</strong></span><div class='btn-group'><button onclick="copiar(this, '${b64Adm}')" class='btn-copy-adm'>📋 ADM</button><button onclick="copiar(this, '${b64Pl}')" class='btn-copy-players'>📋 Players</button><button class='btn-icon btn-edit' onclick="abrirModal('log', ${realIdx})">✏️</button><button class='btn-icon btn-del' onclick="deletarLog(${realIdx})">❌</button></div></div><div style='background:var(--box-bg); padding:8px; border:1px solid var(--border-color); border-radius:4px;'>${htmlT}</div></div>`;
         });
-        if (logs.length > 50) logs.pop();
+        renderPaginacao(totalP, pag.log, pagC, p => { pag.log = p; renderizarLogs(); });
+    }
+
+    const getNotas = () => JSON.parse(localStorage.getItem('gvg_notas_prontas')) || [];
+    function salvarNotaPronta() {
+        let t = document.getElementById('tituloNota').value.trim(), c = document.getElementById('conteudoNota').value.trim();
+        if(!t || !c) return alert("Preencha título e conteúdo!");
+        let n = getNotas(); n.unshift({ titulo: t, conteudo: c });
+        localStorage.setItem('gvg_notas_prontas', JSON.stringify(n));
+        document.getElementById('tituloNota').value = ""; document.getElementById('conteudoNota').value = ""; renderizarNotas();
+    }
+    function deletarNota(i) { if(confirm("Apagar aviso?")) { let n = getNotas(); n.splice(i,1); localStorage.setItem('gvg_notas_prontas', JSON.stringify(n)); renderizarNotas(); } }
+    function renderizarNotas() {
+        let c = document.getElementById('listaNotasContainer'), notas = getNotas();
+        c.innerHTML = notas.length ? "" : "<div style='text-align:center; color:#999; padding:20px;'>Nenhum aviso.</div>";
+        notas.forEach((n, i) => {
+            let b64 = btoa(encodeURIComponent(`📌 *${n.titulo}*\n\n${n.conteudo}`)), b64Zap = btoa(encodeURIComponent(obterCabecalhoLider() + `📌 *${n.titulo}*\n\n${n.conteudo}`));
+            c.innerHTML += `<div class='note-item'><div style='display:flex; justify-content:space-between; margin-bottom:6px;'><strong>📌 ${n.titulo}</strong><div class='btn-group'><button onclick="copiar(this, '${b64}')" class='btn-copy-players'>📋 Copiar</button><button onclick="enviarZapTurno('${b64Zap}')" class='btn-whatsapp-turno' style='margin:0; padding:3px 8px; font-size:11px;'>💬 WhatsApp</button><button class='btn-icon btn-del' onclick="deletarNota(${i})">❌</button></div></div><div style='font-size:13px; background:var(--input-bg); padding:8px; border-radius:4px; border:1px solid var(--border-color); white-space:pre-wrap;'>${n.conteudo}</div></div>`;
+        });
+    }
+
+    function renderPaginacao(tot, atual, el, cb) {
+        if(tot <= 1) return;
+        el.innerHTML = `<button class='page-btn' ${atual===1?'disabled':''} onclick="(${cb})(${atual-1})">◀</button>`;
+        for(let i=1; i<=tot; i++) el.innerHTML += `<button class='page-btn ${i===atual?'active':''}' onclick="(${cb})(${i})">${i}</button>`;
+        el.innerHTML += `<button class='page-btn' ${atual===tot?'disabled':''} onclick="(${cb})(${atual+1})">▶</button>`;
+    }
+
+    function abrirModal(tipo, chaveIdx) {
+        editandoTipo = tipo; editandoChave = chaveIdx;
+        document.getElementById('modalTitulo').innerText = "✏️ Editar " + (tipo==='sistema'?'Jogador':'Histórico');
+        document.getElementById('modalTextoInput').value = tipo==='sistema' ? getBanco()[chaveIdx].nome : getLogs()[chaveIdx].conteudo;
+        document.getElementById('modalEdicao').style.display = 'flex';
+    }
+    function salvarEdicaoModal() {
+        let val = document.getElementById('modalTextoInput').value.trim();
+        if(!val) return;
+        if(editandoTipo === 'sistema') {
+            let b = getBanco(); delete b[editandoChave]; b[val.toLowerCase()] = { nome: val, ehSistema: true };
+            saveBanco(b); processarETocalhar();
+        } else {
+            let l = getLogs(); l[editandoChave].conteudo = val; l[editandoChave].conteudoPlayers = val;
+            localStorage.setItem('gvg_historico_logs', JSON.stringify(l)); renderizarLogs();
+        }
+        document.getElementById('modalEdicao').style.display = 'none';
+    }
+
+    function processarETocalhar() {
+        let texto = document.getElementById('listaTexto').value;
+        if(!texto.trim()) {
+            document.getElementById('resultado').innerText = "A escala aparecerá aqui...";
+            document.getElementById('botoesZap').style.display = 'none';
+            document.getElementById('alertaInvalido').style.display = 'none';
+            return;
+        }
+        let b = getBanco(), invalido = false;
+        let linhas = texto.split('\n').filter(l => l.trim()).map(l => {
+            let limpo = l.trim(), sys = limpo.toLowerCase().includes('sistema');
+            let partes = limpo.replace(/sistema/gi, '').trim().split(/\s+/);
+            let pts = parseInt(partes.pop()) || 0, nome = partes.join(' ');
+            if(pts < 0) invalido = true;
+            let chave = nome.toLowerCase();
+            if(sys && !b[chave]) b[chave] = { nome, ehSistema: true };
+            return { nome: b[chave] ? b[chave].nome : nome, pontos: pts, ehSistema: b[chave] ? b[chave].ehSistema : false };
+        });
+        document.getElementById('alertaInvalido').style.display = invalido ? 'block' : 'none';
+        saveBanco(b);
+
+        let validos = linhas.filter(m => !m.ehSistema || m.pontos >= 80);
+        let sysPessoas = validos.filter(m => m.ehSistema).sort((a,b) => b.pontos - a.pontos);
+        let nomesSys = sysPessoas.map(m => m.nome);
+        let escala = {}, contagem = {};
+        validos.forEach(m => contagem[m.nome] = 0);
+        turnos.forEach(t => escala[t] = []);
+
+        ['Sexta', 'Sáb Manhã'].forEach((t, idx) => {
+            for(let i=0; i<5 && sysPessoas.length; i++) {
+                let m = sysPessoas[(idx * 5 + i) % sysPessoas.length];
+                escala[t].push(m); contagem[m.nome]++;
+            }
+        });
+
+        let top15 = validos.filter(m => !nomesSys.includes(m.nome)).sort((a,b) => b.pontos - a.pontos).slice(0, 15);
+        turnos.filter(t => t !== 'Sexta' && t !== 'Sáb Manhã').forEach(t => {
+            let disp = [...top15].sort((a,b) => (contagem[a.nome] - contagem[b.nome]) || (b.pontos - a.pontos));
+            for(let i=0; i<5 && disp.length; i++) {
+                let m = disp.shift(); escala[t].push(m); contagem[m.nome]++;
+            }
+        });
+
+        let outP = "🏆 *Premiação GvG*\n\n", outC = "🏆 *Premiação GvG*\n\n", box = "🏆 *Premiação GvG*\n\n";
+        turnos.forEach(t => {
+            let lista = escala[t], str = lista.length ? lista.map(m => `- ${m.nome} (${m.pontos})`).join('\n') : "- Ninguém";
+            outP += `*${t}:*\n${str}\n\n`; outC += `*${t}:*\n${str}\n\n`;
+            let b64 = btoa(encodeURIComponent(obterCabecalhoLider() + `📢 *GvG - ${t}*\n\n${str}\n\nPreparem-se!`));
+            box += `*${t}:*\n${str} <button onclick="enviarZapTurno('${b64}')" class="btn-whatsapp-turno">💬 Avisar ${t}</button>\n\n`;
+        });
+        let rod = "📊 *Contagem:*\n" + Object.keys(contagem).map(n => `${n}: ${contagem[n]}x`).join('\n');
+        gradePlayers = outP + rod; gradeCompleta = outC + rod;
+        
+        document.getElementById('resultado').innerHTML = box + rod;
+        document.getElementById('botoesZap').style.display = 'block';
+
+        let logs = getLogs(), agora = new Date();
+        logs.unshift({ data: agora.toLocaleDateString('pt-BR'), hora: agora.toLocaleTimeString('pt-BR'), escalaDados: escala, conteudo: gradeCompleta, conteudoPlayers: gradePlayers });
+        if(logs.length > 50) logs.pop();
         localStorage.setItem('gvg_historico_logs', JSON.stringify(logs));
         renderizarLogs();
     }
 
-    function deletarLog(indexReal) {
-        if(confirm("Deseja apagar este registro?")) {
-            let logs = getLogs();
-            logs.splice(indexReal, 1);
-            localStorage.setItem('gvg_historico_logs', JSON.stringify(logs));
-            renderizarLogs();
-        }
+    function enviarZapTurno(b64) { window.open("https://wa.me/?text=" + encodeURIComponent(decodeURIComponent(escape(atob(b64))))); }
+    function compartilharZap(tipo) { window.open("https://wa.me/?text=" + encodeURIComponent(obterCabecalhoLider() + (tipo==='adm' ? gradeCompleta : gradePlayers))); }
+    function copiar(btn, b64) {
+        navigator.clipboard.writeText(decodeURIComponent(escape(atob(b64)))).then(() => {
+            let o = btn.innerText; btn.innerText = "✅"; setTimeout(() => btn.innerText = o, 2000);
+        });
     }
 
-    function abrirModalEdicaoLog(indexReal) {
-        let logs = getLogs();
-        editandoTipo = 'log';
-        editandoChaveOuIndex = indexReal;
-        document.getElementById('modalTitulo').innerText = "✏️ Editar Histórico";
-        let txtInput = document.getElementById('modalTextoInput');
-        txtInput.style.height = "200px";
-        txtInput.value = logs[indexReal].conteudo;
-        document.getElementById('modalEdicao').style.display = 'flex';
+    function exportarBackup() {
+        let dados = { banco_jogadores: getBanco(), historico_logs: getLogs(), notas_prontas: getNotas(), clan_info: { guilda: localStorage.getItem('gvg_nome_guilda'), lider: localStorage.getItem('gvg_nome_lider'), saudacao: localStorage.getItem('gvg_texto_saudacao') } };
+        let a = document.createElement('a');
+        a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dados, null, 2));
+        a.download = `backup_gvg_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'_')}.json`;
+        document.body.appendChild(a); a.click(); a.remove();
     }
-
-    function fecharModal() {
-        document.getElementById('modalEdicao').style.display = 'none';
-    }
-
-    function salvarEdicaoModal() {
-        let novoTexto = document.getElementById('modalTextoInput').value.trim();
-        if(!novoTexto) return;
-        if(editandoTipo === 'sistema') {
-            let banco = getBancoJogadores();
-            let chaveOriginal = editandoChaveOuIndex;
-            let novaChave = novoTexto.toLowerCase();
-            banco[novaChave] = { nome: novoTexto, ehSistema: true };
-            if(novaChave !== chaveOriginal) delete banco[chaveOriginal];
-            saveBancoJogadores(banco);
-            processarETocalhar();
-        } else if(editandoTipo === 'log') {
-            let logs = getLogs();
-            logs[editandoChaveOuIndex].conteudo = novoTexto;
-            logs[editandoChaveOuIndex].conteudoPlayers = novoTexto; 
-            localStorage.setItem('gvg_historico_logs', JSON.stringify(logs));
-            renderizarLogs();
-        }
-        fecharModal();
-    }
-
-    function renderizarLogs() {
-        const container = document.getElementById('listaLogsContainer');
-        const pagContainer = document.getElementById('paginacaoLogs');
-        const filtro = document.getElementById('filtroLogs').value.toLowerCase();
-        const itensPorPagina = parseInt(document.getElementById('itensPorPaginaLogs').value);
-        let logs = getLogs();
-
-        if (filtro) {
-            logs = logs.filter(l => l.data.toLowerCase().includes(filtro) || l.conteudo.toLowerCase().includes(filtro));
-        }
-
-        container.innerHTML = "";
-        if (logs.length === 0) {
-            container.innerHTML = "<div style='text-align:center; color:#999; padding:20px;'>Nenhum registro encontrado.</div>";
-            pagContainer.innerHTML = "";
-            return;
-        }
-
-        let totalPaginas = Math.ceil(logs.length / itensPorPagina);
-        if(paginaLogs > totalPaginas) paginaLogs = totalPaginas;
-        let inicio = (paginaLogs - 1) * itensPorPagina;
-        let logsPagina = logs.slice(inicio, inicio + itensPorPagina);
-
-        logsPagina.forEach((log, idxRelativo) => {
-            let indexReal = inicio + idxRelativo;
-            let textoPlayersSalvo = log.conteudoPlayers || log.conteudo;
-            let textoAdmSalvo = log.conteudo;
-
-            let htmlTurnosHistorico = "";
-            if (log.escalaDados) {
-                for (let turno in log.escalaDados) {
-                    let listaTurno = log.escalaDados[turno];
-                    let nomesTurnoStr = listaTurno.length ? listaTurno.map(m => `- ${m.nome} (${m.pontos})`).join('\n') : "- Ninguém disponível";
-                    let mensagemTurnoZap = obterCabecalhoLider() + `📢 *Aviso GvG - ${turno}*\n\nOlá equipe! Segue a escala do dia *${turno}*:\n\n` + nomesTurnoStr + `\n\nPreparem-se para a entrega dos prêmios!`;
-                    let base64Turno = btoa(encodeURIComponent(mensagemTurnoZap));
-                    
-                    htmlTurnosHistorico += `<div style="margin: 3px 0; font-size: 13px;"><strong>${turno}:</strong> <button onclick="enviarZapTurno('${base64Turno}')" class="btn-whatsapp-turno" style="padding: 2px 6px; font-size: 11px;">💬 Avisar ${turno}</button></div>`;
+    function importarBackup(e) {
+        let f = e.target.files[0]; if(!f) return;
+        let r = new FileReader();
+        r.onload = function(evt) {
+            try {
+                let d = JSON.parse(evt.target.result);
+                if(d.banco_jogadores) localStorage.setItem('gvg_banco_jogadores', JSON.stringify(d.banco_jogadores));
+                if(d.historico_logs) localStorage.setItem('gvg_historico_logs', JSON.stringify(d.historico_logs));
+                if(d.notas_prontas) localStorage.setItem('gvg_notas_prontas', JSON.stringify(d.notas_prontas));
+                if(d.clan_info) {
+                    localStorage.setItem('gvg_nome_guilda', d.clan_info.guilda || '');
+                    localStorage.setItem('gvg_nome_lider', d.clan_info.lider || '');
+                    localStorage.setItem('gvg_texto_saudacao', d.clan_info.saudacao || '');
+                    carregarClan();
                 }
-            } else {
-                htmlTurnosHistorico = `<div style="font-size: 13px; white-space: pre-wrap;">${textoAdmSalvo}</div>`;
-            }
-
-            let base64Adm = btoa(encodeURIComponent(textoAdmSalvo));
-            let base64Players = btoa(encodeURIComponent(textoPlayersSalvo));
-
-            let div = document.createElement('div');
-            div.className = 'history-item';
-            div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#888; margin-bottom:8px; border-bottom:1px dashed var(--border-color); padding-bottom:4px; flex-wrap:wrap; gap:5px;">
-                    <span>📅 <strong>${log.data}</strong> às <strong>${log.hora}</strong></span>
-                    <div class="btn-group">
-                        <button onclick="copiarTextoPersonalizado(this, '${base64Adm}')" class="btn-copy-adm">📋 ADM</button>
-                        <button onclick="copiarTextoPersonalizado(this, '${base64Players}')" class="btn-copy-players">📋 Players</button>
-                        <button class="btn-icon btn-edit" onclick="abrirModalEdicaoLog(${indexReal})">✏️</button>
-                        <button class="btn-icon btn-del" onclick="deletarLog(${indexReal})">❌</button>
-                    </div>
-                </div>
-                <div style="background: var(--box-bg); padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; max-height: 150px; overflow-y: auto;">
-                    ${htmlTurnosHistorico}
-                </div>
-            `;
-            container.appendChild(div);
-        });
-
-        renderizarPaginacao(totalPaginas, paginaLogs, pagContainer, (p) => { paginaLogs = p; renderizarLogs(); });
-    }
-
-    function getNotas() {
-        try {
-            return JSON.parse(localStorage.getItem('gvg_notas_prontas')) || [];
-        } catch (e) {
-            return [];
-        }
-    }
-
-    function salvarNotaPronta() {
-        let titulo = document.getElementById('tituloNota').value.trim();
-        let conteudo = document.getElementById('conteudoNota').value.trim();
-        if(!titulo || !conteudo) {
-            alert("Preencha o título e o conteúdo do aviso!");
-            return;
-        }
-        let notas = getNotas();
-        notas.unshift({ titulo, conteudo });
-        localStorage.setItem('gvg_notas_prontas', JSON.stringify(notas));
-        document.getElementById('tituloNota').value = "";
-        document.getElementById('conteudoNota').value = "";
-        renderizarNotas();
-    }
-
-    function deletarNota(index) {
-        if(confirm("Deseja apagar este aviso?")) {
-            let notas = getNotas();
-            notas.splice(index, 1);
-            localStorage.setItem('gvg_notas_prontas', JSON.stringify(notas));
-            renderizarNotas();
-        }
-    }
-
-    function renderizarNotas() {
-        const container = document.getElementById('listaNotasContainer');
-        let notas = getNotas();
-        container.innerHTML = "";
-
-        if(notas.length === 0) {
-            container.innerHTML = "<div style='text-align:center; color:#999; padding:20px;'>Nenhum aviso salvo ainda.</div>";
-            return;
-        }
-
-        notas.forEach((nota, index) => {
-            let textoCompletoNota = `📌 *${nota.titulo}*\n\n${nota.conteudo}`;
-            let textoZapNotaComLider = obterCabecalhoLider() + textoCompletoNota;
-            
-            let base64Nota = btoa(encodeURIComponent(textoCompletoNota));
-            let base64ZapNota = btoa(encodeURIComponent(textoZapNotaComLider));
-
-            let div = document.createElement('div');
-            div.className = 'note-item';
-            div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                    <strong>📌 ${nota.titulo}</strong>
-                    <div class="btn-group">
-                        <button onclick="copiarTextoPersonalizado(this, '${base64Nota}')" class="btn-copy-players">📋 Copiar</button>
-                        <button onclick="enviarZapTurno('${base64ZapNota}')" class="btn-whatsapp-turno" style="margin-bottom:0; padding:3px 8px; font-size:11px;">💬 WhatsApp</button>
-                        <button class="btn-icon btn-del" onclick="deletarNota(${index})">❌</button>
-                    </div>
-                </div>
-                <div style="font-size: 13px; color: var(--text-color); white-space: pre-wrap; background: var(--input-bg); padding: 8px; border-radius: 4px; border: 1px solid var(--border-color);">${nota.conteudo}</div>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    function renderizarPaginacao(totalPaginas, paginaAtual, container, callback) {
-        container.innerHTML = "";
-        if(totalPaginas <= 1) return;
-
-        let btnAnt = document.createElement('button');
-        btnAnt.className = 'page-btn';
-        btnAnt.innerText = '◀';
-        btnAnt.disabled = paginaAtual === 1;
-        btnAnt.onclick = () => callback(paginaAtual - 1);
-        container.appendChild(btnAnt);
-
-        for(let i=1; i<=totalPaginas; i++) {
-            let btn = document.createElement('button');
-            btn.className = `page-btn ${i === paginaAtual ? 'active' : ''}`;
-            btn.innerText = i;
-            btn.onclick = () => callback(i);
-            container.appendChild(btn);
-        }
-
-        let btnProx = document.createElement('button');
-        btnProx.className = 'page-btn';
-        btnProx.innerText = '▶';
-        btnProx.disabled = paginaAtual === totalPaginas;
-        btnProx.onclick = () => callback(paginaAtual + 1);
-        container.appendChild(btnProx);
-    }
-
-    function copiarTextoPersonalizado(btn, base64Texto) {
-        let textoReal = decodeURIComponent(atob(base64Texto));
-        navigator.clipboard.writeText(textoReal).then(() => {
-            let original = btn.innerText;
-            btn.innerText = "✅";
-            setTimeout(() => btn.innerText = original, 2000);
-        });
-    }
-
-    function limparLogs() {
-        if (confirm("Deseja apagar todo o histórico?")) {
-            localStorage.removeItem('gvg_historico_logs');
-            renderizarLogs();
-        }
-    }
-
-    function processarETocalhar() {
-        const texto = document.getElementById('listaTexto').value;
-        const alertaBox = document.getElementById('alertaInvalido');
-        
-        if (!texto.trim()) {
-            document.getElementById('resultado').innerText = "A escala aparecerá aqui assim que colar a lista...";
-            document.getElementById('botoesZap').style.display = 'none';
-            alertaBox.style.display = 'none';
-            return;
-        }
-
-        let banco = getBancoJogadores(); 
-        let temInvalido = false;
-
-        let listaInput = texto.split('\n').filter(l => l.trim()).map(l => {
-            let linhaLimpa = l.trim();
-            let temTextoSistema = linhaLimpa.toLowerCase().includes('sistema');
-            let semPalavraSistema = linhaLimpa.replace(/sistema/gi, '').trim();
-            
-            let partes = semPalavraSistema.split(/\s+/);
-            let pts = parseInt(partes.pop());
-            let nome = partes.join(' ');
-            if (isNaN(pts)) pts = 0;
-            if (pts < 0) temInvalido = true;
-            
-            let chave = nome.toLowerCase();
-            if (temTextoSistema && !banco[chave]) {
-                banco[chave] = { nome: nome, ehSistema: true };
-            }
-
-            let eSistemaFinal = banco[chave] ? banco[chave].ehSistema : false;
-            return { nome: banco[chave] ? banco[chave].nome : nome, pontos: pts, ehSistema: eSistemaFinal };
-        });
-
-        alertaBox.style.display = temInvalido ? 'block' : 'none';
-        saveBancoJogadores(banco);
-
-        let listaValida = listaInput.filter(m => {
-            if (m.ehSistema) return m.pontos >= 80;
-            return true; 
-        });
-
-        let sistemaPessoas = listaValida.filter(m => m.ehSistema).sort((a,b) => b.pontos - a.pontos);
-        let nomesSistema = sistemaPessoas.map(m => m.nome);
-        
-        let turnos = ['Sáb Tarde', 'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb Manhã'];
-        let escala = {};
-        let contagem = {};
-        listaValida.forEach(m => contagem[m.nome] = 0);
-        turnos.forEach(t => escala[t] = []);
-
-        ['Sexta', 'Sáb Manhã'].forEach(t => {
-            let offset = (t === 'Sexta' ? 0 : 5);
-            for(let i=0; i<5; i++) {
-                if(sistemaPessoas.length === 0) break;
-                let m = sistemaPessoas[(offset + i) % sistemaPessoas.length];
-                escala[t].push(m);
-                contagem[m.nome]++;
-            }
-        });
-
-        let top15 = listaValida.filter(m => !nomesSistema.includes(m.nome)).sort((a,b) => b.pontos - a.pontos).slice(0, 15);
-        
-        turnos.filter(t => t !== 'Sexta' && t !== 'Sáb Manhã').forEach(t => {
-            let disponiveis = [...top15].sort((a,b) => (contagem[a.nome] - contagem[b.nome]) || (b.pontos - a.pontos));
-            for(let i=0; i<5; i++) {
-                if(disponiveis.length === 0) break;
-                let escolhido = disponiveis.shift();
-                escala[t].push(escolhido);
-                contagem[escolhido.nome]++;
-            }
-        });
-
-        let outPlayers = "🏆 *Premiação GvG*\n\n";
-        let outCompleta = "🏆 *Premiação GvG*\n\n";
-
-        turnos.forEach(t => {
-            let listaTurno = escala[t];
-            let nomesTurnoStr = listaTurno.length ? listaTurno.map(m => `- ${m.nome} (${m.pontos})`).join('\n') : "- Ninguém disponível";
-            
-            outPlayers += `*${t}:*\n` + nomesTurnoStr + "\n\n";
-            outCompleta += `*${t}:*\n` + nomesTurnoStr + "\n\n";
-        });
-        
-        let rodapéContagem = "📊 *Contagem:*\n" + Object.keys(contagem).map(n => `${n}: ${contagem[n]}x`).join('\n');
-        
-        gradePlayers = outPlayers + rodapéContagem;
-        gradeCompleta = outCompleta + rodapéContagem;
-        
-        let boxVisual = "🏆 *Premiação GvG*\n\n";
-        turnos.forEach(t => {
-            let listaTurno = escala[t];
-            let nomesTurnoStr = listaTurno.length ? listaTurno.map(m => `- ${m.nome} (${m.pontos})`).join('\n') : "- Ninguém disponível";
-            
-            let mensagemTurnoZap = obterCabecalhoLider() + `📢 *Aviso GvG - ${t}*\n\nOlá equipe! Segue a escala do dia *${t}*:\n\n` + nomesTurnoStr + `\n\nPreparem-se para a entrega dos prêmios!`;
-            let base64Turno = btoa(encodeURIComponent(mensagemTurnoZap));
-            
-            boxVisual += `*${t}:*\n` + nomesTurnoStr + ` <button onclick="enviarZapTurno('${base64Turno}')" class="btn-whatsapp-turno">💬 Avisar ${t}</button>\n\n`;
-        });
-        boxVisual += rodapéContagem;
-        
-        document.getElementById('resultado').innerHTML = boxVisual;
-        document.getElementById('botoesZap').style.display = 'block';
-
-        salvarLog(escala, gradePlayers, gradeCompleta);
-    }
-
-    function enviarZapTurno(base64Texto) {
-        let textoReal = decodeURIComponent(atob(base64Texto));
-        window.open("https://wa.me/?text=" + encodeURIComponent(textoReal));
-    }
-
-    function compartilharZap(tipo) {
-        let textoBase = tipo === 'adm' ? gradeCompleta : gradePlayers;
-        let textoFinal = obterCabecalhoLider() + textoBase;
-        window.open("https://wa.me/?text=" + encodeURIComponent(textoFinal));
+                renderizarHistorico(); renderizarLogs(); renderizarNotas(); processarETocalhar();
+                alert("✅ Backup importado com sucesso!");
+            } catch(err) { alert("❌ Arquivo inválido."); }
+            e.target.value = "";
+        };
+        r.readAsText(f);
     }
 </script>
 </body>
