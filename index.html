@@ -73,10 +73,11 @@
         <button class="theme-btn" onclick="alternarTema()">🌙 Modo Escuro</button>
     </div>
 
-    <div id="bannerProximoTurno" class="next-turn-banner" style="display:none;">
+    <!-- BANNER CRONÔMETRO DAS 01:00 AM -->
+    <div id="bannerProximoTurno" class="next-turn-banner">
         <div class="banner-header">
-            <span>⏰ Turno Atual: <strong id="txtTurnoNome">Carregando...</strong></span>
-            <button class="btn-marcar-enviado" id="btnMarcarEnviado" onclick="marcarComoEnviado()">✅ Já Enviei</button>
+            <span>⏰ Próxima Premiação (01:00 AM)</span>
+            <button class="btn-marcar-enviado" id="btnMarcarEnviado" onclick="marcarComoEnviado()">✅ Já Enviei Hoje</button>
         </div>
         <div id="txtTurnoTimer" class="banner-timer">Calculando tempo...</div>
     </div>
@@ -210,7 +211,7 @@
     </div>
 </div>
 
-<!-- MODAL DE EDIÇÃO -->
+<!-- MODAL DE EDIÇÃO DA ESCALA -->
 <div id="modalEdicao" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
@@ -296,36 +297,31 @@
         alert('Token removido do armazenamento local!');
     }
 
+    // --- CRONÔMETRO DIÁRIO FIXO 01:00 AM ---
     function marcarComoEnviado() {
         localStorage.setItem('gvg_ultimo_envio_timestamp', new Date().getTime());
         let btn = document.getElementById('btnMarcarEnviado');
-        btn.innerText = "✨ Salvo!"; setTimeout(() => btn.innerText = "✅ Já Enviei", 1500);
+        btn.innerText = "✨ Salvo!"; setTimeout(() => btn.innerText = "✅ Já Enviei Hoje", 1500);
         atualizarStatusPremiacao();
     }
     function atualizarStatusPremiacao() {
-        let agora = new Date(), dia = agora.getDay(), hora = agora.getHours();
-        let turnoNome = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"][dia];
-        if(dia === 6) turnoNome = hora < 11 ? "Sáb Manhã" : "Sáb Tarde";
+        let agora = new Date();
+        let proximaUmAm = new Date(agora);
+        proximaUmAm.setHours(1, 0, 0, 0);
 
-        let inicioJanela = new Date(agora);
-        inicioJanela.setHours(dia === 6 && hora >= 11 ? 11 : 1, 0, 0, 0);
-        if(hora < 1 && dia !== 6) inicioJanela.setDate(inicioJanela.getDate() - 1);
-
-        let ultimoEnvio = parseInt(localStorage.getItem('gvg_ultimo_envio_timestamp')) || 0;
-        let enviado = ultimoEnvio >= inicioJanela.getTime();
-
-        let target = new Date(agora);
-        if(enviado) {
-            target.setDate(target.getDate() + 1); target.setHours(1,0,0,0);
-        } else {
-            target.setHours(dia === 6 && hora < 11 ? 11 : 1, 0, 0, 0);
-            if(hora >= target.getHours()) target.setDate(target.getDate() + 1);
+        if (agora >= proximaUmAm) {
+            proximaUmAm.setDate(proximaUmAm.getDate() + 1);
         }
 
-        let diff = target - agora;
-        let timerStr = enviado ? "✅ Premiação enviada! Próxima liberação em: " : "⏳ Libera em: ";
-        document.getElementById('bannerProximoTurno').style.display = 'flex';
-        document.getElementById('txtTurnoNome').innerText = turnoNome;
+        let ultimoEnvio = parseInt(localStorage.getItem('gvg_ultimo_envio_timestamp')) || 0;
+        let inicioJanelaAtual = new Date(agora);
+        inicioJanelaAtual.setHours(1, 0, 0, 0);
+        if (agora.getHours() < 1) inicioJanelaAtual.setDate(inicioJanelaAtual.getDate() - 1);
+
+        let enviado = ultimoEnvio >= inicioJanelaAtual.getTime();
+        let diff = proximaUmAm - agora;
+
+        let timerStr = enviado ? "✅ Premiação enviada! Próxima liberação em: " : "⏳ Faltam: ";
         document.getElementById('txtTurnoTimer').innerText = timerStr + formatarMs(diff);
     }
     function formatarMs(ms) {
@@ -340,6 +336,11 @@
         if(id === 'abaComparativo') renderizarComparativoMensal();
     }
 
+    function formatarNomeProprio(nome) {
+        if (!nome) return '';
+        return nome.trim().toLowerCase().replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+    }
+
     const getBanco = () => JSON.parse(localStorage.getItem('gvg_banco_jogadores')) || {};
     const saveBanco = (dados) => localStorage.setItem('gvg_banco_jogadores', JSON.stringify(dados));
 
@@ -351,9 +352,9 @@
 
     function encontrarChaveBanco(banco, nome) {
         if (!nome) return '';
-        let nomeTrim = nome.trim();
-        let existente = Object.keys(banco).find(k => k.trim().toLowerCase() === nomeTrim.toLowerCase());
-        return existente || nomeTrim;
+        let nomeFormatted = formatarNomeProprio(nome);
+        let existente = Object.keys(banco).find(k => k.trim().toLowerCase() === nomeFormatted.toLowerCase());
+        return existente || nomeFormatted;
     }
 
     function sanitizarBanco() {
@@ -383,6 +384,7 @@
 
             if (!nomeLimpo) return;
 
+            nomeLimpo = formatarNomeProprio(nomeLimpo);
             let chaveExistente = Object.keys(novoBanco).find(k => k.trim().toLowerCase() === nomeLimpo.toLowerCase()) || nomeLimpo;
 
             if (!novoBanco[chaveExistente]) {
@@ -469,36 +471,42 @@
             return;
         }
 
-        // ORDEM DO CICLO DA SEMANA: Inicia no Sábado Tarde e encerra no Sábado Manhã
         const diasNormais = ['SÁB TARDE', 'DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA'];
-        const diasSistema = ['SEXTA', 'SÁB MANHÃ'];
-
+        
         let membrosComuns = listaProcessada.filter(j => !j.isSistema);
         let membrosSistema = listaProcessada.filter(j => j.isSistema);
 
         membrosComuns.sort((a, b) => b.pts - a.pts);
         membrosSistema.sort((a, b) => b.pts - a.pts);
 
-        let escalaDias = {};
-        [...diasNormais, ...diasSistema].forEach(d => escalaDias[d] = []);
+        let escalaDias = {
+            'SÁB TARDE': [], 'DOMINGO': [], 'SEGUNDA': [], 
+            'TERÇA': [], 'QUARTA': [], 'QUINTA': [], 
+            'SEXTA': [], 'SÁB MANHÃ': []
+        };
 
-        let top10Sistema = membrosSistema.filter(j => j.pts >= 80).slice(0, 10);
-
-        diasSistema.forEach(dia => {
-            if (top10Sistema.length > 0) {
-                let idx = 0;
-                let adicionadosHoje = new Set();
-                while (escalaDias[dia].length < 5 && adicionadosHoje.size < top10Sistema.length) {
-                    let player = top10Sistema[idx % top10Sistema.length];
-                    if (!adicionadosHoje.has(player.nome)) {
-                        escalaDias[dia].push(player);
-                        adicionadosHoje.add(player.nome);
-                    }
-                    idx++;
-                }
+        // --- PREENCHIMENTO DO SISTEMA (SEXTA E SÁBADO MANHÃ) COM LOOP CIRCULAR ---
+        let topSistema = membrosSistema.filter(j => j.pts >= 80);
+        
+        if (topSistema.length > 0) {
+            let idx = 0;
+            
+            // Preenche Sexta (5 Vagas)
+            while (escalaDias['SEXTA'].length < 5) {
+                let p = topSistema[idx % topSistema.length];
+                escalaDias['SEXTA'].push(p);
+                idx++;
             }
-        });
 
+            // Preenche Sábado Manhã (5 Vagas)
+            while (escalaDias['SÁB MANHÃ'].length < 5) {
+                let p = topSistema[idx % topSistema.length];
+                escalaDias['SÁB MANHÃ'].push(p);
+                idx++;
+            }
+        }
+
+        // --- DISTRIBUIÇÃO DOS MEMBROS COMUNS ---
         let altaPontuacao = membrosComuns.filter(j => j.pts > 30);
         let baixaPontuacao = membrosComuns.filter(j => j.pts <= 30);
 
@@ -627,6 +635,26 @@
         renderizarHistorico();
     }
 
+    function editarNomeJogador(nomeAntigo) {
+        let novoNome = prompt("Digite o novo nome para o jogador:", nomeAntigo);
+        if (!novoNome || novoNome.trim() === "" || novoNome.trim() === nomeAntigo) return;
+
+        novoNome = formatarNomeProprio(novoNome);
+        let banco = getBanco();
+
+        if (banco[novoNome]) {
+            alert("Já existe um jogador registrado com esse nome!");
+            return;
+        }
+
+        banco[novoNome] = banco[nomeAntigo];
+        delete banco[nomeAntigo];
+
+        saveBanco(banco);
+        renderizarHistorico();
+        renderizarComparativoMensal();
+    }
+
     function renderizarHistorico() {
         let banco = getBanco();
         let filtro = document.getElementById('filtroJogador').value.toLowerCase();
@@ -670,6 +698,7 @@
                 div.innerHTML = `
                     <div><strong>${nome}</strong></div>
                     <div class="btn-group">
+                        <button onclick="editarNomeJogador('${nome}')" class="btn-icon btn-edit" title="Editar Nome">✏️ Editar</button>
                         <button onclick="alternarStatusSistema('${nome}')" class="btn-icon" style="background:${isSys ? '#ffc107' : '#17a2b8'}; color:#000;" title="${isSys ? 'Remover do Sistema' : 'Marcar no Sistema'}">
                             ${isSys ? '⭐ Sistema' : '➕ Sistema'}
                         </button>
@@ -683,6 +712,7 @@
                         <br><span class="badge-sys">⭐ Sistema</span>
                     </div>
                     <div class="btn-group">
+                        <button onclick="editarNomeJogador('${nome}')" class="btn-icon btn-edit" title="Editar Nome">✏️ Editar</button>
                         <button onclick="alternarStatusSistema('${nome}')" class="btn-icon btn-del" title="Remover do Sistema">✖️ Remover</button>
                     </div>
                 `;
