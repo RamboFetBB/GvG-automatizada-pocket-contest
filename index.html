@@ -6,15 +6,15 @@
     <style>
         :root {
             --bg-color: #f0f2f5;
-            --container-bg: #white;
+            --container-bg: #fff;
             --text-color: #333;
             --border-color: #ccc;
             --tab-bg: #f1f1f1;
             --tab-text: #555;
             --box-bg: #f8f9fa;
-            --item-bg: #white;
+            --item-bg: #fff;
             --item-border: #eee;
-            --input-bg: #white;
+            --input-bg: #fff;
         }
 
         [data-theme="dark"] {
@@ -30,8 +30,8 @@
             --input-bg: #2a2a2a;
         }
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: var(--bg-color); color: var(--text-color); transition: background 0.3s, color 0.3s; }
-        .container { max-width: 750px; margin: auto; background: var(--container-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; transition: background 0.3s; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 15px; background: var(--bg-color); color: var(--text-color); transition: background 0.3s, color 0.3s; }
+        .container { max-width: 750px; margin: auto; background: var(--container-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; transition: background 0.3s; }
         
         /* Top Bar & Tema */
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -39,8 +39,8 @@
         .next-turn-banner { background: #007bff; color: white; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
 
         /* Abas */
-        .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; gap: 5px; overflow-x: auto; }
-        .tab-btn { flex: 1; padding: 10px; border: none; background: var(--tab-bg); font-weight: bold; font-size: 14px; cursor: pointer; border-radius: 8px 8px 0 0; transition: 0.3s; color: var(--tab-text); white-space: nowrap; }
+        .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; gap: 3px; overflow-x: auto; padding-bottom: 3px; }
+        .tab-btn { flex: 1; padding: 8px 10px; border: none; background: var(--tab-bg); font-weight: bold; font-size: 12px; cursor: pointer; border-radius: 8px 8px 0 0; transition: 0.3s; color: var(--tab-text); white-space: nowrap; text-align: center; }
         .tab-btn.active { background: #007bff; color: white; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -57,9 +57,9 @@
         .controls-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
         .select-per-page { padding: 6px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--input-bg); color: var(--text-color); font-size: 13px; cursor: pointer; }
         
-        .player-grid, .history-grid { min-height: 200px; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: var(--box-bg); }
-        .player-item, .history-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--item-border); background: var(--item-bg); margin-bottom: 6px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .history-item { flex-direction: column; align-items: stretch; }
+        .player-grid, .history-grid, .notes-grid { min-height: 200px; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: var(--box-bg); }
+        .player-item, .history-item, .note-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--item-border); background: var(--item-bg); margin-bottom: 6px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .history-item, .note-item { flex-direction: column; align-items: stretch; }
         .badge-sys { background: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         
         /* Ações e Botões */
@@ -97,12 +97,13 @@
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="alternarAba('abaRodizio')">📅 Gerar Rodízio</button>
+        <button class="tab-btn active" onclick="alternarAba('abaRodizio')">📅 Rodízio</button>
         <button class="tab-btn" onclick="alternarAba('abaHistorico')">👥 Pessoas (<span id="countTotal">0</span>)</button>
         <button class="tab-btn" onclick="alternarAba('abaLogs')">📁 Histórico</button>
+        <button class="tab-btn" onclick="alternarAba('abaNotas')">📝 Avisos Prontos</button>
     </div>
 
-    <!-- ABA 1 -->
+    <!-- ABA 1: GERAR RODÍZIO -->
     <div id="abaRodizio" class="tab-content active">
         <h2>1. Cole a Lista de Nomes</h2>
         <textarea id="listaTexto" placeholder="Cole a lista aqui..."></textarea>
@@ -151,7 +152,7 @@
         <h3>📁 Histórico de Rodízios</h3>
         
         <div class="controls-header" style="margin-top: 10px;">
-            <input type="text" id="filtroLogs" class="search-box" placeholder="🔍 Buscar no histórico (ex: data ou nome)..." oninput="paginaLogs = 1; renderizarLogs()" style="margin-bottom:0; flex: 1;">
+            <input type="text" id="filtroLogs" class="search-box" placeholder="🔍 Buscar no histórico..." oninput="paginaLogs = 1; renderizarLogs()" style="margin-bottom:0; flex: 1;">
             <select id="itensPorPaginaLogs" class="select-per-page" onchange="paginaLogs = 1; renderizarLogs()">
                 <option value="5">5 p/ pág</option>
                 <option value="10">10 p/ pág</option>
@@ -163,6 +164,20 @@
         <div class="pagination" id="paginacaoLogs"></div>
 
         <button onclick="limparLogs()" class="action-btn" style="background:#dc3545; margin-top:15px; padding:8px;">🗑️ Limpar Todo o Histórico</button>
+    </div>
+
+    <!-- ABA 4: AVISOS PRONTOS (NOVA FUNÇÃO EXCLUSIVA) -->
+    <div id="abaNotas" class="tab-content">
+        <h3>📝 Avisos & Mensagens Prontas</h3>
+        <p style="font-size: 13px; color: #777; margin-top: 0;">Salve seus textos fixos, regras ou lembretes para copiar com um toque no celular.</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+            <input type="text" id="tituloNota" class="search-box" placeholder="Título do aviso (ex: Regras GvG)..." style="margin-bottom:0;">
+            <textarea id="conteudoNota" placeholder="Escreva o texto completo da mensagem aqui..." style="height: 80px;"></textarea>
+            <button onclick="salvarNotaPronta()" class="action-btn" style="background:#28a745; margin-top:0; padding:10px;">💾 Salvar Novo Aviso</button>
+        </div>
+
+        <div class="notes-grid" id="listaNotasContainer" style="margin-top: 12px;"></div>
     </div>
 </div>
 
@@ -192,6 +207,7 @@
         carregarTemaSalvo();
         renderizarHistorico();
         renderizarLogs();
+        renderizarNotas();
         calcularProximoTurnoDinamico();
     };
 
@@ -212,8 +228,8 @@
     function calcularProximoTurnoDinamico() {
         const ordemTurnos = [
             { nome: 'Sexta', diaSemana: 5 },
-            { nome: 'Sáb Manhã', diaSemana: 6, periodo: 'manha' },
-            { nome: 'Sáb Tarde', diaSemana: 6, periodo: 'tarde' },
+            { nome: 'Sáb Manhã', diaSemana: 6 },
+            { nome: 'Sáb Tarde', diaSemana: 6 },
             { nome: 'Domingo', diaSemana: 0 },
             { nome: 'Segunda', diaSemana: 1 },
             { nome: 'Terça', diaSemana: 2 },
@@ -223,7 +239,6 @@
 
         let agora = new Date();
         let diaHoje = agora.getDay();
-
         let proximo = ordemTurnos.find(t => t.diaSemana > diaHoje) || ordemTurnos[0];
         let banner = document.getElementById('bannerProximoTurno');
         banner.style.display = 'flex';
@@ -328,7 +343,7 @@
     }
 
     function exportarBackup() {
-        const dados = { banco_jogadores: getBancoJogadores(), historico_logs: getLogs() };
+        const dados = { banco_jogadores: getBancoJogadores(), historico_logs: getLogs(), notas_prontas: getNotas() };
         const agora = new Date();
         const nomeArquivo = `backup_data_${String(agora.getDate()).padStart(2, '0')}_${String(agora.getMonth() + 1).padStart(2, '0')}_${agora.getFullYear()}.json`;
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dados, null, 2));
@@ -349,8 +364,10 @@
                 const dadosImportados = JSON.parse(e.target.result);
                 if (dadosImportados.banco_jogadores) localStorage.setItem('gvg_banco_jogadores', JSON.stringify(dadosImportados.banco_jogadores));
                 if (dadosImportados.historico_logs) localStorage.setItem('gvg_historico_logs', JSON.stringify(dadosImportados.historico_logs));
+                if (dadosImportados.notas_prontas) localStorage.setItem('gvg_notas_prontas', JSON.stringify(dadosImportados.notas_prontas));
                 renderizarHistorico();
                 renderizarLogs();
+                renderizarNotas();
                 processarETocalhar();
                 alert("✅ Dados importados com sucesso!");
             } catch (err) {
@@ -488,6 +505,64 @@
         });
 
         renderizarPaginacao(totalPaginas, paginaLogs, pagContainer, (p) => { paginaLogs = p; renderizarLogs(); });
+    }
+
+    /* FUNÇÕES DA ABA 4: AVISOS PRONTOS */
+    function getNotas() {
+        return JSON.parse(localStorage.getItem('gvg_notas_prontas')) || [];
+    }
+
+    function salvarNotaPronta() {
+        let titulo = document.getElementById('tituloNota').value.trim();
+        let conteudo = document.getElementById('conteudoNota').value.trim();
+        if(!titulo || !conteudo) {
+            alert("Preencha o título e o conteúdo do aviso!");
+            return;
+        }
+        let notas = getNotas();
+        notas.unshift({ titulo, conteudo });
+        localStorage.setItem('gvg_notas_prontas', JSON.stringify(notas));
+        document.getElementById('tituloNota').value = "";
+        document.getElementById('conteudoNota').value = "";
+        renderizarNotas();
+    }
+
+    function deletarNota(index) {
+        if(confirm("Deseja apagar este aviso?")) {
+            let notas = getNotas();
+            notas.splice(index, 1);
+            localStorage.setItem('gvg_notas_prontas', JSON.stringify(notas));
+            renderizarNotas();
+        }
+    }
+
+    function renderizarNotas() {
+        const container = document.getElementById('listaNotasContainer');
+        let notas = getNotas();
+        container.innerHTML = "";
+
+        if(notas.length === 0) {
+            container.innerHTML = "<div style='text-align:center; color:#999; padding:20px;'>Nenhum aviso salvo ainda.</div>";
+            return;
+        }
+
+        notas.forEach((nota, index) => {
+            let base64Nota = btoa(encodeURIComponent(nota.conteudo));
+            let div = document.createElement('div');
+            div.className = 'note-item';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                    <strong>📌 ${nota.titulo}</strong>
+                    <div class="btn-group">
+                        <button onclick="copiarTextoPersonalizado(this, \`${base64Nota}\`)" class="btn-copy-players">📋 Copiar</button>
+                        <button onclick="enviarZapTurno(\`${base64Nota}\`)" class="btn-whatsapp-turno" style="margin-bottom:0; padding:3px 8px; font-size:11px;">💬 WhatsApp</button>
+                        <button class="btn-icon btn-del" onclick="deletarNota(${index})">❌</button>
+                    </div>
+                </div>
+                <div style="font-size: 13px; color: var(--text-color); white-space: pre-wrap; background: var(--input-bg); padding: 8px; border-radius: 4px; border: 1px solid var(--border-color);">${nota.conteudo}</div>
+            `;
+            container.appendChild(div);
+        });
     }
 
     function renderizarPaginacao(totalPaginas, paginaAtual, container, callback) {
