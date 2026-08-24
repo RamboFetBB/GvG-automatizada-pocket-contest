@@ -1,31 +1,64 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <title>GvG - Rodízio, Gerenciador & Histórico</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: #f0f2f5; color: #333; }
-        .container { max-width: 750px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
+        :root {
+            --bg-color: #f0f2f5;
+            --container-bg: #white;
+            --text-color: #333;
+            --border-color: #ccc;
+            --tab-bg: #f1f1f1;
+            --tab-text: #555;
+            --box-bg: #f8f9fa;
+            --item-bg: #white;
+            --item-border: #eee;
+            --input-bg: #white;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --border-color: #444;
+            --tab-bg: #2d2d2d;
+            --tab-text: #b0b0b0;
+            --box-bg: #252525;
+            --item-bg: #2a2a2a;
+            --item-border: #383838;
+            --input-bg: #2a2a2a;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: var(--bg-color); color: var(--text-color); transition: background 0.3s, color 0.3s; }
+        .container { max-width: 750px; margin: auto; background: var(--container-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; transition: background 0.3s; }
         
+        /* Top Bar & Tema */
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .theme-btn { background: none; border: 1px solid var(--border-color); color: var(--text-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .next-turn-banner { background: #007bff; color: white; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+
         /* Abas */
-        .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; gap: 5px; overflow-x: auto; }
-        .tab-btn { flex: 1; padding: 10px; border: none; background: #f1f1f1; font-weight: bold; font-size: 14px; cursor: pointer; border-radius: 8px 8px 0 0; transition: 0.3s; color: #555; white-space: nowrap; }
+        .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; gap: 5px; overflow-x: auto; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: var(--tab-bg); font-weight: bold; font-size: 14px; cursor: pointer; border-radius: 8px 8px 0 0; transition: 0.3s; color: var(--tab-text); white-space: nowrap; }
         .tab-btn.active { background: #007bff; color: white; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        textarea { width: 100%; height: 110px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        textarea { width: 100%; height: 130px; padding: 10px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; background: var(--input-bg); color: var(--text-color); }
         button.action-btn { cursor: pointer; padding: 12px; margin-top: 10px; border: none; border-radius: 6px; color: white; font-weight: bold; width: 100%; font-size: 15px; }
         
-        .result-box { margin-top: 20px; padding: 15px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; line-height: 1.5; }
+        .result-box { margin-top: 20px; padding: 15px; background: var(--box-bg); border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; line-height: 1.5; }
+        .alert-box { background: #fff3cd; color: #856404; padding: 10px; border-radius: 6px; border: 1px solid #ffeeba; margin-top: 10px; font-size: 13px; display: none; }
+        [data-theme="dark"] .alert-box { background: #332701; color: #ffda6a; border-color: #664d03; }
         
         /* Listas e Controles */
-        .search-box { width: 100%; padding: 8px; margin-bottom: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; }
+        .search-box { width: 100%; padding: 8px; margin-bottom: 12px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--input-bg); color: var(--text-color); }
         .controls-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
-        .select-per-page { padding: 6px; border: 1px solid #ccc; border-radius: 6px; background: white; font-size: 13px; cursor: pointer; }
+        .select-per-page { padding: 6px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--input-bg); color: var(--text-color); font-size: 13px; cursor: pointer; }
         
-        .player-grid, .history-grid { min-height: 200px; border: 1px solid #eee; border-radius: 6px; padding: 10px; background: #fafafa; }
-        .player-item, .history-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #eee; background: white; margin-bottom: 6px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .player-grid, .history-grid { min-height: 200px; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: var(--box-bg); }
+        .player-item, .history-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--item-border); background: var(--item-bg); margin-bottom: 6px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .history-item { flex-direction: column; align-items: stretch; }
         .badge-sys { background: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         
@@ -41,23 +74,32 @@
 
         /* Paginação */
         .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 15px; }
-        .page-btn { padding: 5px 10px; border: 1px solid #ccc; background: white; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .page-btn { padding: 5px 10px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); cursor: pointer; border-radius: 4px; font-weight: bold; }
         .page-btn.active { background: #007bff; color: white; border-color: #007bff; }
         .page-btn:disabled { background: #e9ecef; cursor: not-allowed; color: #6c757d; }
 
-        /* Modal de Edição Customizado */
+        /* Modal */
         #modalEdicao { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
-        .modal-box { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .modal-box { background: var(--container-bg); color: var(--text-color); padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         .modal-box textarea { height: 200px; margin-top: 10px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <div class="top-bar">
+        <h2 style="margin:0; font-size: 18px;">Gerenciador GvG</h2>
+        <button class="theme-btn" onclick="alternarTema()">🌙 Modo Escuro</button>
+    </div>
+
+    <div id="bannerProximoTurno" class="next-turn-banner" style="display:none;">
+        ⏰ <span>Calculando próximo turno...</span>
+    </div>
+
     <div class="tabs">
         <button class="tab-btn active" onclick="alternarAba('abaRodizio')">📅 Gerar Rodízio</button>
-        <button class="tab-btn" onclick="alternarAba('abaHistorico')">👥 Pessoas do Sistema (<span id="countTotal">0</span>)</button>
-        <button class="tab-btn" onclick="alternarAba('abaLogs')">📁 Histórico de Gerações</button>
+        <button class="tab-btn" onclick="alternarAba('abaHistorico')">👥 Pessoas (<span id="countTotal">0</span>)</button>
+        <button class="tab-btn" onclick="alternarAba('abaLogs')">📁 Histórico</button>
     </div>
 
     <!-- ABA 1 -->
@@ -65,8 +107,7 @@
         <h2>1. Cole a Lista de Nomes</h2>
         <textarea id="listaTexto" placeholder="Cole a lista aqui..."></textarea>
         
-        <h3>❌ Não Responderam:</h3>
-        <textarea id="ausentesTexto" placeholder="Ex: Tiagoli, Safir" style="height:40px;"></textarea>
+        <div id="alertaInvalido" class="alert-box">⚠️ Atenção: Detectamos pontuações negativas ou valores inválidos na lista. Verifique os dados.</div>
         
         <div id="resultado" class="result-box">A escala aparecerá aqui assim que colar a lista...</div>
         
@@ -78,7 +119,7 @@
 
     <!-- ABA 2: GERENCIADOR DE SISTEMA -->
     <div id="abaHistorico" class="tab-content">
-        <h3>⚙️ Gerenciador de Jogadores do Sistema</h3>
+        <h3>⚙️ Jogadores do Sistema</h3>
         <div style="display: flex; gap: 5px; margin-bottom: 12px;">
             <input type="text" id="novoNomeSistema" class="search-box" placeholder="Adicionar player manualmente..." style="margin-bottom:0;">
             <button onclick="adicionarManualSistema()" class="btn-icon btn-save" style="padding: 0 15px; font-size: 16px;">✅</button>
@@ -87,10 +128,9 @@
         <div class="controls-header">
             <input type="text" id="filtroJogador" class="search-box" placeholder="🔍 Buscar jogador..." oninput="paginaSistema = 1; renderizarHistorico()" style="margin-bottom:0; flex: 1;">
             <select id="itensPorPaginaSistema" class="select-per-page" onchange="paginaSistema = 1; renderizarHistorico()">
-                <option value="5">5 por pág</option>
-                <option value="10">10 por pág</option>
-                <option value="20">20 por pág</option>
-                <option value="30">30 por pág</option>
+                <option value="5">5 p/ pág</option>
+                <option value="10">10 p/ pág</option>
+                <option value="20">20 p/ pág</option>
             </select>
         </div>
         
@@ -98,25 +138,24 @@
         <div class="pagination" id="paginacaoSistema"></div>
 
         <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button onclick="exportarBackup()" class="action-btn" style="background:#17a2b8; margin-top:0; padding:10px; font-size:14px;">💾 Exportar Dados (Backup)</button>
-            <button onclick="document.getElementById('inputImportar').click()" class="action-btn" style="background:#ffc107; color:#000; margin-top:0; padding:10px; font-size:14px;">📂 Importar Dados</button>
+            <button onclick="exportarBackup()" class="action-btn" style="background:#17a2b8; margin-top:0; padding:10px; font-size:14px;">💾 Exportar Backup</button>
+            <button onclick="document.getElementById('inputImportar').click()" class="action-btn" style="background:#ffc107; color:#000; margin-top:0; padding:10px; font-size:14px;">📂 Importar</button>
             <input type="file" id="inputImportar" accept=".json" style="display:none" onchange="importarBackup(event)">
         </div>
 
-        <button onclick="limparBancoJogadores()" class="action-btn" style="background:#dc3545; margin-top:10px; padding:8px;">🗑️ Limpar Banco de Sistema</button>
+        <button onclick="limparBancoJogadores()" class="action-btn" style="background:#dc3545; margin-top:10px; padding:8px;">🗑️ Limpar Banco</button>
     </div>
 
     <!-- ABA 3: HISTÓRICO DE GERAÇÕES -->
     <div id="abaLogs" class="tab-content">
-        <h3>📁 Histórico de Rodízios Gerados</h3>
+        <h3>📁 Histórico de Rodízios</h3>
         
         <div class="controls-header" style="margin-top: 10px;">
-            <p style="font-size: 13px; color: #666; margin:0;">Gerencie, edite ou apague cada escala gerada.</p>
+            <input type="text" id="filtroLogs" class="search-box" placeholder="🔍 Buscar no histórico (ex: data ou nome)..." oninput="paginaLogs = 1; renderizarLogs()" style="margin-bottom:0; flex: 1;">
             <select id="itensPorPaginaLogs" class="select-per-page" onchange="paginaLogs = 1; renderizarLogs()">
-                <option value="5">5 por pág</option>
-                <option value="10">10 por pág</option>
-                <option value="20">20 por pág</option>
-                <option value="30">30 por pág</option>
+                <option value="5">5 p/ pág</option>
+                <option value="10">10 p/ pág</option>
+                <option value="20">20 p/ pág</option>
             </select>
         </div>
         
@@ -127,14 +166,14 @@
     </div>
 </div>
 
-<!-- MODAL PARA EDIÇÃO CONFORTÁVEL -->
+<!-- MODAL DE EDIÇÃO -->
 <div id="modalEdicao">
     <div class="modal-box">
         <h3 id="modalTitulo" style="margin-top:0;">✏️ Editar Registro</h3>
         <textarea id="modalTextoInput"></textarea>
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
             <button onclick="fecharModal()" class="action-btn" style="background:#6c757d; width:auto; padding:8px 15px; margin-top:0;">Cancelar</button>
-            <button onclick="salvarEdicaoModal()" class="action-btn" style="background:#28a745; width:auto; padding:8px 15px; margin-top:0;">Salvar Alterações</button>
+            <button onclick="salvarEdicaoModal()" class="action-btn" style="background:#28a745; width:auto; padding:8px 15px; margin-top:0;">Salvar</button>
         </div>
     </div>
 </div>
@@ -144,17 +183,55 @@
     let gradeCompleta = "";
     let paginaSistema = 1;
     let paginaLogs = 1;
-    
     let editandoTipo = null; 
     let editandoChaveOuIndex = null;
 
     document.getElementById('listaTexto').addEventListener('input', processarETocalhar);
-    document.getElementById('ausentesTexto').addEventListener('input', processarETocalhar);
 
     window.onload = () => {
+        carregarTemaSalvo();
         renderizarHistorico();
         renderizarLogs();
+        calcularProximoTurnoDinamico();
     };
+
+    function alternarTema() {
+        let atual = document.documentElement.getAttribute('data-theme');
+        let novo = atual === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', novo);
+        localStorage.setItem('gvg_tema', novo);
+        document.querySelector('.theme-btn').innerText = novo === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro';
+    }
+
+    function carregarTemaSalvo() {
+        let salvo = localStorage.getItem('gvg_tema') || 'light';
+        document.documentElement.setAttribute('data-theme', salvo);
+        document.querySelector('.theme-btn').innerText = salvo === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro';
+    }
+
+    function calcularProximoTurnoDinamico() {
+        // Ordem dos dias da semana padrão do rodízio
+        const ordemTurnos = [
+            { nome: 'Sexta', diaSemana: 5 },
+            { nome: 'Sáb Manhã', diaSemana: 6, periodo: 'manha' },
+            { nome: 'Sáb Tarde', diaSemana: 6, periodo: 'tarde' },
+            { nome: 'Domingo', diaSemana: 0 },
+            { nome: 'Segunda', diaSemana: 1 },
+            { nome: 'Terça', diaSemana: 2 },
+            { nome: 'Quarta', diaSemana: 3 },
+            { nome: 'Quinta', diaSemana: 4 }
+        ];
+
+        let agora = new Date();
+        let diaHoje = agora.getDay();
+        let horaAtual = agora.getHours();
+
+        // Encontra o próximo turno aproximado com base no dia atual
+        let proximo = ordemTurnos.find(t => t.diaSemana > diaHoje) || ordemTurnos[0];
+        let banner = document.getElementById('bannerProximoTurno');
+        banner.style.display = 'flex';
+        banner.querySelector('span').innerText = `Próximo Turno Estimado: ${proximo.nome}`;
+    }
 
     function alternarAba(abaId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -176,7 +253,6 @@
         let input = document.getElementById('novoNomeSistema');
         let nome = input.value.trim();
         if(!nome) return;
-        
         let banco = getBancoJogadores();
         banco[nome.toLowerCase()] = { nome: nome, ehSistema: true };
         saveBancoJogadores(banco);
@@ -195,12 +271,10 @@
         let banco = getBancoJogadores();
         editandoTipo = 'sistema';
         editandoChaveOuIndex = chaveOriginal;
-        
-        document.getElementById('modalTitulo').innerText = "✏️ Editar Nome do Jogador";
+        document.getElementById('modalTitulo').innerText = "✏️ Editar Nome";
         let txtInput = document.getElementById('modalTextoInput');
         txtInput.style.height = "60px";
         txtInput.value = banco[chaveOriginal].nome;
-        
         document.getElementById('modalEdicao').style.display = 'flex';
     }
 
@@ -212,15 +286,13 @@
         const banco = getBancoJogadores();
         
         let chaves = Object.keys(banco).sort();
-        if(filtro) {
-            chaves = chaves.filter(k => banco[k].nome.toLowerCase().includes(filtro));
-        }
+        if(filtro) chaves = chaves.filter(k => banco[k].nome.toLowerCase().includes(filtro));
         
         document.getElementById('countTotal').innerText = Object.keys(banco).length;
         container.innerHTML = "";
 
         if (chaves.length === 0) {
-            container.innerHTML = "<div style='text-align:center; color:#999; padding:20px;'>Nenhum jogador de sistema cadastrado.</div>";
+            container.innerHTML = "<div style='text-align:center; color:#999; padding:20px;'>Nenhum jogador cadastrado.</div>";
             pagContainer.innerHTML = "";
             return;
         }
@@ -228,8 +300,7 @@
         let totalPaginas = Math.ceil(chaves.length / itensPorPagina);
         if(paginaSistema > totalPaginas) paginaSistema = totalPaginas;
         let inicio = (paginaSistema - 1) * itensPorPagina;
-        let fim = inicio + itensPorPagina;
-        let chavesPagina = chaves.slice(inicio, fim);
+        let chavesPagina = chaves.slice(inicio, inicio + itensPorPagina);
 
         chavesPagina.forEach(chave => {
             let player = banco[chave];
@@ -252,7 +323,7 @@
     }
 
     function limparBancoJogadores() {
-        if (confirm("Tem certeza que deseja apagar o banco de jogadores de sistema?")) {
+        if (confirm("Tem certeza que deseja apagar o banco de jogadores?")) {
             localStorage.removeItem('gvg_banco_jogadores');
             renderizarHistorico();
             processarETocalhar();
@@ -260,16 +331,9 @@
     }
 
     function exportarBackup() {
-        const dados = {
-            banco_jogadores: getBancoJogadores(),
-            historico_logs: getLogs()
-        };
+        const dados = { banco_jogadores: getBancoJogadores(), historico_logs: getLogs() };
         const agora = new Date();
-        const dia = String(agora.getDate()).padStart(2, '0');
-        const mes = String(agora.getMonth() + 1).padStart(2, '0');
-        const ano = agora.getFullYear();
-        const nomeArquivo = `backup_data_${dia}_${mes}_${ano}.json`;
-
+        const nomeArquivo = `backup_data_${String(agora.getDate()).padStart(2, '0')}_${String(agora.getMonth() + 1).padStart(2, '0')}_${agora.getFullYear()}.json`;
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dados, null, 2));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
@@ -282,23 +346,18 @@
     function importarBackup(event) {
         const file = event.target.files[0];
         if (!file) return;
-
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
                 const dadosImportados = JSON.parse(e.target.result);
-                if (dadosImportados.banco_jogadores) {
-                    localStorage.setItem('gvg_banco_jogadores', JSON.stringify(dadosImportados.banco_jogadores));
-                }
-                if (dadosImportados.historico_logs) {
-                    localStorage.setItem('gvg_historico_logs', JSON.stringify(dadosImportados.historico_logs));
-                }
+                if (dadosImportados.banco_jogadores) localStorage.setItem('gvg_banco_jogadores', JSON.stringify(dadosImportados.banco_jogadores));
+                if (dadosImportados.historico_logs) localStorage.setItem('gvg_historico_logs', JSON.stringify(dadosImportados.historico_logs));
                 renderizarHistorico();
                 renderizarLogs();
                 processarETocalhar();
                 alert("✅ Dados importados com sucesso!");
             } catch (err) {
-                alert("❌ Erro ao importar o arquivo. Certifique-se de que é um arquivo de backup válido.");
+                alert("❌ Erro ao importar arquivo.");
             }
             event.target.value = "";
         };
@@ -315,7 +374,7 @@
         logs.unshift({ 
             data: agora.toLocaleDateString('pt-BR'), 
             hora: agora.toLocaleTimeString('pt-BR'), 
-            escalaDados: escalaObj, // Salva os turnos estruturados
+            escalaDados: escalaObj, 
             conteudo: completaTexto, 
             conteudoPlayers: playersTexto,
             timestamp: agora.getTime() 
@@ -326,7 +385,7 @@
     }
 
     function deletarLog(indexReal) {
-        if(confirm("Deseja apagar este registro do histórico?")) {
+        if(confirm("Deseja apagar este registro?")) {
             let logs = getLogs();
             logs.splice(indexReal, 1);
             localStorage.setItem('gvg_historico_logs', JSON.stringify(logs));
@@ -338,12 +397,10 @@
         let logs = getLogs();
         editandoTipo = 'log';
         editandoChaveOuIndex = indexReal;
-        
-        document.getElementById('modalTitulo').innerText = "✏️ Editar Escala Salva";
+        document.getElementById('modalTitulo').innerText = "✏️ Editar Histórico";
         let txtInput = document.getElementById('modalTextoInput');
         txtInput.style.height = "200px";
         txtInput.value = logs[indexReal].conteudo;
-        
         document.getElementById('modalEdicao').style.display = 'flex';
     }
 
@@ -354,12 +411,10 @@
     function salvarEdicaoModal() {
         let novoTexto = document.getElementById('modalTextoInput').value.trim();
         if(!novoTexto) return;
-
         if(editandoTipo === 'sistema') {
             let banco = getBancoJogadores();
             let chaveOriginal = editandoChaveOuIndex;
             let novaChave = novoTexto.toLowerCase();
-            
             banco[novaChave] = { nome: novoTexto, ehSistema: true };
             if(novaChave !== chaveOriginal) delete banco[chaveOriginal];
             saveBancoJogadores(banco);
@@ -371,19 +426,23 @@
             localStorage.setItem('gvg_historico_logs', JSON.stringify(logs));
             renderizarLogs();
         }
-
         fecharModal();
     }
 
     function renderizarLogs() {
         const container = document.getElementById('listaLogsContainer');
         const pagContainer = document.getElementById('paginacaoLogs');
+        const filtro = document.getElementById('filtroLogs').value.toLowerCase();
         const itensPorPagina = parseInt(document.getElementById('itensPorPaginaLogs').value);
-        const logs = getLogs();
+        let logs = getLogs();
+
+        if (filtro) {
+            logs = logs.filter(l => l.data.toLowerCase().includes(filtro) || l.conteudo.toLowerCase().includes(filtro));
+        }
 
         container.innerHTML = "";
         if (logs.length === 0) {
-            container.innerHTML = "<div style='text-align:center; color:#999; padding:20px;'>Nenhum rodízio gerado ainda.</div>";
+            container.innerHTML = "<div style='text-align:center; color:#999; padding:20px;'>Nenhum registro encontrado.</div>";
             pagContainer.innerHTML = "";
             return;
         }
@@ -391,42 +450,40 @@
         let totalPaginas = Math.ceil(logs.length / itensPorPagina);
         if(paginaLogs > totalPaginas) paginaLogs = totalPaginas;
         let inicio = (paginaLogs - 1) * itensPorPagina;
-        let fim = inicio + itensPorPagina;
-        let logsPagina = logs.slice(inicio, fim);
+        let logsPagina = logs.slice(inicio, inicio + itensPorPagina);
 
         logsPagina.forEach((log, idxRelativo) => {
             let indexReal = inicio + idxRelativo;
             let textoPlayersSalvo = log.conteudoPlayers || log.conteudo;
             let textoAdmSalvo = log.conteudo;
 
-            // Gera botões de WhatsApp por turno baseado nos dados salvos ou texto
             let htmlTurnosHistorico = "";
             if (log.escalaDados) {
                 for (let turno in log.escalaDados) {
                     let listaTurno = log.escalaDados[turno];
                     let nomesTurnoStr = listaTurno.length ? listaTurno.map(m => `- ${m.nome} (${m.pontos})`).join('\n') : "- Ninguém disponível";
-                    let mensagemTurnoZap = `📢 *Aviso GvG - ${turno}*\n\nOlá equipe! Segue a escala do dia *${turno}*:\n\n` + nomesTurnoStr + `\n\nPor favor, preparem-se para a entrega dos prêmios!`;
+                    let mensagemTurnoZap = `📢 *Aviso GvG - ${turno}*\n\nOlá equipe! Segue a escala do dia *${turno}*:\n\n` + nomesTurnoStr + `\n\nPreparem-se para a entrega dos prêmios!`;
                     let base64Turno = btoa(encodeURIComponent(mensagemTurnoZap));
                     
                     htmlTurnosHistorico += `<div style="margin: 3px 0; font-size: 13px;"><strong>${turno}:</strong> <button onclick="enviarZapTurno(\`${base64Turno}\`)" class="btn-whatsapp-turno" style="padding: 2px 6px; font-size: 11px;">💬 Avisar ${turno}</button></div>`;
                 }
             } else {
-                htmlTurnosHistorico = `<div style="font-size: 13px; white-space: pre-wrap; color: #333;">${textoAdmSalvo}</div>`;
+                htmlTurnosHistorico = `<div style="font-size: 13px; white-space: pre-wrap;">${textoAdmSalvo}</div>`;
             }
 
             let div = document.createElement('div');
             div.className = 'history-item';
             div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#666; margin-bottom:8px; border-bottom:1px dashed #ddd; padding-bottom:4px; flex-wrap:wrap; gap:5px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#888; margin-bottom:8px; border-bottom:1px dashed var(--border-color); padding-bottom:4px; flex-wrap:wrap; gap:5px;">
                     <span>📅 <strong>${log.data}</strong> às <strong>${log.hora}</strong></span>
                     <div class="btn-group">
-                        <button onclick="copiarTextoPersonalizado(this, \`${btoa(encodeURIComponent(textoAdmSalvo))}\`)" class="btn-copy-adm">📋 Copiar p/ ADM</button>
-                        <button onclick="copiarTextoPersonalizado(this, \`${btoa(encodeURIComponent(textoPlayersSalvo))}\`)" class="btn-copy-players">📋 Copiar p/ Player</button>
+                        <button onclick="copiarTextoPersonalizado(this, \`${btoa(encodeURIComponent(textoAdmSalvo))}\`)" class="btn-copy-adm">📋 ADM</button>
+                        <button onclick="copiarTextoPersonalizado(this, \`${btoa(encodeURIComponent(textoPlayersSalvo))}\`)" class="btn-copy-players">📋 Players</button>
                         <button class="btn-icon btn-edit" onclick="abrirModalEdicaoLog(${indexReal})">✏️</button>
                         <button class="btn-icon btn-del" onclick="deletarLog(${indexReal})">❌</button>
                     </div>
                 </div>
-                <div style="background: #fdfdfd; padding: 8px; border: 1px solid #eee; border-radius: 4px; max-height: 150px; overflow-y: auto;">
+                <div style="background: var(--box-bg); padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; max-height: 150px; overflow-y: auto;">
                     ${htmlTurnosHistorico}
                 </div>
             `;
@@ -467,13 +524,13 @@
         let textoReal = decodeURIComponent(atob(base64Texto));
         navigator.clipboard.writeText(textoReal).then(() => {
             let original = btn.innerText;
-            btn.innerText = "✅ Copiado!";
+            btn.innerText = "✅";
             setTimeout(() => btn.innerText = original, 2000);
         });
     }
 
     function limparLogs() {
-        if (confirm("Deseja apagar todo o histórico de gerações?")) {
+        if (confirm("Deseja apagar todo o histórico?")) {
             localStorage.removeItem('gvg_historico_logs');
             renderizarLogs();
         }
@@ -481,15 +538,18 @@
 
     function processarETocalhar() {
         const texto = document.getElementById('listaTexto').value;
+        const alertaBox = document.getElementById('alertaInvalido');
+        
         if (!texto.trim()) {
             document.getElementById('resultado').innerText = "A escala aparecerá aqui assim que colar a lista...";
             document.getElementById('botoesZap').style.display = 'none';
+            alertaBox.style.display = 'none';
             return;
         }
 
         let banco = getBancoJogadores(); 
-        const ausentes = document.getElementById('ausentesTexto').value.toLowerCase().split(/[\n,]/).map(n => n.trim());
-        
+        let temInvalido = false;
+
         let listaInput = texto.split('\n').filter(l => l.trim()).map(l => {
             let linhaLimpa = l.trim();
             let temTextoSistema = linhaLimpa.toLowerCase().includes('sistema');
@@ -499,9 +559,9 @@
             let pts = parseInt(partes.pop());
             let nome = partes.join(' ');
             if (isNaN(pts)) pts = 0;
+            if (pts < 0) temInvalido = true;
             
             let chave = nome.toLowerCase();
-
             if (temTextoSistema && !banco[chave]) {
                 banco[chave] = { nome: nome, ehSistema: true };
             }
@@ -510,10 +570,10 @@
             return { nome: banco[chave] ? banco[chave].nome : nome, pontos: pts, ehSistema: eSistemaFinal };
         });
 
+        alertaBox.style.display = temInvalido ? 'block' : 'none';
         saveBancoJogadores(banco);
 
         let listaValida = listaInput.filter(m => {
-            if (ausentes.includes(m.nome.toLowerCase())) return false;
             if (m.ehSistema) return m.pontos >= 80;
             return true; 
         });
@@ -560,7 +620,7 @@
             outPlayers += `*${t}:*\n` + nomesTurnoStr + "\n\n";
             outCompleta += `*${t}:*\n` + nomesTurnoStr + "\n\n";
 
-            let mensagemTurnoZap = `📢 *Aviso GvG - ${t}*\n\nOlá equipe! Segue a escala do dia *${t}*:\n\n` + nomesTurnoStr + `\n\nPor favor, preparem-se para a entrega dos prêmios!`;
+            let mensagemTurnoZap = `📢 *Aviso GvG - ${t}*\n\nOlá equipe! Segue a escala do dia *${t}*:\n\n` + nomesTurnoStr + `\n\nPreparem-se para a entrega dos prêmios!`;
             let base64Turno = btoa(encodeURIComponent(mensagemTurnoZap));
 
             htmlBox += `*${t}:*\n` + nomesTurnoStr + ` <button onclick="enviarZapTurno(\`${base64Turno}\`)" class="btn-whatsapp-turno">💬 Avisar ${t}</button>\n\n`;
@@ -572,7 +632,6 @@
         document.getElementById('resultado').innerHTML = htmlBox + "📊 *Contagem:*\n" + Object.keys(contagem).map(n => `${n}: ${contagem[n]}x`).join('\n');
         document.getElementById('botoesZap').style.display = 'block';
 
-        // Salva a escala estruturada no histórico para permitir o disparo futuro por dia
         salvarLog(escala, gradePlayers, gradeCompleta);
     }
 
