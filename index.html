@@ -1,5 +1,3 @@
-Isso acontece porque a função que filtra os dias no histórico (agruparPorTurno) está procurando a palavra exata em caixa alta (SEGUNDA), enquanto a escala gerada estava salvando o nome do dia em caixa mista (Segunda). Como o texto salvo no log não batia exatamente com a chave do botão, a lista do dia específico saía em branco na mensagem do WhatsApp.
-Abaixo está o arquivo index.html corrigido com a padronização e o botão de envio individual para cada dia funcionando corretamente.
 <!DOCTYPE html>
 <html lang="pt-br" data-theme="light">
 <head>
@@ -59,6 +57,13 @@ Abaixo está o arquivo index.html corrigido com a padronização e o botão de e
         .val-zero { opacity: 0.4; }
         .sub-nav-btn { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; background: var(--tab-bg); color: var(--text-color); }
         .sub-nav-btn.active { background: #007bff; color: white; border-color: #007bff; }
+
+        /* MODAL DE EDIÇÃO CUSTOMIZADO */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; padding: 15px; box-sizing: border-box; }
+        .modal-content { background: var(--container-bg); color: var(--text-color); width: 100%; max-width: 600px; border-radius: 10px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 12px; }
+        .modal-header { font-weight: bold; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body textarea { height: 200px; font-family: monospace; font-size: 13px; line-height: 1.4; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; }
     </style>
 </head>
 <body>
@@ -200,8 +205,25 @@ Abaixo está o arquivo index.html corrigido com a padronização e o botão de e
         <textarea id="editorCodigo" placeholder="O código fonte aparecerá aqui após validar o Token..." style="height: 320px; font-family: monospace; font-size: 12px; white-space: pre; display:none;"></textarea>
         
         <div id="boxSalvar" style="display:none; margin-top: 15px;">
-            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Correção no envio diário do WhatsApp)">
+            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Modal de edição customizado e fix no filtro de dias)">
             <button onclick="commitarCodigo()" class="action-btn" style="background:#28a745; margin-top: 5px;">🚀 Fazer Commit Direto no GitHub</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE EDIÇÃO -->
+<div id="modalEdicao" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>✏️ Editar Registro do Histórico</span>
+            <button onclick="fecharModalEdicao()" style="background:none; border:none; color:var(--text-color); font-size:18px; cursor:pointer;">✖</button>
+        </div>
+        <div class="modal-body">
+            <textarea id="modalTextoEdicao"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button onclick="fecharModalEdicao()" class="btn-icon btn-del" style="padding: 8px 15px;">Cancelar</button>
+            <button onclick="salvarModalEdicao()" class="btn-icon btn-save" style="padding: 8px 15px;">Salvar Alterações</button>
         </div>
     </div>
 </div>
@@ -216,6 +238,7 @@ Abaixo está o arquivo index.html corrigido com a padronização e o botão de e
     let textoEscalaCache = "";
     let pag = { sis: 1, log: 1 };
     let subAbaAtualPessoas = 'membros';
+    let logEmEdicaoId = null;
 
     window.onload = () => {
         carregarTema(); carregarClan(); 
@@ -447,8 +470,8 @@ Abaixo está o arquivo index.html corrigido com a padronização e o botão de e
             return;
         }
 
-        const diasNormais = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sáb Tarde', 'Domingo'];
-        const diasSistema = ['Sexta', 'Sáb Manhã'];
+        const diasNormais = ['SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SÁB TARDE', 'DOMINGO'];
+        const diasSistema = ['SEXTA', 'SÁB MANHÃ'];
 
         let membrosComuns = listaProcessada.filter(j => !j.isSistema);
         let membrosSistema = listaProcessada.filter(j => j.isSistema);
@@ -522,7 +545,7 @@ Abaixo está o arquivo index.html corrigido com a padronização e o botão de e
 
         let escalaStr = "📅 *ESCALA DO RODÍZIO GvG*\n\n";
         let totalJogadoresEscalados = 0;
-        let ordemExibicao = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb Manhã', 'Sáb Tarde', 'Domingo'];
+        let ordemExibicao = ['SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁB MANHÃ', 'SÁB TARDE', 'DOMINGO'];
 
         ordemExibicao.forEach(dia => {
             if (escalaDias[dia] && escalaDias[dia].length > 0) {
@@ -716,16 +739,18 @@ Abaixo está o arquivo index.html corrigido com a padronização e o botão de e
         if(!log) return;
         
         let turnosMap = agruparPorTurno(log.texto);
-        let chaveTurno = String(turno).trim().toUpperCase();
-        let jogadores = turnosMap[chaveTurno] || [];
+        let chaveTurnoBusca = String(turno).trim().toUpperCase();
+        
+        let chaveReal = Object.keys(turnosMap).find(k => k.toUpperCase() === chaveTurnoBusca);
+        let jogadores = chaveReal ? turnosMap[chaveReal] : [];
         
         if (jogadores.length === 0) {
             alert(`Nenhum jogador encontrado para o turno: ${turno}`);
             return;
         }
 
-        let textoZap = `📢 *Aviso GvG - ${chaveTurno}*\n\n`;
-        textoZap += `Olá equipe! Segue a escala do dia *${chaveTurno}*:\n\n`;
+        let textoZap = `📢 *Aviso GvG - ${chaveTurnoBusca}*\n\n`;
+        textoZap += `Olá equipe! Segue a escala do dia *${chaveTurnoBusca}*:\n\n`;
         
         jogadores.forEach(j => {
             textoZap += `- *${j.nome}* (${j.pts} pts)\n`;
@@ -742,13 +767,30 @@ Abaixo está o arquivo index.html corrigido com a padronização e o botão de e
         let log = logs.find(l => String(l.id) === String(id));
         if(!log) return;
 
-        let novoTexto = prompt("Edite o texto do histórico para este registro:", log.texto);
-        if(novoTexto !== null && novoTexto.trim() !== "") {
-            log.texto = novoTexto.trim();
+        logEmEdicaoId = id;
+        document.getElementById('modalTextoEdicao').value = log.texto;
+        document.getElementById('modalEdicao').style.display = 'flex';
+    }
+
+    function fecharModalEdicao() {
+        document.getElementById('modalEdicao').style.display = 'none';
+        logEmEdicaoId = null;
+    }
+
+    function salvarModalEdicao() {
+        if(!logEmEdicaoId) return;
+        let logs = getLogs();
+        let log = logs.find(l => String(l.id) === String(logEmEdicaoId));
+        if(!log) return;
+
+        let novoTexto = document.getElementById('modalTextoEdicao').value.trim();
+        if(novoTexto !== "") {
+            log.texto = novoTexto;
             saveLogs(logs);
             renderizarLogs();
             renderizarComparativoMensal();
         }
+        fecharModalEdicao();
     }
 
     function renderizarLogs() {
@@ -1122,4 +1164,3 @@ Abaixo está o arquivo index.html corrigido com a padronização e o botão de e
 </script>
 </body>
 </html>
-
