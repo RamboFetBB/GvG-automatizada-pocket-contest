@@ -205,7 +205,7 @@
         <textarea id="editorCodigo" placeholder="O código fonte aparecerá aqui após validar o Token..." style="height: 320px; font-family: monospace; font-size: 12px; white-space: pre; display:none;"></textarea>
         
         <div id="boxSalvar" style="display:none; margin-top: 15px;">
-            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Ajuste no parser de regex dos turnos)">
+            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Preservação de caracteres maiúsculos/minúsculos)">
             <button onclick="commitarCodigo()" class="action-btn" style="background:#28a745; margin-top: 5px;">🚀 Fazer Commit Direto no GitHub</button>
         </div>
     </div>
@@ -336,9 +336,10 @@
         if(id === 'abaComparativo') renderizarComparativoMensal();
     }
 
+    // Preserva a grafia exata do usuário (LanneR, TheRev, etc.) removendo apenas espaços externos
     function formatarNomeProprio(nome) {
         if (!nome) return '';
-        return nome.trim().toLowerCase().replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+        return nome.trim();
     }
 
     const getBanco = () => JSON.parse(localStorage.getItem('gvg_banco_jogadores')) || {};
