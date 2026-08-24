@@ -78,6 +78,7 @@
         <button class="tab-btn" onclick="alternarAba(event, 'abaLogs')">📁 Histórico</button>
         <button class="tab-btn" onclick="alternarAba(event, 'abaNotas')">📝 Avisos</button>
         <button class="tab-btn" onclick="alternarAba(event, 'abaClan')">🛡️ Clã</button>
+        <button class="tab-btn" onclick="alternarAba(event, 'abaDev')">👨‍💻 Dev</button>
     </div>
 
     <!-- ABA 1: RODÍZIO -->
@@ -152,6 +153,23 @@
             💡 <strong>Exemplo no Zap:</strong><code id="exemploZapPreview" style="color: #007bff; display: block; margin-top: 5px; white-space: pre-wrap;"></code>
         </div>
     </div>
+
+    <!-- ABA 6: MODO DEV -->
+    <div id="abaDev" class="tab-content">
+        <h3>👨‍💻 Editor de Código (Auto-Commit)</h3>
+        
+        <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+            <input type="password" id="inputTokenGit" class="search-box" placeholder="Digite seu Token do GitHub..." style="margin-bottom:0; flex:1;">
+            <button onclick="carregarCodigo()" class="action-btn" style="background:#007bff; margin:0; width:auto; padding:8px 15px;">Carregar</button>
+        </div>
+
+        <textarea id="editorCodigo" placeholder="O código fonte aparecerá aqui após validar o Token..." style="height: 320px; font-family: monospace; font-size: 12px; white-space: pre; display:none;"></textarea>
+        
+        <div id="boxSalvar" style="display:none; margin-top: 15px;">
+            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Ajuste na interface)">
+            <button onclick="commitarCodigo()" class="action-btn" style="background:#28a745; margin-top: 5px;">🚀 Fazer Commit Direto no GitHub</button>
+        </div>
+    </div>
 </div>
 
 <!-- MODAL -->
@@ -167,6 +185,12 @@
 </div>
 
 <script>
+    // --- CONFIGURAÇÕES DO REPOSITÓRIO GITHUB ---
+    const DONO_DO_REPO = "SEU_USUARIO";      // Altere para seu usuário no GitHub
+    const NOME_DO_REPO = "SEU_REPOSITORIO";  // Altere para o nome do repositório
+    const CAMINHO_ARQUIVO = "index.html";    // Caminho do arquivo a editar
+
+    let arquivoSha = "";
     let gradePlayers = "", gradeCompleta = "", editandoTipo = null, editandoChave = null;
     let pag = { sis: 1, log: 1 };
     const turnos = ['Sáb Tarde', 'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb Manhã'];
@@ -458,6 +482,72 @@
             e.target.value = "";
         };
         r.readAsText(f);
+    }
+
+    // --- FUNÇÕES DA ABA 6 (EDITOR AUTO-COMMIT) ---
+    async function carregarCodigo() {
+        const token = document.getElementById('inputTokenGit').value.trim();
+        if (!token) return alert("Digite o token do GitHub!");
+
+        const editor = document.getElementById('editorCodigo');
+        editor.value = "Carregando código do repositório...";
+        editor.style.display = 'block';
+
+        try {
+            const res = await fetch(`https://api.github.com/repos/${DONO_DO_REPO}/${NOME_DO_REPO}/contents/${CAMINHO_ARQUIVO}`, {
+                headers: { 'Authorization': `token ${token}` }
+            });
+
+            if (!res.ok) throw new Error("Erro de permissão ou repositório não encontrado.");
+
+            const dados = await res.json();
+            arquivoSha = dados.sha;
+            
+            const textoDecodificado = decodeURIComponent(escape(atob(dados.content.replace(/\s/g, ''))));
+            editor.value = textoDecodificado;
+            document.getElementById('boxSalvar').style.display = 'block';
+        } catch (err) {
+            alert("Erro ao carregar: " + err.message);
+            editor.style.display = 'none';
+            document.getElementById('boxSalvar').style.display = 'none';
+        }
+    }
+
+    async function commitarCodigo() {
+        const token = document.getElementById('inputTokenGit').value.trim();
+        const novoCodigo = document.getElementById('editorCodigo').value;
+        const msgCommit = document.getElementById('inputMensagemCommit').value || "Atualização via App Mobile";
+
+        if (!confirm("Tem certeza que deseja aplicar o commit direto no GitHub?")) return;
+
+        const codigoBase64 = btoa(unescape(encodeURIComponent(novoCodigo)));
+
+        try {
+            const res = await fetch(`https://api.github.com/repos/${DONO_DO_REPO}/${NOME_DO_REPO}/contents/${CAMINHO_ARQUIVO}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: msgCommit,
+                    content: codigoBase64,
+                    sha: arquivoSha
+                })
+            });
+
+            if (res.ok) {
+                alert("✅ Commit realizado com sucesso! O GitHub atualizará seu app em instantes.");
+                document.getElementById('inputTokenGit').value = "";
+                document.getElementById('editorCodigo').style.display = 'none';
+                document.getElementById('boxSalvar').style.display = 'none';
+            } else {
+                const erroApi = await res.json();
+                alert("❌ Falha no commit: " + erroApi.message);
+            }
+        } catch (err) {
+            alert("Erro na conexão com o GitHub.");
+        }
     }
 </script>
 </body>
