@@ -1,604 +1,1033 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerenciador de Escala e Rodízio do Clã</title>
-  <style>
-    :root {
-      --bg-color: #121826;
-      --card-bg: #1e293b;
-      --card-border: #334155;
-      --accent-color: #6366f1;
-      --accent-hover: #4f46e5;
-      --whatsapp-color: #25d366;
-      --whatsapp-hover: #1da851;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --danger: #ef4444;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      padding: 20px;
-      line-height: 1.5;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 25px;
-    }
-
-    header h1 {
-      font-size: 2rem;
-      color: var(--text-main);
-      margin-bottom: 5px;
-    }
-
-    header p {
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
-
-    .grid-settings {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      margin-bottom: 25px;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-    }
-
-    .card h2 {
-      font-size: 1.2rem;
-      margin-bottom: 15px;
-      color: #e2e8f0;
-      border-bottom: 1px solid var(--card-border);
-      padding-bottom: 8px;
-    }
-
-    .form-group {
-      margin-bottom: 12px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 5px;
-    }
-
-    input[type="text"], input[type="number"], textarea {
-      width: 100%;
-      padding: 10px;
-      background: #0f172a;
-      border: 1px solid var(--card-border);
-      border-radius: 6px;
-      color: #fff;
-      font-size: 0.9rem;
-    }
-
-    textarea {
-      resize: vertical;
-      min-height: 120px;
-    }
-
-    .btn {
-      padding: 10px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 0.9rem;
-      transition: background 0.2s, transform 0.1s;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .btn:active {
-      transform: scale(0.98);
-    }
-
-    .btn-primary {
-      background: var(--accent-color);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: var(--accent-hover);
-    }
-
-    .btn-whatsapp {
-      background: var(--whatsapp-color);
-      color: white;
-    }
-
-    .btn-whatsapp:hover {
-      background: var(--whatsapp-hover);
-    }
-
-    .btn-danger {
-      background: var(--danger);
-      color: white;
-    }
-
-    .actions-bar {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 25px;
-    }
-
-    /* Cards da Escala Semanal */
-    .escala-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
-      margin-bottom: 30px;
-    }
-
-    .dia-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .dia-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--card-border);
-    }
-
-    .dia-header h3 {
-      font-size: 1.05rem;
-      color: #6366f1;
-    }
-
-    .dia-corpo {
-      flex-grow: 1;
-      margin-bottom: 15px;
-    }
-
-    .membro-item {
-      font-size: 0.9rem;
-      padding: 4px 0;
-      display: flex;
-      justify-content: space-between;
-      border-bottom: 1px dashed #334155;
-    }
-
-    .membro-item:last-child {
-      border-bottom: none;
-    }
-
-    .tag-sistema {
-      background: #312e81;
-      color: #c7d2fe;
-      font-size: 0.75rem;
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-
-    .hist-section {
-      margin-top: 30px;
-    }
-
-    .hist-card {
-      background: #0f172a;
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .hist-info h4 {
-      font-size: 0.95rem;
-      color: #e2e8f0;
-    }
-
-    .hist-info p {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    @media (max-width: 600px) {
-      body { padding: 10px; }
-      .actions-bar { flex-direction: column; }
-      .btn { width: 100%; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GvG - Rodízio & Gerenciador</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5; --container-bg: #fff; --text-color: #333;
+            --border-color: #ccc; --tab-bg: #f1f1f1; --tab-text: #555;
+            --box-bg: #f8f9fa; --item-bg: #fff; --item-border: #eee; --input-bg: #fff;
+        }
+        [data-theme="dark"] {
+            --bg-color: #121212; --container-bg: #1e1e1e; --text-color: #e0e0e0;
+            --border-color: #444; --tab-bg: #2d2d2d; --tab-text: #b0b0b0;
+            --box-bg: #252525; --item-bg: #2a2a2a; --item-border: #383838; --input-bg: #2a2a2a;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 15px; padding-bottom: 70px; background: var(--bg-color); color: var(--text-color); transition: 0.3s; margin: 0; }
+        .container { max-width: 800px; margin: auto; background: var(--container-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .theme-btn { background: none; border: 1px solid var(--border-color); color: var(--text-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .next-turn-banner { background: #007bff; color: white; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+        .banner-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; flex-wrap: wrap; gap: 5px; }
+        .banner-timer { font-size: 13px; opacity: 0.95; background: rgba(0,0,0,0.15); padding: 4px 8px; border-radius: 4px; display: inline-block; width: fit-content; }
+        .btn-marcar-enviado { background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; gap: 3px; overflow-x: auto; padding-bottom: 3px; }
+        .tab-btn { flex: 1; padding: 8px 8px; border: none; background: var(--tab-bg); font-weight: bold; font-size: 11px; cursor: pointer; border-radius: 8px 8px 0 0; color: var(--tab-text); white-space: nowrap; text-align: center; }
+        .tab-btn.active { background: #007bff; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        textarea, .search-box, .select-per-page { width: 100%; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; background: var(--input-bg); color: var(--text-color); }
+        textarea { height: 130px; padding: 10px; font-size: 14px; resize: vertical; }
+        .search-box { padding: 8px; margin-bottom: 12px; }
+        button.action-btn { cursor: pointer; padding: 12px; margin-top: 10px; border: none; border-radius: 6px; color: white; font-weight: bold; width: 100%; font-size: 15px; }
+        .result-box { margin-top: 20px; padding: 15px; background: var(--box-bg); border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+        .alert-box { background: #fff3cd; color: #856404; padding: 10px; border-radius: 6px; border: 1px solid #ffeeba; margin-top: 10px; font-size: 13px; display: none; }
+        [data-theme="dark"] .alert-box { background: #332701; color: #ffda6a; border-color: #664d03; }
+        .controls-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; flex-wrap: wrap; }
+        .select-per-page { padding: 6px; font-size: 13px; cursor: pointer; width: auto; }
+        .player-grid, .history-grid, .notes-grid { min-height: 200px; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: var(--box-bg); }
+        .player-item, .history-item, .note-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--item-border); background: var(--item-bg); margin-bottom: 6px; border-radius: 6px; }
+        .history-item, .note-item { flex-direction: column; align-items: stretch; }
+        .badge-sys { background: #17a2b8; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; margin-top: 3px; }
+        .btn-group { display: flex; gap: 5px; flex-wrap: wrap; }
+        .btn-icon { border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; color: white; }
+        .btn-del { background: #dc3545; } .btn-save { background: #28a745; }
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 15px; }
+        .page-btn { padding: 5px 10px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .page-btn.active { background: #007bff; color: white; border-color: #007bff; }
+        
+        .comp-table-wrapper { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 8px; margin-top: 15px; }
+        .comp-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        .comp-table th, .comp-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); }
+        .comp-table th { background: var(--tab-bg); color: var(--text-color); font-weight: bold; }
+        .comp-table tr:nth-child(even) { background: var(--box-bg); }
+        .val-pts { font-weight: bold; color: #28a745; }
+        .val-zero { opacity: 0.4; }
+        .sub-nav-btn { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; background: var(--tab-bg); color: var(--text-color); }
+        .sub-nav-btn.active { background: #007bff; color: white; border-color: #007bff; }
+    </style>
 </head>
 <body>
 
-  <div class="container">
-    <header>
-      <h1>🛡️ Rodízio e Escala do Clã</h1>
-      <p>Organize turnos, aplique regras de pontuação e envie mensagens formatadas por dia ou geral.</p>
-    </header>
-
-    <!-- Configurações e Membros -->
-    <div class="grid-settings">
-      <div class="card">
-        <h2>⚙️ Configurações da Guilda</h2>
-        <div class="form-group">
-          <label for="nomeGuilda">Nome da Guilda / Clã</label>
-          <input type="text" id="nomeGuilda" value="Os Imortais">
-        </div>
-        <div class="form-group">
-          <label for="nomeLider">Nome do Líder</label>
-          <input type="text" id="nomeLider" value="Líder Supremo">
-        </div>
-        <div class="form-group">
-          <label for="pontuacaoMinima">Pontuação Mínima para Sistema</label>
-          <input type="number" id="pontuacaoMinima" value="80">
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>👥 Colar Lista de Jogadores</h2>
-        <div class="form-group">
-          <label for="membrosTexto">Cole os nomes (ex: "Jogador1 - 90" ou só "Jogador1")</label>
-          <textarea id="membrosTexto" placeholder="Jogador1 - 95
-Jogador2 - 82
-Jogador3 - 70
-Jogador4 - 88"></textarea>
-        </div>
-        <button class="btn btn-primary" onclick="processarEManterMembros()">Salvar / Atualizar Membros</button>
-      </div>
+<div class="container">
+    <div class="top-bar">
+        <h2 style="margin:0; font-size: 18px;">Gerenciador GvG</h2>
+        <button class="theme-btn" onclick="alternarTema()">🌙 Modo Escuro</button>
     </div>
 
-    <!-- Barra de Ações Principais -->
-    <div class="actions-bar">
-      <button class="btn btn-primary" onclick="gerarNovaEscala()">⚡ Gerar Nova Escala</button>
-      <button class="btn btn-whatsapp" onclick="enviarWhatsAppLider()">📲 Enviar para Líder (Completo)</button>
-      <button class="btn btn-whatsapp" onclick="enviarWhatsAppJogadores()">📲 Enviar para Jogadores (Premiação)</button>
-      <button class="btn btn-danger" onclick="limparEscalaAtual()">🗑️ Limpar Escala Atual</button>
+    <div id="bannerProximoTurno" class="next-turn-banner" style="display:none;">
+        <div class="banner-header">
+            <span>⏰ Turno Atual: <strong id="txtTurnoNome">Carregando...</strong></span>
+            <button class="btn-marcar-enviado" id="btnMarcarEnviado" onclick="marcarComoEnviado()">✅ Já Enviei</button>
+        </div>
+        <div id="txtTurnoTimer" class="banner-timer">Calculando tempo...</div>
     </div>
 
-    <!-- Visualização da Escala Gerada -->
-    <h2 style="margin-bottom: 15px;">📅 Escala Atual da Semana</h2>
-    <div id="escalaContainer" class="escala-grid">
-      <!-- Cards dos dias renderizados via JavaScript -->
-      <p style="color: var(--text-muted); grid-column: 1 / -1;">Nenhuma escala gerada no momento. Clique em "Gerar Nova Escala".</p>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="alternarAba(event, 'abaRodizio')">📅 Rodízio</button>
+        <button class="tab-btn" onclick="alternarAba(event, 'abaHistorico')">👥 Pessoas (<span id="countTotal">0</span>)</button>
+        <button class="tab-btn" onclick="alternarAba(event, 'abaLogs')">📁 Histórico</button>
+        <button class="tab-btn" onclick="alternarAba(event, 'abaComparativo')">📊 Comparativo</button>
+        <button class="tab-btn" onclick="alternarAba(event, 'abaNotas')">📝 Avisos</button>
+        <button class="tab-btn" onclick="alternarAba(event, 'abaClan')">🛡️ Clã</button>
+        <button class="tab-btn" onclick="alternarAba(event, 'abaDev')">👨‍💻 Dev</button>
     </div>
 
-    <!-- Histórico de Escalas -->
-    <div class="hist-section card">
-      <h2>📜 Histórico de Escalas Salvas</h2>
-      <div id="historicoContainer">
-        <!-- Itens do histórico renderizados via JS -->
-      </div>
+    <!-- ABA 1: RODÍZIO -->
+    <div id="abaRodizio" class="tab-content active">
+        <h2>1. Cole a Lista de Nomes</h2>
+        <div style="margin-bottom: 8px;">
+            <label style="font-size: 13px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <input type="checkbox" id="chkApenasSistema" onchange="processarETocalhar()"> 🛡️ Filtrar na escala apenas quem está no Sistema
+            </label>
+        </div>
+        <textarea id="listaTexto" placeholder="Cole a lista aqui..."></textarea>
+        <div id="alertaInvalido" class="alert-box">⚠️ Atenção: Detectamos pontuações negativas ou valores inválidos na lista.</div>
+        <div id="resultado" class="result-box">A escala aparecerá aqui assim que colar a lista...</div>
+        
+        <button class="action-btn" id="botoesZap" onclick="compartilharZap()" style="background:#25d366; display:none; margin-top: 15px;">📤 Enviar Escala para o WhatsApp</button>
     </div>
-  </div>
 
-  <script>
-    // Sequência de turnos do sistema de rodízio
-    const turnosOrdenados = [
-      "Sáb Tarde",
-      "Domingo",
-      "Segunda",
-      "Terça",
-      "Quarta",
-      "Quinta",
-      "Sexta",
-      "Sáb Manhã"
-    ];
+    <!-- ABA 2: JOGADORES -->
+    <div id="abaHistorico" class="tab-content">
+        <h3>⚙️ Gerenciador de Pessoas</h3>
+        
+        <div style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+            <button id="btnSubMembros" class="sub-nav-btn active" onclick="alternarSubAbaPessoas('membros')">👥 Membros (<span id="countMembros">0</span>)</button>
+            <button id="btnSubSistema" class="sub-nav-btn" onclick="alternarSubAbaPessoas('sistema')">🛡️ Sistema (<span id="countSistema">0</span>)</button>
+        </div>
 
-    let membrosLista = [];
-    let escalaAtual = null;
+        <div style="display: flex; gap: 5px; margin-bottom: 12px;">
+            <input type="text" id="novoNomeSistema" class="search-box" placeholder="Adicionar player diretamente ao Sistema..." style="margin-bottom:0;">
+            <button onclick="adicionarManualSistema()" class="btn-icon btn-save" style="padding: 0 15px; font-size: 16px;" title="Adicionar ao Sistema">✅</button>
+        </div>
+        <div class="controls-header">
+            <input type="text" id="filtroJogador" class="search-box" placeholder="🔍 Buscar..." oninput="pag.sis=1; renderizarHistorico()" style="margin-bottom:0; flex: 1;">
+            <select id="itensPorPaginaSistema" class="select-per-page" onchange="pag.sis=1; renderizarHistorico()">
+                <option value="5">5</option><option value="10">10</option><option value="20" selected>20</option>
+            </select>
+        </div>
+        <div class="player-grid" id="listaHistoricoContainer" style="margin-top: 12px;"></div>
+        <div class="pagination" id="paginacaoSistema"></div>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button onclick="exportarBackup()" class="action-btn" style="background:#17a2b8; margin:0; padding:10px; font-size:14px;">💾 Exportar</button>
+            <button onclick="document.getElementById('inputImportar').click()" class="action-btn" style="background:#ffc107; color:#000; margin:0; padding:10px; font-size:14px;">📂 Importar</button>
+            <input type="file" id="inputImportar" accept=".json" style="display:none" onchange="importarBackup(event)">
+        </div>
+        <button onclick="limparBancoJogadores()" class="action-btn" style="background:#dc3545; margin-top:10px; padding:8px;">🗑️ Limpar Banco</button>
+    </div>
 
-    // Inicialização do Sistema
-    window.onload = function() {
-      carregarConfiguracoes();
-      carregarMembrosSalvos();
-      carregarEscalaAtualSalva();
-      renderizarHistorico();
+    <!-- ABA 3: HISTÓRICO DE LOGS -->
+    <div id="abaLogs" class="tab-content">
+        <h3>📁 Histórico de Rodízios</h3>
+        <div class="controls-header" style="margin-top: 10px;">
+            <input type="text" id="filtroLogs" class="search-box" placeholder="🔍 Buscar histórico..." oninput="pag.log=1; renderizarLogs()" style="margin-bottom:0; flex: 1;">
+            <select id="itensPorPaginaLogs" class="select-per-page" onchange="pag.log=1; renderizarLogs()">
+                <option value="5">5</option><option value="10">10</option><option value="20" selected>20</option>
+            </select>
+        </div>
+        <div class="history-grid" id="listaLogsContainer" style="margin-top: 12px;"></div>
+        <div class="pagination" id="paginacaoLogs"></div>
+        <button onclick="limparLogs()" class="action-btn" style="background:#dc3545; margin-top:15px; padding:8px;">🗑️ Limpar Todo o Histórico</button>
+    </div>
+
+    <!-- ABA 4: COMPARATIVO MENSAL -->
+    <div id="abaComparativo" class="tab-content">
+        <h3>📊 Comparativo Mensal (Mês a Mês)</h3>
+        <p style="font-size: 13px; opacity: 0.8; margin-bottom: 15px;">Acompanhamento automático da pontuação de cada jogador extraído diretamente de todo o histórico salvo.</p>
+
+        <div class="controls-header">
+            <select id="selectFiltroMesComp" class="select-per-page" onchange="renderizarComparativoMensal()" style="flex:1;">
+                <option value="TODOS">📅 Visão Geral (Todos os Meses)</option>
+            </select>
+            <button onclick="enviarZapComparativo()" class="action-btn" style="background:#25d366; margin:0; width:auto; padding:8px 15px; font-size:13px;">📤 Enviar p/ Zap</button>
+        </div>
+
+        <div class="comp-table-wrapper">
+            <table class="comp-table" id="tabelaComparativo">
+                <thead><tr id="tableHeaderComp"><th>Jogador</th></tr></thead>
+                <tbody id="tableBodyComp"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ABA 5: AVISOS -->
+    <div id="abaNotas" class="tab-content">
+        <h3>📝 Avisos & Mensagens Prontas</h3>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+            <input type="text" id="tituloNota" class="search-box" placeholder="Título..." style="margin-bottom:0;">
+            <textarea id="conteudoNota" placeholder="Escreva o aviso..." style="height: 80px;"></textarea>
+            <button onclick="salvarNotaPronta()" class="action-btn" style="background:#28a745; margin:0; padding:10px;">💾 Salvar Aviso</button>
+        </div>
+        <div class="notes-grid" id="listaNotasContainer" style="margin-top: 12px;"></div>
+    </div>
+
+    <!-- ABA 6: CLÃ -->
+    <div id="abaClan" class="tab-content">
+        <h3>🛡️ Configurações do Clã</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+            <div><label style="font-size: 13px; font-weight: bold;">Nome da Guilda:</label><input type="text" id="inputNomeGuilda" class="search-box" oninput="salvarDadosClan()"></div>
+            <div><label style="font-size: 13px; font-weight: bold;">Nome do Líder:</label><input type="text" id="inputNomeLider" class="search-box" oninput="salvarDadosClan()"></div>
+            <div><label style="font-size: 13px; font-weight: bold;">Saudação:</label><input type="text" id="inputTextoSaudacao" class="search-box" oninput="salvarDadosClan()"></div>
+        </div>
+        <div style="margin-top: 20px; padding: 12px; background: var(--box-bg); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px;">
+            💡 <strong>Exemplo no Zap:</strong><code id="exemploZapPreview" style="color: #007bff; display: block; margin-top: 5px; white-space: pre-wrap;"></code>
+        </div>
+    </div>
+
+    <!-- ABA 7: MODO DEV -->
+    <div id="abaDev" class="tab-content">
+        <h3>👨‍💻 Editor de Código (Auto-Commit)</h3>
+        
+        <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+            <input type="password" id="inputTokenGit" class="search-box" placeholder="Digite seu Token do GitHub..." style="margin-bottom:0; flex:1;" oninput="salvarTokenGitLocal()">
+            <button onclick="carregarCodigo()" class="action-btn" style="background:#007bff; margin:0; width:auto; padding:8px 15px;">Carregar</button>
+            <button onclick="limparTokenGitLocal()" class="action-btn" style="background:#dc3545; margin:0; width:auto; padding:8px 12px;" title="Remover Token Salvo">🗑️</button>
+        </div>
+
+        <textarea id="editorCodigo" placeholder="O código fonte aparecerá aqui após validar o Token..." style="height: 320px; font-family: monospace; font-size: 12px; white-space: pre; display:none;"></textarea>
+        
+        <div id="boxSalvar" style="display:none; margin-top: 15px;">
+            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Correção de parsing de nomes e sistema)">
+            <button onclick="commitarCodigo()" class="action-btn" style="background:#28a745; margin-top: 5px;">🚀 Fazer Commit Direto no GitHub</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const DONO_DO_REPO = "RamboFetBB";
+    const NOME_DO_REPO = "GvG-automatizada-pocket-contest";
+    const CAMINHO_ARQUIVO = "index.html";
+    const BRANCH_GIT = "main";
+
+    let arquivoSha = "";
+    let textoEscalaCache = "";
+    let pag = { sis: 1, log: 1 };
+    let subAbaAtualPessoas = 'membros';
+    const turnos = ['Sáb Tarde', 'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb Manhã'];
+
+    document.getElementById('listaTexto').addEventListener('input', processarETocalhar);
+    window.onload = () => {
+        carregarTema(); carregarClan(); 
+        sanitizarBanco(); // Limpa e corrige nomes que foram salvos com erro anteriormente
+        renderizarHistorico(); renderizarLogs(); renderizarNotas();
+        renderizarComparativoMensal(); carregarTokenGitLocal();
+        atualizarStatusPremiacao(); setInterval(atualizarStatusPremiacao, 1000);
     };
 
-    function carregarConfiguracoes() {
-      const config = JSON.parse(localStorage.getItem('clan_config')) || {};
-      if (config.nomeGuilda) document.getElementById('nomeGuilda').value = config.nomeGuilda;
-      if (config.nomeLider) document.getElementById('nomeLider').value = config.nomeLider;
-      if (config.pontuacaoMinima) document.getElementById('pontuacaoMinima').value = config.pontuacaoMinima;
+    function alternarTema() {
+        let novo = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', novo);
+        localStorage.setItem('gvg_tema', novo);
+        document.querySelector('.theme-btn').innerText = novo === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro';
+    }
+    function carregarTema() {
+        let salvo = localStorage.getItem('gvg_tema') || 'light';
+        document.documentElement.setAttribute('data-theme', salvo);
+        document.querySelector('.theme-btn').innerText = salvo === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro';
     }
 
-    function salvarConfiguracoes() {
-      const config = {
-        nomeGuilda: document.getElementById('nomeGuilda').value,
-        nomeLider: document.getElementById('nomeLider').value,
-        pontuacaoMinima: parseInt(document.getElementById('pontuacaoMinima').value) || 80
-      };
-      localStorage.setItem('clan_config', JSON.stringify(config));
-      return config;
+    function salvarDadosClan() {
+        localStorage.setItem('gvg_nome_guilda', document.getElementById('inputNomeGuilda').value.trim());
+        localStorage.setItem('gvg_nome_lider', document.getElementById('inputNomeLider').value.trim());
+        localStorage.setItem('gvg_texto_saudacao', document.getElementById('inputTextoSaudacao').value);
+        atualizarPreview(); renderizarNotas();
+    }
+    function carregarClan() {
+        document.getElementById('inputNomeGuilda').value = localStorage.getItem('gvg_nome_guilda') || '';
+        document.getElementById('inputNomeLider').value = localStorage.getItem('gvg_nome_lider') || '';
+        document.getElementById('inputTextoSaudacao').value = localStorage.getItem('gvg_texto_saudacao') || 'Olá guilda [Guilda], segue:';
+        atualizarPreview();
+    }
+    function atualizarPreview() {
+        document.getElementById('exemploZapPreview').innerText = `${obterCabecalhoLider()}...`;
+    }
+    function obterCabecalhoLider() {
+        let lider = localStorage.getItem('gvg_nome_lider') || 'Líder';
+        let guilda = localStorage.getItem('gvg_nome_guilda') || 'Guilda';
+        let saudacao = (localStorage.getItem('gvg_texto_saudacao') || 'Olá guilda [Guilda], segue:').replace(/\[Guilda\]/g, guilda);
+        return `*${lider}*: ${saudacao}\n\n`;
     }
 
-    function processarEManterMembros() {
-      const texto = document.getElementById('membrosTexto').value;
-      const minPontos = parseInt(document.getElementById('pontuacaoMinima').value) || 80;
-      const linhas = texto.split('\n');
+    function salvarTokenGitLocal() {
+        let token = document.getElementById('inputTokenGit').value.trim();
+        if(token) localStorage.setItem('gvg_git_token', token);
+        else localStorage.removeItem('gvg_git_token');
+    }
+    function carregarTokenGitLocal() {
+        let tokenSalvo = localStorage.getItem('gvg_git_token') || '';
+        if(tokenSalvo) document.getElementById('inputTokenGit').value = tokenSalvo;
+    }
+    function limparTokenGitLocal() {
+        localStorage.removeItem('gvg_git_token');
+        document.getElementById('inputTokenGit').value = '';
+        alert('Token removido do armazenamento local!');
+    }
 
-      membrosLista = [];
+    function marcarComoEnviado() {
+        localStorage.setItem('gvg_ultimo_envio_timestamp', new Date().getTime());
+        let btn = document.getElementById('btnMarcarEnviado');
+        btn.innerText = "✨ Salvo!"; setTimeout(() => btn.innerText = "✅ Já Enviei", 1500);
+        atualizarStatusPremiacao();
+    }
+    function atualizarStatusPremiacao() {
+        let agora = new Date(), dia = agora.getDay(), hora = agora.getHours();
+        let turnoNome = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"][dia];
+        if(dia === 6) turnoNome = hora < 11 ? "Sáb Manhã" : (hora < 18 ? "Sáb Tarde (Em breve)" : "Sáb Tarde");
 
-      linhas.forEach(linha => {
-        let l = linha.trim();
-        if (!l) return;
+        let inicioJanela = new Date(agora);
+        inicioJanela.setHours(dia === 6 && hora >= 18 ? 18 : (dia === 6 && hora >= 11 ? 11 : 1), 0, 0, 0);
+        if(hora < 1 && dia !== 6) inicioJanela.setDate(inicioJanela.getDate() - 1);
 
-        let partes = l.split('-');
-        let nome = partes[0].trim();
-        let pontos = partes[1] ? parseInt(partes[1].trim()) : 80;
+        let ultimoEnvio = parseInt(localStorage.getItem('gvg_ultimo_envio_timestamp')) || 0;
+        let enviado = ultimoEnvio >= inicioJanela.getTime();
 
-        if (isNaN(pontos)) pontos = 80;
+        let target = new Date(agora);
+        if(enviado) {
+            target.setDate(target.getDate() + 1); target.setHours(1,0,0,0);
+        } else {
+            target.setHours(dia === 6 && hora < 11 ? 11 : (dia === 6 && hora >= 11 && hora < 18 ? 18 : 1), 0,0,0);
+            if(hora >= target.getHours()) target.setDate(target.getDate() + 1);
+        }
 
-        membrosLista.push({
-          nome: nome,
-          pontos: pontos,
-          isSistema: pontos >= minPontos
+        let diff = target - agora;
+        let timerStr = enviado ? "✅ Premiação enviada! Próxima liberação em: " : "⏳ Libera em: ";
+        document.getElementById('bannerProximoTurno').style.display = 'flex';
+        document.getElementById('txtTurnoNome').innerText = turnoNome;
+        document.getElementById('txtTurnoTimer').innerText = timerStr + formatarMs(diff);
+    }
+    function formatarMs(ms) {
+        if(ms < 0) return "00h 00m 00s";
+        let s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+        return `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s%60).padStart(2,'0')}s`;
+    }
+
+    function alternarAba(e, id) {
+        document.querySelectorAll('.tab-content, .tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active');
+        if(id === 'abaComparativo') renderizarComparativoMensal();
+    }
+
+    const getBanco = () => JSON.parse(localStorage.getItem('gvg_banco_jogadores')) || {};
+    const saveBanco = (dados) => localStorage.setItem('gvg_banco_jogadores', JSON.stringify(dados));
+
+    const getLogs = () => JSON.parse(localStorage.getItem('gvg_historico_logs')) || [];
+    const saveLogs = (dados) => localStorage.setItem('gvg_historico_logs', JSON.stringify(dados));
+
+    const getNotas = () => JSON.parse(localStorage.getItem('gvg_notas_prontas')) || [];
+    const saveNotas = (dados) => localStorage.setItem('gvg_notas_prontas', JSON.stringify(dados));
+
+    function encontrarChaveBanco(banco, nome) {
+        if (!nome) return '';
+        let nomeTrim = nome.trim();
+        let existente = Object.keys(banco).find(k => k.trim().toLowerCase() === nomeTrim.toLowerCase());
+        return existente || nomeTrim;
+    }
+
+    // SANITIZAÇÃO AUTOMÁTICA DE DADOS CORROMPIDOS NO LOCALSTORAGE
+    function sanitizarBanco() {
+        let banco = getBanco();
+        let alterado = false;
+        let novoBanco = {};
+
+        Object.keys(banco).forEach(chaveAntiga => {
+            let item = banco[chaveAntiga];
+            let nomeLimpo = chaveAntiga;
+            let ehSistema = item.isSistema || false;
+            let pontos = item.pontos || 0;
+
+            if (/\bsistema\b/i.test(nomeLimpo)) {
+                ehSistema = true;
+                nomeLimpo = nomeLimpo.replace(/\bsistema\b/gi, '').trim();
+            }
+
+            let matchNum = nomeLimpo.match(/^(.+?)\s+([-\d]+)$/);
+            if (matchNum) {
+                nomeLimpo = matchNum[1].trim();
+                let ptsExtraidos = parseInt(matchNum[2], 10);
+                if (pontos === 0 && !isNaN(ptsExtraidos)) {
+                    pontos = ptsExtraidos;
+                }
+            }
+
+            if (!nomeLimpo) return;
+
+            let chaveExistente = Object.keys(novoBanco).find(k => k.trim().toLowerCase() === nomeLimpo.toLowerCase()) || nomeLimpo;
+
+            if (!novoBanco[chaveExistente]) {
+                novoBanco[chaveExistente] = {
+                    participacoes: item.participacoes || 0,
+                    pontos: pontos,
+                    isSistema: ehSistema
+                };
+            } else {
+                novoBanco[chaveExistente].participacoes = Math.max(novoBanco[chaveExistente].participacoes || 0, item.participacoes || 0);
+                novoBanco[chaveExistente].pontos = Math.max(novoBanco[chaveExistente].pontos || 0, pontos);
+                if (ehSistema) novoBanco[chaveExistente].isSistema = true;
+            }
+
+            if (chaveAntiga !== chaveExistente || item.isSistema !== ehSistema || item.pontos !== pontos) {
+                alterado = true;
+            }
         });
-      });
 
-      localStorage.setItem('clan_membros', JSON.stringify(membrosLista));
-      salvarConfiguracoes();
-      alert(`${membrosLista.length} membros processados e salvos com sucesso!`);
-    }
-
-    function carregarMembrosSalvos() {
-      const salvos = localStorage.getItem('clan_membros');
-      if (salvos) {
-        membrosLista = JSON.parse(salvos);
-        document.getElementById('membrosTexto').value = membrosLista.map(m => `${m.nome} - ${m.pontos}`).join('\n');
-      }
-    }
-
-    // Regra Principal de Geração de Escala
-    function gerarNovaEscala() {
-      const config = salvarConfiguracoes();
-
-      if (membrosLista.length === 0) {
-        alert("Por favor, adicione e salve a lista de membros antes de gerar a escala.");
-        return;
-      }
-
-      // Separa membros do Sistema (>= 80 pts ou flag de Sistema) dos demais
-      let sistemaMembros = membrosLista.filter(m => m.pontos >= config.pontuacaoMinima || m.isSistema);
-      let outrosMembros = membrosLista.filter(m => !(m.pontos >= config.pontuacaoMinima || m.isSistema));
-
-      // Embaralha para distribuir de forma justa
-      sistemaMembros.sort(() => Math.random() - 0.5);
-      outrosMembros.sort(() => Math.random() - 0.5);
-
-      let escala = {};
-      turnosOrdenados.forEach(t => escala[t] = []);
-
-      // Regra: Sexta e Sáb Manhã priorizam membros do Sistema
-      const diasPrioritariosSistema = ["Sexta", "Sáb Manhã"];
-
-      // Aloca nos dias de prioridade
-      diasPrioritariosSistema.forEach(dia => {
-        let qtdParaAlocar = Math.max(1, Math.ceil(membrosLista.length / turnosOrdenados.length));
-        for (let i = 0; i < qtdParaAlocar && sistemaMembros.length > 0; i++) {
-          escala[dia].push(sistemaMembros.pop());
+        if (alterado) {
+            saveBanco(novoBanco);
         }
-      });
-
-      // Sobras de membros do sistema combinados com os demais
-      let poolGeral = [...sistemaMembros, ...outrosMembros];
-      poolGeral.sort(() => Math.random() - 0.5);
-
-      // Distribui o restante nos turnos disponíveis
-      let turnoIndex = 0;
-      while (poolGeral.length > 0) {
-        let turnoNome = turnosOrdenados[turnoIndex % turnosOrdenados.length];
-        escala[turnoNome].push(poolGeral.pop());
-        turnoIndex++;
-      }
-
-      escalaAtual = escala;
-      localStorage.setItem('escala_atual', JSON.stringify(escalaAtual));
-
-      // Salvar no Histórico automaticamente
-      salvarNoHistorico(escalaAtual);
-
-      renderizarEscala(escalaAtual);
     }
 
-    function renderizarEscala(escala) {
-      const container = document.getElementById('escalaContainer');
-      container.innerHTML = '';
+    function processarETocalhar() {
+        let texto = document.getElementById('listaTexto').value.trim();
+        let divResult = document.getElementById('resultado');
+        let divAlert = document.getElementById('alertaInvalido');
+        let btnZap = document.getElementById('botoesZap');
 
-      turnosOrdenados.forEach(dia => {
-        const membros = escala[dia] || [];
-        const cardDia = document.createElement('div');
-        cardDia.classList.add('dia-card');
-
-        let listaHTML = membros.map(m => `
-          <div class="membro-item">
-            <span>${m.nome}</span>
-            ${m.pontos >= 80 ? '<span class="tag-sistema">Sistema</span>' : `<span style="color:#94a3b8; font-size:0.8rem">${m.pontos} pts</span>`}
-          </div>
-        `).join('');
-
-        if (membros.length === 0) {
-          listaHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">Nenhum escalado</p>`;
+        if (!texto) {
+            divResult.innerText = "A escala aparecerá aqui assim que colar a lista...";
+            divAlert.style.display = 'none';
+            btnZap.style.display = 'none';
+            textoEscalaCache = "";
+            return;
         }
 
-        // Botão de envio individual por dia restaurado aqui
-        cardDia.innerHTML = `
-          <div class="dia-header">
-            <h3>${dia}</h3>
-            <button class="btn btn-whatsapp" style="padding: 4px 8px; font-size: 0.75rem;" onclick="enviarEscalaDia('${dia}')">
-              📲 Enviar ${dia}
-            </button>
-          </div>
-          <div class="dia-corpo">
-            ${listaHTML}
-          </div>
-        `;
+        let linhas = texto.split('\n');
+        let jogadores = [];
+        let temInvalido = false;
+        let banco = getBanco();
 
-        container.appendChild(cardDia);
-      });
+        let apenasSistema = document.getElementById('chkApenasSistema').checked;
+
+        linhas.forEach(linha => {
+            linha = linha.trim();
+            if(!linha) return;
+
+            let ehSistemaLinha = false;
+            if (/\bsistema\b/i.test(linha)) {
+                ehSistemaLinha = true;
+                linha = linha.replace(/\bsistema\b/gi, '').trim();
+            }
+
+            let match = linha.match(/^(.+?)\s+([-\d]+)$/);
+            let nomeRaw = "", pts = 0;
+
+            if(match) {
+                nomeRaw = match[1].trim();
+                pts = parseInt(match[2], 10);
+                if(isNaN(pts) || pts < 0) temInvalido = true;
+            } else {
+                nomeRaw = linha;
+                pts = 0;
+            }
+
+            if (!nomeRaw) return;
+
+            let chave = encontrarChaveBanco(banco, nomeRaw);
+
+            if (!banco[chave]) {
+                banco[chave] = { participacoes: 0, pontos: 0, isSistema: ehSistemaLinha };
+            } else if (ehSistemaLinha) {
+                banco[chave].isSistema = true;
+            }
+
+            if (apenasSistema && !banco[chave].isSistema) return;
+
+            jogadores.push({ nome: chave, pts });
+        });
+
+        divAlert.style.display = temInvalido ? 'block' : 'none';
+        if(jogadores.length === 0) {
+            divResult.innerText = apenasSistema ? "Nenhum jogador da lista está marcado no Sistema." : "Nenhum jogador válido encontrado.";
+            btnZap.style.display = 'none';
+            return;
+        }
+
+        let totalTurnos = turnos.length;
+        let escalaStr = "📅 *ESCALA DO RODÍZIO GvG*\n\n";
+
+        jogadores.forEach((j, index) => {
+            let turno = turnos[index % totalTurnos];
+            let ehSys = banco[j.nome] && banco[j.nome].isSistema;
+            escalaStr += `• *${j.nome}* ${ehSys ? '🛡️' : ''} - ${turno} (${j.pts} pts)\n`;
+
+            banco[j.nome].participacoes += 1;
+            banco[j.nome].pontos += j.pts;
+        });
+
+        saveBanco(banco);
+        renderizarHistorico();
+
+        textoEscalaCache = escalaStr;
+        divResult.innerText = obterCabecalhoLider() + escalaStr;
+        btnZap.style.display = 'block';
+
+        salvarLogAutomatico(jogadores.length, escalaStr);
     }
 
-    // Disparo individual por dia via WhatsApp
-    function enviarEscalaDia(dia) {
-      if (!escalaAtual || !escalaAtual[dia]) {
-        alert("Nenhuma escala encontrada para este dia.");
-        return;
-      }
-
-      const config = salvarConfiguracoes();
-      const membros = escalaAtual[dia];
-      const listaNomes = membros.map(m => `- ${m.nome}`).join('\n');
-
-      const mensagem = `🛡️ *${config.nomeGuilda.toUpperCase()}* - *Escala ${dia.toUpperCase()}*\n👑 *Líder:* ${config.nomeLider}\n\n*Integrantes Escalados:*\n${listaNomes}\n\nGood Game e boa sorte a todos! ⚔️`;
-
-      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`;
-      window.open(url, '_blank');
+    function compartilharZap() {
+        let textoFinal = obterCabecalhoLider() + textoEscalaCache;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textoFinal)}`, '_blank');
     }
 
-    // Disparo Geral - Envio do Líder (Mensagem completa com contagem)
-    function enviarWhatsAppLider() {
-      if (!escalaAtual) return alert("Gere uma escala primeiro.");
-      const config = salvarConfiguracoes();
-
-      let textoTurnos = '';
-      let totalGeral = 0;
-
-      turnosOrdenados.forEach(dia => {
-        let qtd = escalaAtual[dia].length;
-        totalGeral += qtd;
-        let nomes = escalaAtual[dia].map(m => m.nome).join(', ');
-        textoTurnos += `\n*${dia}* (${qtd}): ${nomes || 'Nenhum'}`;
-      });
-
-      const msg = `👑 *[RELATÓRIO DO LÍDER]* - ${config.nomeGuilda}\n👑 *Líder:* ${config.nomeLider}\n📊 *Total Participantes:* ${totalGeral}\n${textoTurnos}\n\n📌 Escala salva e verificada pelo sistema.`;
-
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-
-    // Disparo Geral - Envio dos Jogadores (Premiação/Resumo)
-    function enviarWhatsAppJogadores() {
-      if (!escalaAtual) return alert("Gere uma escala primeiro.");
-      const config = salvarConfiguracoes();
-
-      let textoTurnos = '';
-      turnosOrdenados.forEach(dia => {
-        let nomes = escalaAtual[dia].map(m => m.nome).join('\n  - ');
-        textoTurnos += `\n📅 *${dia}*\n  - ${nomes || 'Nenhum'}\n`;
-      });
-
-      const msg = `⚔️ *RODÍZIO SEMANAL* - ${config.nomeGuilda} ⚔️\n\nConfiram a escala de presença e premiações da semana:\n${textoTurnos}\n🎁 Cumpram seus turnos para garantir a pontuação mínima de ${config.pontuacaoMinima} pontos!`;
-
-      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-
-    // Persistência do Histórico
-    function salvarNoHistorico(escala) {
-      const historico = JSON.parse(localStorage.getItem('historico_escalas')) || [];
-      const config = salvarConfiguracoes();
-
-      const item = {
-        id: Date.now(),
-        data: new Date().toLocaleString('pt-BR'),
-        guilda: config.nomeGuilda,
-        lider: config.nomeLider,
-        escala: escala
-      };
-
-      historico.unshift(item); // Adiciona no início
-      localStorage.setItem('historico_escalas', JSON.stringify(historico));
-      renderizarHistorico();
+    function alternarSubAbaPessoas(sub) {
+        subAbaAtualPessoas = sub;
+        document.getElementById('btnSubMembros').classList.toggle('active', sub === 'membros');
+        document.getElementById('btnSubSistema').classList.toggle('active', sub === 'sistema');
+        pag.sis = 1;
+        renderizarHistorico();
     }
 
     function renderizarHistorico() {
-      const container = document.getElementById('historicoContainer');
-      const historico = JSON.parse(localStorage.getItem('historico_escalas')) || [];
+        let banco = getBanco();
+        let todasChaves = Object.keys(banco);
+        let filtro = (document.getElementById('filtroJogador').value || '').toLowerCase();
 
-      if (historico.length === 0) {
-        container.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">Nenhum histórico armazenado ainda.</p>`;
-        return;
-      }
+        let totalMembros = todasChaves.length;
+        let totalSistema = todasChaves.filter(k => banco[k] && banco[k].isSistema).length;
 
-      container.innerHTML = historico.map(h => `
-        <div class="hist-card">
-          <div class="hist-info">
-            <h4>🛡️ ${h.guilda} - ${h.data}</h4>
-            <p>Líder: ${h.lider}</p>
-          </div>
-          <div style="display:flex; gap:8px;">
-            <button class="btn btn-primary" style="padding:6px 10px; font-size:0.8rem;" onclick="carregarHistorico(${h.id})">Restaurar Tela</button>
-            <button class="btn btn-danger" style="padding:6px 10px; font-size:0.8rem;" onclick="excluirHistorico(${h.id})">Deletar</button>
-          </div>
-        </div>
-      `).join('');
+        document.getElementById('countTotal').innerText = totalMembros;
+        document.getElementById('countMembros').innerText = totalMembros;
+        document.getElementById('countSistema').innerText = totalSistema;
+
+        let chavesFiltradas = todasChaves.filter(nome => {
+            let p = banco[nome];
+            if (subAbaAtualPessoas === 'sistema' && (!p || !p.isSistema)) return false;
+            return nome.toLowerCase().includes(filtro);
+        });
+
+        let container = document.getElementById('listaHistoricoContainer');
+        container.innerHTML = '';
+
+        let porPagina = parseInt(document.getElementById('itensPorPaginaSistema').value, 10);
+        let inicio = (pag.sis - 1) * porPagina;
+        let itensPagina = chavesFiltradas.slice(inicio, inicio + porPagina);
+
+        if(itensPagina.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding:15px; opacity:0.6;">Nenhum jogador em ${subAbaAtualPessoas === 'sistema' ? 'Sistema' : 'Membros'}.</div>`;
+            document.getElementById('paginacaoSistema').innerHTML = '';
+            return;
+        }
+
+        itensPagina.forEach(nome => {
+            let p = banco[nome];
+            let isSys = p && p.isSistema;
+            let div = document.createElement('div');
+            div.className = 'player-item';
+
+            if (subAbaAtualPessoas === 'membros') {
+                div.innerHTML = `
+                    <div>
+                        <strong>${nome}</strong><br>
+                        <span style="font-size:12px; opacity:0.8;">Pontos Totais: ${p.pontos || 0}</span>
+                    </div>
+                    <div class="btn-group">
+                        <button onclick="alternarStatusSistema('${nome}')" class="btn-icon" style="background:${isSys ? '#ffc107' : '#17a2b8'}; color:#000;" title="${isSys ? 'Remover do Sistema' : 'Marcar no Sistema'}">
+                            ${isSys ? '⭐ Sistema' : '➕ Sistema'}
+                        </button>
+                        <button onclick="excluirJogadorSistema('${nome}')" class="btn-icon btn-del" title="Excluir do Banco">🗑️</button>
+                    </div>
+                `;
+            } else {
+                div.innerHTML = `
+                    <div>
+                        <strong>${nome}</strong> <span class="badge-sys">🛡️ Sistema</span>
+                    </div>
+                    <div class="btn-group">
+                        <button onclick="alternarStatusSistema('${nome}')" class="btn-icon" style="background:#ffc107; color:#000;" title="Remover do Sistema">
+                            ⭐ Sistema
+                        </button>
+                        <button onclick="excluirJogadorSistema('${nome}')" class="btn-icon btn-del" title="Excluir do Banco">🗑️</button>
+                    </div>
+                `;
+            }
+
+            container.appendChild(div);
+        });
+
+        renderizarPaginacao('paginacaoSistema', chavesFiltradas.length, porPagina, pag.sis, (p) => { pag.sis = p; renderizarHistorico(); });
     }
 
-    function carregarHistorico(id) {
-      const historico = JSON.parse(localStorage.getItem('historico_escalas')) || [];
-      const encontrado = historico.find(item => item.id === id);
-
-      if (encontrado) {
-        escalaAtual = encontrado.escala;
-        localStorage.setItem('escala_atual', JSON.stringify(escalaAtual));
-        renderizarEscala(escalaAtual);
-        window.scrollTo({ top: 300, behavior: 'smooth' });
-      }
+    function alternarStatusSistema(nome) {
+        let banco = getBanco();
+        let chave = encontrarChaveBanco(banco, nome);
+        if(banco[chave]) {
+            banco[chave].isSistema = !banco[chave].isSistema;
+            saveBanco(banco);
+            renderizarHistorico();
+        }
     }
 
-    function excluirHistorico(id) {
-      let historico = JSON.parse(localStorage.getItem('historico_escalas')) || [];
-      historico = historico.filter(item => item.id !== id);
-      localStorage.setItem('historico_escalas', JSON.stringify(historico));
-      renderizarHistorico();
+    function adicionarManualSistema() {
+        let input = document.getElementById('novoNomeSistema');
+        let rawNome = input.value.trim();
+        if (!rawNome) return;
+        
+        if (/\bsistema\b/i.test(rawNome)) {
+            rawNome = rawNome.replace(/\bsistema\b/gi, '').trim();
+        }
+
+        let banco = getBanco();
+        let chave = encontrarChaveBanco(banco, rawNome);
+
+        if (!banco[chave]) {
+            banco[chave] = { participacoes: 0, pontos: 0, isSistema: true };
+        } else {
+            banco[chave].isSistema = true;
+        }
+        saveBanco(banco);
+        input.value = '';
+        renderizarHistorico();
     }
 
-    function carregarEscalaAtualSalva() {
-      const escalaSalva = localStorage.getItem('escala_atual');
-      if (escalaSalva) {
-        escalaAtual = JSON.parse(escalaSalva);
-        renderizarEscala(escalaAtual);
-      }
+    function excluirJogadorSistema(nome) {
+        if (confirm(`Deseja remover ${nome} do banco de jogadores?`)) {
+            let banco = getBanco();
+            let chave = encontrarChaveBanco(banco, nome);
+            delete banco[chave];
+            saveBanco(banco);
+            renderizarHistorico();
+        }
     }
 
-    function limparEscalaAtual() {
-      if (confirm("Deseja realmente limpar a escala atual da tela? (O histórico antigo continuará salvo)")) {
-        escalaAtual = null;
-        localStorage.removeItem('escala_atual');
-        document.getElementById('escalaContainer').innerHTML = `<p style="color: var(--text-muted); grid-column: 1 / -1;">Nenhuma escala gerada no momento. Clique em "Gerar Nova Escala".</p>`;
-      }
+    function limparBancoJogadores() {
+        if (confirm('Tem certeza que deseja apagar TODOS os jogadores cadastrados?')) {
+            localStorage.removeItem('gvg_banco_jogadores');
+            renderizarHistorico();
+        }
     }
-  </script>
+
+    function extrairDadosMensais() {
+        let logs = getLogs();
+        let mesesMap = {};
+        let todosPlayers = new Set();
+        let listaMeses = [];
+
+        logs.forEach(log => {
+            let dataObj = new Date(log.id || Date.now());
+            let mesAno = String(dataObj.getMonth() + 1).padStart(2, '0') + '/' + dataObj.getFullYear();
+            
+            if (!mesesMap[mesAno]) {
+                mesesMap[mesAno] = {};
+                listaMeses.push(mesAno);
+            }
+
+            let linhas = (log.texto || '').split('\n');
+            linhas.forEach(linha => {
+                let match = linha.match(/•?\s*\*?([^*\-]+?)\*?\s*-\s*.*?\(([-\d]+)\s*pts\)/i);
+                if (match) {
+                    let nome = match[1].trim();
+                    let pts = parseInt(match[2], 10) || 0;
+                    todosPlayers.add(nome);
+
+                    if (!mesesMap[mesAno][nome]) mesesMap[mesAno][nome] = 0;
+                    mesesMap[mesAno][nome] += pts;
+                }
+            });
+        });
+
+        return { mesesMap, listaMeses, todosPlayers: Array.from(todosPlayers).sort() };
+    }
+
+    function renderizarComparativoMensal() {
+        let { mesesMap, listaMeses, todosPlayers } = extrairDadosMensais();
+        let select = document.getElementById('selectFiltroMesComp');
+        let valorSelecionado = select.value;
+
+        select.innerHTML = '<option value="TODOS">📅 Visão Geral (Todos os Meses)</option>';
+        listaMeses.forEach(m => {
+            let opt = document.createElement('option');
+            opt.value = m;
+            opt.innerText = `🗓️ Mês: ${m}`;
+            if (m === valorSelecionado) opt.selected = true;
+            select.appendChild(opt);
+        });
+
+        let theader = document.getElementById('tableHeaderComp');
+        let tbody = document.getElementById('tableBodyComp');
+        theader.innerHTML = '<th>Jogador</th>';
+        tbody.innerHTML = '';
+
+        if (todosPlayers.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:15px; opacity:0.6;">Nenhum dado encontrado no histórico.</td></tr>';
+            return;
+        }
+
+        let mesesExibicao = (select.value === 'TODOS') ? listaMeses : [select.value];
+
+        mesesExibicao.forEach(m => {
+            let th = document.createElement('th');
+            th.innerText = m;
+            theader.appendChild(th);
+        });
+
+        if (select.value === 'TODOS') {
+            let thTotal = document.createElement('th');
+            thTotal.innerText = 'Total Acumulado';
+            theader.appendChild(thTotal);
+        }
+
+        todosPlayers.forEach(player => {
+            let tr = document.createElement('tr');
+            let tdNome = document.createElement('td');
+            tdNome.innerHTML = `<strong>${player}</strong>`;
+            tr.appendChild(tdNome);
+
+            let totalPlayer = 0;
+            mesesExibicao.forEach(m => {
+                let td = document.createElement('td');
+                let pts = (mesesMap[m] && mesesMap[m][player]) ? mesesMap[m][player] : 0;
+                totalPlayer += pts;
+
+                if (pts > 0) {
+                    td.className = 'val-pts';
+                    td.innerText = `${pts} pts`;
+                } else {
+                    td.className = 'val-zero';
+                    td.innerText = '0 pts';
+                }
+                tr.appendChild(td);
+            });
+
+            if (select.value === 'TODOS') {
+                let tdTotal = document.createElement('td');
+                tdTotal.className = 'val-pts';
+                tdTotal.innerText = `${totalPlayer} pts`;
+                tr.appendChild(tdTotal);
+            }
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    function enviarZapComparativo() {
+        let { mesesMap, listaMeses, todosPlayers } = extrairDadosMensais();
+        let mesSelecionado = document.getElementById('selectFiltroMesComp').value;
+
+        if (todosPlayers.length === 0) {
+            alert('Não há dados no histórico para gerar o comparativo.');
+            return;
+        }
+
+        let textoZap = `📊 *COMPARATIVO MENSAL DE PONTUAÇÃO GvG*\n\n`;
+
+        if (mesSelecionado === 'TODOS') {
+            listaMeses.forEach(m => {
+                textoZap += `🗓️ *Mês: ${m}*\n`;
+                todosPlayers.forEach(p => {
+                    let pts = (mesesMap[m] && mesesMap[m][p]) ? mesesMap[m][p] : 0;
+                    if (pts > 0) textoZap += `• *${p}*: ${pts} pts\n`;
+                });
+                textoZap += `\n`;
+            });
+        } else {
+            textoZap += `🗓️ *Mês: ${mesSelecionado}*\n`;
+            todosPlayers.forEach(p => {
+                let pts = (mesesMap[mesSelecionado] && mesesMap[mesSelecionado][p]) ? mesesMap[mesSelecionado][p] : 0;
+                if (pts > 0) textoZap += `• *${p}*: ${pts} pts\n`;
+            });
+        }
+
+        let textoFinal = obterCabecalhoLider() + textoZap;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textoFinal)}`, '_blank');
+    }
+
+    function salvarLogAutomatico(total, resumo) {
+        let logs = getLogs();
+        logs.unshift({
+            id: Date.now(),
+            data: new Date().toLocaleString('pt-BR'),
+            total: total,
+            texto: resumo
+        });
+        saveLogs(logs);
+        renderizarLogs();
+        renderizarComparativoMensal();
+    }
+
+    function renderizarLogs() {
+        let logs = getLogs();
+        let filtro = (document.getElementById('filtroLogs').value || '').toLowerCase();
+        let filtrados = logs.filter(l => l.data.toLowerCase().includes(filtro) || l.texto.toLowerCase().includes(filtro));
+        
+        let container = document.getElementById('listaLogsContainer');
+        container.innerHTML = '';
+
+        let porPagina = parseInt(document.getElementById('itensPorPaginaLogs').value, 10);
+        let inicio = (pag.log - 1) * porPagina;
+        let itensPagina = filtrados.slice(inicio, inicio + porPagina);
+
+        if(itensPagina.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:10px; opacity:0.6;">Nenhum histórico gravado.</div>';
+            document.getElementById('paginacaoLogs').innerHTML = '';
+            return;
+        }
+
+        itensPagina.forEach(log => {
+            let div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <strong>📅 ${log.data} (${log.total} Players)</strong>
+                    <button onclick="excluirLog(${log.id})" class="btn-icon btn-del">🗑️</button>
+                </div>
+                <div style="font-size:12px; white-space:pre-wrap; max-height:100px; overflow-y:auto; background:var(--box-bg); padding:6px; border-radius:4px;">${log.texto}</div>
+            `;
+            container.appendChild(div);
+        });
+
+        renderizarPaginacao('paginacaoLogs', filtrados.length, porPagina, pag.log, (p) => { pag.log = p; renderizarLogs(); });
+    }
+
+    function excluirLog(id) {
+        let logs = getLogs().filter(l => l.id !== id);
+        saveLogs(logs);
+        renderizarLogs();
+        renderizarComparativoMensal();
+    }
+
+    function limparLogs() {
+        if (confirm('Deseja apagar todo o histórico de rodízios?')) {
+            localStorage.removeItem('gvg_historico_logs');
+            renderizarLogs();
+            renderizarComparativoMensal();
+        }
+    }
+
+    function exportarBackup() {
+        let dados = {
+            banco: getBanco(), logs: getLogs(), notas: getNotas(),
+            clan: { guilda: localStorage.getItem('gvg_nome_guilda'), lider: localStorage.getItem('gvg_nome_lider'), saudacao: localStorage.getItem('gvg_texto_saudacao') }
+        };
+        let blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+        let a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `backup_gvg_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+    }
+
+    function importarBackup(e) {
+        let file = e.target.files[0];
+        if (!file) return;
+        let reader = new FileReader();
+        reader.onload = (evt) => {
+            try {
+                let dados = JSON.parse(evt.target.result);
+                let bancoAtual = getBanco();
+
+                let novoBanco = null;
+                let novosLogs = null;
+                let novasNotas = null;
+
+                if (dados.banco) {
+                    novoBanco = dados.banco;
+                } else if (Array.isArray(dados)) {
+                    novoBanco = {};
+                    dados.forEach(item => {
+                        let n = item.nome || item.player || item.name;
+                        if (n) {
+                            novoBanco[n] = {
+                                participacoes: item.participacoes || 1,
+                                pontos: item.pontos || item.pts || 0,
+                                isSistema: !!item.isSistema
+                            };
+                        }
+                    });
+                } else if (typeof dados === 'object' && !dados.logs && !dados.notas) {
+                    novoBanco = dados;
+                }
+
+                if (dados.logs) novosLogs = dados.logs;
+                if (dados.notas) novasNotas = dados.notas;
+
+                if (novoBanco && typeof novoBanco === 'object') {
+                    Object.keys(novoBanco).forEach(k => {
+                        let item = novoBanco[k];
+                        let chave = encontrarChaveBanco(bancoAtual, k);
+
+                        if (typeof item === 'number') {
+                            item = { participacoes: 1, pontos: item, isSistema: false };
+                        }
+
+                        if (!bancoAtual[chave]) {
+                            bancoAtual[chave] = {
+                                participacoes: item.participacoes || 0,
+                                pontos: item.pontos || 0,
+                                isSistema: item.isSistema || false
+                            };
+                        } else {
+                            bancoAtual[chave].participacoes = Math.max(bancoAtual[chave].participacoes || 0, item.participacoes || 0);
+                            bancoAtual[chave].pontos = Math.max(bancoAtual[chave].pontos || 0, item.pontos || 0);
+                            if (item.isSistema) bancoAtual[chave].isSistema = true;
+                        }
+                    });
+                    saveBanco(bancoAtual);
+                }
+
+                if (novosLogs && Array.isArray(novosLogs)) {
+                    let logsAtuais = getLogs();
+                    let ids = new Set(logsAtuais.map(l => l.id));
+                    novosLogs.forEach(l => { if (!ids.has(l.id)) logsAtuais.push(l); });
+                    saveLogs(logsAtuais);
+                }
+
+                if (novasNotas && Array.isArray(novasNotas)) {
+                    let notasAtuais = getNotas();
+                    let ids = new Set(notasAtuais.map(n => n.id));
+                    novasNotas.forEach(n => { if (!ids.has(n.id)) notasAtuais.push(n); });
+                    saveNotas(notasAtuais);
+                }
+
+                if (dados.clan) {
+                    if (dados.clan.guilda) localStorage.setItem('gvg_nome_guilda', dados.clan.guilda);
+                    if (dados.clan.lider) localStorage.setItem('gvg_nome_lider', dados.clan.lider);
+                    if (dados.clan.saudacao) localStorage.setItem('gvg_texto_saudacao', dados.clan.saudacao);
+                    carregarClan();
+                }
+
+                sanitizarBanco();
+                alert('✅ Backup restaurado e unificado com sucesso!');
+                renderizarHistorico(); renderizarLogs(); renderizarNotas(); renderizarComparativoMensal();
+            } catch (err) {
+                alert('❌ Erro ao ler o arquivo de backup: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    }
+
+    function salvarNotaPronta() {
+        let titulo = document.getElementById('tituloNota').value.trim();
+        let conteudo = document.getElementById('conteudoNota').value.trim();
+        if(!titulo || !conteudo) { alert('Preencha o título e o conteúdo!'); return; }
+
+        let notas = getNotas();
+        notas.unshift({ id: Date.now(), titulo, conteudo });
+        saveNotas(notas);
+
+        document.getElementById('tituloNota').value = '';
+        document.getElementById('conteudoNota').value = '';
+        renderizarNotas();
+    }
+
+    function renderizarNotas() {
+        let notas = getNotas();
+        let container = document.getElementById('listaNotasContainer');
+        container.innerHTML = '';
+
+        if(notas.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:10px; opacity:0.6;">Nenhum aviso salvo.</div>';
+            return;
+        }
+
+        notas.forEach(nota => {
+            let div = document.createElement('div');
+            div.className = 'note-item';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <strong>📌 ${nota.titulo}</strong>
+                    <div class="btn-group">
+                        <button onclick="enviarZapNota('${encodeURIComponent(nota.conteudo)}')" class="btn-icon btn-save">📤 Zap</button>
+                        <button onclick="excluirNota(${nota.id})" class="btn-icon btn-del">🗑️</button>
+                    </div>
+                </div>
+                <div style="font-size:13px; white-space:pre-wrap;">${nota.conteudo}</div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function excluirNota(id) {
+        let notas = getNotas().filter(n => n.id !== id);
+        saveNotas(notas);
+        renderizarNotas();
+    }
+
+    function enviarZapNota(textoEnc) {
+        let texto = decodeURIComponent(textoEnc);
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(obterCabecalhoLider() + texto)}`, '_blank');
+    }
+
+    function renderizarPaginacao(elementId, totalItens, porPagina, paginaAtual, callback) {
+        let container = document.getElementById(elementId);
+        container.innerHTML = '';
+        let totalPaginas = Math.ceil(totalItens / porPagina);
+        if (totalPaginas <= 1) return;
+
+        for (let i = 1; i <= totalPaginas; i++) {
+            let btn = document.createElement('button');
+            btn.className = `page-btn ${i === paginaAtual ? 'active' : ''}`;
+            btn.innerText = i;
+            btn.onclick = () => callback(i);
+            container.appendChild(btn);
+        }
+    }
+
+    async function carregarCodigo() {
+        const token = document.getElementById('inputTokenGit').value.trim();
+        if (!token) { alert('Digite o Token!'); return; }
+
+        salvarTokenGitLocal();
+
+        const url = `https://api.github.com/repos/${DONO_DO_REPO}/${NOME_DO_REPO}/contents/${CAMINHO_ARQUIVO}?ref=${BRANCH_GIT}`;
+
+        try {
+            const resp = await fetch(url, {
+                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+
+            if (!resp.ok) throw new Error(`Erro na API do GitHub (Status ${resp.status})`);
+
+            const data = await resp.json();
+            arquivoSha = data.sha;
+
+            const conteudoDecodificado = decodeURIComponent(escape(atob(data.content.replace(/\s/g, ''))));
+            const editor = document.getElementById('editorCodigo');
+            editor.value = conteudoDecodificado;
+            editor.style.display = 'block';
+            document.getElementById('boxSalvar').style.display = 'block';
+            alert('✅ Código carregado com sucesso!');
+        } catch (err) { alert('❌ Erro ao carregar: ' + err.message); }
+    }
+
+    async function commitarCodigo() {
+        const token = document.getElementById('inputTokenGit').value.trim();
+        const conteudo = document.getElementById('editorCodigo').value;
+        const msg = document.getElementById('inputMensagemCommit').value.trim() || 'Correção de parsing de nomes e higienização automática do banco';
+
+        if (!token || !arquivoSha) { alert('Carregue o código e insira o token!'); return; }
+
+        const url = `https://api.github.com/repos/${DONO_DO_REPO}/${NOME_DO_REPO}/contents/${CAMINHO_ARQUIVO}`;
+        const conteudoBase64 = btoa(unescape(encodeURIComponent(conteudo)));
+
+        try {
+            const resp = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: msg, content: conteudoBase64, sha: arquivoSha, branch: BRANCH_GIT })
+            });
+
+            if (!resp.ok) throw new Error(`Erro ao salvar (Status ${resp.status})`);
+
+            const data = await resp.json();
+            arquivoSha = data.content.sha;
+            alert('🚀 Commit realizado com sucesso no GitHub!');
+        } catch (err) { alert('❌ Erro no commit: ' + err.message); }
+    }
+</script>
 </body>
 </html>
