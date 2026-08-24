@@ -335,6 +335,14 @@
     const getNotas = () => JSON.parse(localStorage.getItem('gvg_notas_prontas')) || [];
     const saveNotas = (dados) => localStorage.setItem('gvg_notas_prontas', JSON.stringify(dados));
 
+    // Busca insensível a maiúsculas/minúsculas para evitar duplicações de nomes
+    function encontrarChaveBanco(banco, nome) {
+        if (!nome) return '';
+        let nomeTrim = nome.trim();
+        let existente = Object.keys(banco).find(k => k.trim().toLowerCase() === nomeTrim.toLowerCase());
+        return existente || nomeTrim;
+    }
+
     function processarETocalhar() {
         let texto = document.getElementById('listaTexto').value.trim();
         let divResult = document.getElementById('resultado');
@@ -360,23 +368,25 @@
             linha = linha.trim();
             if(!linha) return;
             let match = linha.match(/^(.+?)\s+([-\d]+)$/);
-            let nome = "", pts = 0;
+            let nomeRaw = "", pts = 0;
 
             if(match) {
-                nome = match[1].trim();
+                nomeRaw = match[1].trim();
                 pts = parseInt(match[2], 10);
                 if(isNaN(pts) || pts < 0) temInvalido = true;
             } else {
-                nome = linha;
+                nomeRaw = linha;
                 pts = 0;
             }
 
+            let chave = encontrarChaveBanco(banco, nomeRaw);
+
             if (apenasSistema) {
-                let ehSistema = banco[nome] && banco[nome].isSistema;
+                let ehSistema = banco[chave] && banco[chave].isSistema;
                 if (!ehSistema) return;
             }
 
-            jogadores.push({ nome, pts });
+            jogadores.push({ nome: chave, pts });
         });
 
         divAlert.style.display = temInvalido ? 'block' : 'none';
@@ -460,18 +470,36 @@
             let isSys = p && p.isSistema;
             let div = document.createElement('div');
             div.className = 'player-item';
-            div.innerHTML = `
-                <div>
-                    <strong>${nome}</strong> ${isSys ? '<span class="badge-sys">🛡️ Sistema</span>' : ''}<br>
-                    <span style="font-size:12px; opacity:0.8;">Pontos Totais: ${p.pontos || 0}</span>
-                </div>
-                <div class="btn-group">
-                    <button onclick="alternarStatusSistema('${nome}')" class="btn-icon" style="background:${isSys ? '#ffc107' : '#17a2b8'}; color:#000;" title="${isSys ? 'Remover do Sistema' : 'Marcar no Sistema'}">
-                        ${isSys ? '⭐ Sistema' : '➕ Sistema'}
-                    </button>
-                    <button onclick="excluirJogadorSistema('${nome}')" class="btn-icon btn-del" title="Excluir do Banco">🗑️</button>
-                </div>
-            `;
+
+            if (subAbaAtualPessoas === 'membros') {
+                // GUIA MEMBROS: EXIBE NOME E PONTUAÇÃO (SEM O BADGE DO SISTEMA)
+                div.innerHTML = `
+                    <div>
+                        <strong>${nome}</strong><br>
+                        <span style="font-size:12px; opacity:0.8;">Pontos Totais: ${p.pontos || 0}</span>
+                    </div>
+                    <div class="btn-group">
+                        <button onclick="alternarStatusSistema('${nome}')" class="btn-icon" style="background:${isSys ? '#ffc107' : '#17a2b8'}; color:#000;" title="${isSys ? 'Remover do Sistema' : 'Marcar no Sistema'}">
+                            ${isSys ? '⭐ Sistema' : '➕ Sistema'}
+                        </button>
+                        <button onclick="excluirJogadorSistema('${nome}')" class="btn-icon btn-del" title="Excluir do Banco">🗑️</button>
+                    </div>
+                `;
+            } else {
+                // GUIA SISTEMA: EXIBE APENAS NOME + SELO SISTEMA (SEM A PONTUAÇÃO)
+                div.innerHTML = `
+                    <div>
+                        <strong>${nome}</strong> <span class="badge-sys">🛡️ Sistema</span>
+                    </div>
+                    <div class="btn-group">
+                        <button onclick="alternarStatusSistema('${nome}')" class="btn-icon" style="background:#ffc107; color:#000;" title="Remover do Sistema">
+                            ⭐ Sistema
+                        </button>
+                        <button onclick="excluirJogadorSistema('${nome}')" class="btn-icon btn-del" title="Excluir do Banco">🗑️</button>
+                    </div>
+                `;
+            }
+
             container.appendChild(div);
         });
 
@@ -480,8 +508,9 @@
 
     function alternarStatusSistema(nome) {
         let banco = getBanco();
-        if(banco[nome]) {
-            banco[nome].isSistema = !banco[nome].isSistema;
+        let chave = encontrarChaveBanco(banco, nome);
+        if(banco[chave]) {
+            banco[chave].isSistema = !banco[chave].isSistema;
             saveBanco(banco);
             renderizarHistorico();
         }
@@ -489,13 +518,15 @@
 
     function adicionarManualSistema() {
         let input = document.getElementById('novoNomeSistema');
-        let nome = input.value.trim();
-        if (!nome) return;
+        let rawNome = input.value.trim();
+        if (!rawNome) return;
         let banco = getBanco();
-        if (!banco[nome]) {
-            banco[nome] = { participacoes: 0, pontos: 0, isSistema: true };
+        let chave = encontrarChaveBanco(banco, rawNome);
+
+        if (!banco[chave]) {
+            banco[chave] = { participacoes: 0, pontos: 0, isSistema: true };
         } else {
-            banco[nome].isSistema = true;
+            banco[chave].isSistema = true;
         }
         saveBanco(banco);
         input.value = '';
@@ -505,7 +536,8 @@
     function excluirJogadorSistema(nome) {
         if (confirm(`Deseja remover ${nome} do banco de jogadores?`)) {
             let banco = getBanco();
-            delete banco[nome];
+            let chave = encontrarChaveBanco(banco, nome);
+            delete banco[chave];
             saveBanco(banco);
             renderizarHistorico();
         }
@@ -727,6 +759,7 @@
         a.click();
     }
 
+    // LEITURA E UNIFICAÇÃO INTELIGENTE DE BACKUPS (ANTIGOS E NOVOS)
     function importarBackup(e) {
         let file = e.target.files[0];
         if (!file) return;
@@ -734,20 +767,89 @@
         reader.onload = (evt) => {
             try {
                 let dados = JSON.parse(evt.target.result);
-                if (dados.banco) saveBanco(dados.banco);
-                if (dados.logs) saveLogs(dados.logs);
-                if (dados.notas) saveNotas(dados.notas);
+                let bancoAtual = getBanco();
+
+                let novoBanco = null;
+                let novosLogs = null;
+                let novasNotas = null;
+
+                if (dados.banco) {
+                    novoBanco = dados.banco;
+                } else if (Array.isArray(dados)) {
+                    novoBanco = {};
+                    dados.forEach(item => {
+                        let n = item.nome || item.player || item.name;
+                        if (n) {
+                            novoBanco[n] = {
+                                participacoes: item.participacoes || 1,
+                                pontos: item.pontos || item.pts || 0,
+                                isSistema: !!item.isSistema
+                            };
+                        }
+                    });
+                } else if (typeof dados === 'object' && !dados.logs && !dados.notas) {
+                    novoBanco = dados;
+                }
+
+                if (dados.logs) novosLogs = dados.logs;
+                if (dados.notas) novasNotas = dados.notas;
+
+                // Unifica banco de jogadores
+                if (novoBanco && typeof novoBanco === 'object') {
+                    Object.keys(novoBanco).forEach(k => {
+                        let item = novoBanco[k];
+                        let chave = encontrarChaveBanco(bancoAtual, k);
+
+                        if (typeof item === 'number') {
+                            item = { participacoes: 1, pontos: item, isSistema: false };
+                        }
+
+                        if (!bancoAtual[chave]) {
+                            bancoAtual[chave] = {
+                                participacoes: item.participacoes || 0,
+                                pontos: item.pontos || 0,
+                                isSistema: item.isSistema || false
+                            };
+                        } else {
+                            bancoAtual[chave].participacoes = Math.max(bancoAtual[chave].participacoes || 0, item.participacoes || 0);
+                            bancoAtual[chave].pontos = Math.max(bancoAtual[chave].pontos || 0, item.pontos || 0);
+                            if (item.isSistema) bancoAtual[chave].isSistema = true;
+                        }
+                    });
+                    saveBanco(bancoAtual);
+                }
+
+                // Unifica histórico de logs sem duplicar IDs
+                if (novosLogs && Array.isArray(novosLogs)) {
+                    let logsAtuais = getLogs();
+                    let ids = new Set(logsAtuais.map(l => l.id));
+                    novosLogs.forEach(l => { if (!ids.has(l.id)) logsAtuais.push(l); });
+                    saveLogs(logsAtuais);
+                }
+
+                // Unifica avisos sem duplicar IDs
+                if (novasNotas && Array.isArray(novasNotas)) {
+                    let notasAtuais = getNotas();
+                    let ids = new Set(notasAtuais.map(n => n.id));
+                    novasNotas.forEach(n => { if (!ids.has(n.id)) notasAtuais.push(n); });
+                    saveNotas(notasAtuais);
+                }
+
                 if (dados.clan) {
-                    localStorage.setItem('gvg_nome_guilda', dados.clan.guilda || '');
-                    localStorage.setItem('gvg_nome_lider', dados.clan.lider || '');
-                    localStorage.setItem('gvg_texto_saudacao', dados.clan.saudacao || '');
+                    if (dados.clan.guilda) localStorage.setItem('gvg_nome_guilda', dados.clan.guilda);
+                    if (dados.clan.lider) localStorage.setItem('gvg_nome_lider', dados.clan.lider);
+                    if (dados.clan.saudacao) localStorage.setItem('gvg_texto_saudacao', dados.clan.saudacao);
                     carregarClan();
                 }
-                alert('Backup importado com sucesso!');
+
+                alert('✅ Backup restaurado e unificado com sucesso!');
                 renderizarHistorico(); renderizarLogs(); renderizarNotas(); renderizarComparativoMensal();
-            } catch (err) { alert('Erro ao carregar backup.'); }
+            } catch (err) {
+                alert('❌ Erro ao ler o arquivo de backup: ' + err.message);
+            }
         };
         reader.readAsText(file);
+        e.target.value = ''; // Limpa o input para poder reimportar se necessário
     }
 
     function salvarNotaPronta() {
@@ -848,7 +950,7 @@
     async function commitarCodigo() {
         const token = document.getElementById('inputTokenGit').value.trim();
         const conteudo = document.getElementById('editorCodigo').value;
-        const msg = document.getElementById('inputMensagemCommit').value.trim() || 'Atualização das sub-guias de pessoas';
+        const msg = document.getElementById('inputMensagemCommit').value.trim() || 'Atualização das sub-guias de pessoas e restauração de backup';
 
         if (!token || !arquivoSha) { alert('Carregue o código e insira o token!'); return; }
 
