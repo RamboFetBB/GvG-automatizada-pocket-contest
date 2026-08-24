@@ -37,7 +37,7 @@
         [data-theme="dark"] .alert-box { background: #332701; color: #ffda6a; border-color: #664d03; }
         .controls-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; flex-wrap: wrap; }
         .select-per-page { padding: 6px; font-size: 13px; cursor: pointer; width: auto; }
-        .player-grid, .history-grid, .notes-grid { min-height: 200px; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: var(--box-bg); }
+        .player-grid, .history-grid, .notes-grid { min-height: 150px; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: var(--box-bg); }
         .player-item, .history-item, .note-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--item-border); background: var(--item-bg); margin-bottom: 6px; border-radius: 6px; }
         .history-item, .note-item { flex-direction: column; align-items: stretch; }
         .badge-sys { background: #17a2b8; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; margin-top: 3px; }
@@ -47,14 +47,6 @@
         .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 15px; }
         .page-btn { padding: 5px 10px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); cursor: pointer; border-radius: 4px; font-weight: bold; }
         .page-btn.active { background: #007bff; color: white; border-color: #007bff; }
-        
-        .comp-table-wrapper { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 8px; margin-top: 15px; }
-        .comp-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
-        .comp-table th, .comp-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); }
-        .comp-table th { background: var(--tab-bg); color: var(--text-color); font-weight: bold; }
-        .comp-table tr:nth-child(even) { background: var(--box-bg); }
-        .val-pts { font-weight: bold; color: #28a745; }
-        .val-zero { opacity: 0.4; }
         .sub-nav-btn { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; background: var(--tab-bg); color: var(--text-color); }
         .sub-nav-btn.active { background: #007bff; color: white; border-color: #007bff; }
 
@@ -86,9 +78,7 @@
         <button class="tab-btn active" id="btn-abaRodizio" onclick="alternarAba(event, 'abaRodizio')">📅 Rodízio</button>
         <button class="tab-btn" id="btn-abaHistorico" onclick="alternarAba(event, 'abaHistorico')">👥 Pessoas (<span id="countTotal">0</span>)</button>
         <button class="tab-btn" id="btn-abaLogs" onclick="alternarAba(event, 'abaLogs')">📁 Histórico</button>
-        <button class="tab-btn" id="btn-abaComparativo" onclick="alternarAba(event, 'abaComparativo')">📊 Comparativo</button>
-        <button class="tab-btn" id="btn-abaNotas" onclick="alternarAba(event, 'abaNotas')">📝 Avisos</button>
-        <button class="tab-btn" id="btn-abaClan" onclick="alternarAba(event, 'abaClan')">🛡️ Clã</button>
+        <button class="tab-btn" id="btn-abaClan" onclick="alternarAba(event, 'abaClan')">🛡️ Guilda</button>
         <button class="tab-btn" id="btn-abaDev" onclick="alternarAba(event, 'abaDev')">👨‍💻 Dev</button>
     </div>
 
@@ -127,7 +117,7 @@
         <div class="player-grid" id="listaHistoricoContainer" style="margin-top: 12px;"></div>
         <div class="pagination" id="paginacaoSistema"></div>
         <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button onclick="exportarBackup()" class="action-btn" style="background:#17a2b8; margin:0; padding:10px; font-size:14px;">💾 Exportar</button>
+            <button onclick="exportarBackupForcado()" class="action-btn" style="background:#17a2b8; margin:0; padding:10px; font-size:14px;">💾 Exportar</button>
             <button onclick="document.getElementById('inputImportar').click()" class="action-btn" style="background:#ffc107; color:#000; margin:0; padding:10px; font-size:14px;">📂 Importar</button>
             <input type="file" id="inputImportar" accept=".json" style="display:none" onchange="importarBackup(event)">
         </div>
@@ -148,51 +138,30 @@
         <button onclick="limparLogs()" class="action-btn" style="background:#dc3545; margin-top:15px; padding:8px;">🗑️ Limpar Todo o Histórico</button>
     </div>
 
-    <!-- ABA 4: COMPARATIVO MENSAL -->
-    <div id="abaComparativo" class="tab-content">
-        <h3>📊 Comparativo Mensal (Mês a Mês)</h3>
-        <p style="font-size: 13px; opacity: 0.8; margin-bottom: 15px;">Acompanhamento automático da pontuação de cada jogador extraído diretamente de todo o histórico salvo.</p>
-
-        <div class="controls-header">
-            <select id="selectFiltroMesComp" class="select-per-page" onchange="renderizarComparativoMensal()" style="flex:1;">
-                <option value="TODOS">📅 Visão Geral (Todos os Meses)</option>
-            </select>
-            <button onclick="enviarZapComparativo()" class="action-btn" style="background:#25d366; margin:0; width:auto; padding:8px 15px; font-size:13px;">📤 Enviar p/ Zap</button>
-        </div>
-
-        <div class="comp-table-wrapper">
-            <table class="comp-table" id="tabelaComparativo">
-                <thead><tr id="tableHeaderComp"><th>Jogador</th></tr></thead>
-                <tbody id="tableBodyComp"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- ABA 5: AVISOS -->
-    <div id="abaNotas" class="tab-content">
-        <h3>📝 Avisos & Mensagens Prontas</h3>
-        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
-            <input type="text" id="tituloNota" class="search-box" placeholder="Título..." style="margin-bottom:0;">
-            <textarea id="conteudoNota" placeholder="Escreva o aviso..." style="height: 80px;"></textarea>
-            <button onclick="salvarNotaPronta()" class="action-btn" style="background:#28a745; margin:0; padding:10px;">💾 Salvar Aviso</button>
-        </div>
-        <div class="notes-grid" id="listaNotasContainer" style="margin-top: 12px;"></div>
-    </div>
-
-    <!-- ABA 6: CLÃ -->
+    <!-- ABA 4: GUILDA (ANTIGO CLÃ) + AVISOS JUNTOS -->
     <div id="abaClan" class="tab-content">
-        <h3>🛡️ Configurações do Clã</h3>
+        <h3>🛡️ Configurações da Guilda</h3>
         <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
             <div><label style="font-size: 13px; font-weight: bold;">Nome da Guilda:</label><input type="text" id="inputNomeGuilda" class="search-box" oninput="salvarDadosClan()"></div>
             <div><label style="font-size: 13px; font-weight: bold;">Nome do Líder:</label><input type="text" id="inputNomeLider" class="search-box" oninput="salvarDadosClan()"></div>
             <div><label style="font-size: 13px; font-weight: bold;">Saudação:</label><input type="text" id="inputTextoSaudacao" class="search-box" oninput="salvarDadosClan()"></div>
         </div>
-        <div style="margin-top: 20px; padding: 12px; background: var(--box-bg); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px;">
+        <div style="margin-top: 15px; padding: 12px; background: var(--box-bg); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px;">
             💡 <strong>Exemplo no Zap:</strong><code id="exemploZapPreview" style="color: #007bff; display: block; margin-top: 5px; white-space: pre-wrap;"></code>
         </div>
+
+        <hr style="margin: 25px 0; border: 0; border-top: 1px dashed var(--border-color);">
+
+        <h3>📝 Avisos & Mensagens Prontas</h3>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+            <input type="text" id="tituloNota" class="search-box" placeholder="Título do aviso..." style="margin-bottom:0;">
+            <textarea id="conteudoNota" placeholder="Escreva o aviso para a guilda aqui..." style="height: 80px;"></textarea>
+            <button onclick="salvarNotaPronta()" class="action-btn" style="background:#28a745; margin:0; padding:10px;">💾 Salvar Aviso</button>
+        </div>
+        <div class="notes-grid" id="listaNotasContainer" style="margin-top: 12px;"></div>
     </div>
 
-    <!-- ABA 7: MODO DEV -->
+    <!-- ABA 5: MODO DEV -->
     <div id="abaDev" class="tab-content">
         <h3>👨‍💻 Editor de Código (Auto-Commit)</h3>
         
@@ -210,7 +179,7 @@
         <textarea id="editorCodigo" placeholder="O código fonte aparecerá aqui após carregar..." style="height: 320px; font-family: monospace; font-size: 12px; white-space: pre; display:none;"></textarea>
         
         <div id="boxSalvar" style="display:none; margin-top: 15px;">
-            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Atualização do export e cronômetro em tempo real)">
+            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Ajuste no export forçado e unificação da aba guilda)">
             <button onclick="commitarCodigo()" class="action-btn" style="background:#28a745; margin-top: 5px;">🚀 Fazer Commit Direto no GitHub</button>
         </div>
     </div>
@@ -249,7 +218,7 @@
         carregarTema(); carregarClan(); 
         sanitizarBanco();
         renderizarHistorico(); renderizarLogs(); renderizarNotas();
-        renderizarComparativoMensal(); carregarTokenGitLocal();
+        carregarTokenGitLocal();
         atualizarStatusPremiacao();
         setInterval(atualizarStatusPremiacao, 1000);
     };
@@ -323,10 +292,10 @@
         atualizarStatusPremiacao();
     }
 
-    // ATUALIZAÇÃO EM TEMPO REAL DO CRONÔMETRO
+    // CORREÇÃO DEFINITIVA DO CRONÔMETRO
     function atualizarStatusPremiacao() {
         let agora = new Date();
-        let proximaUmAm = new Date(agora);
+        let proximaUmAm = new Date();
         proximaUmAm.setHours(1, 0, 0, 0);
 
         if (agora >= proximaUmAm) {
@@ -334,7 +303,7 @@
         }
 
         let ultimoEnvio = parseInt(localStorage.getItem('gvg_ultimo_envio_timestamp')) || 0;
-        let inicioJanelaAtual = new Date(agora);
+        let inicioJanelaAtual = new Date();
         inicioJanelaAtual.setHours(1, 0, 0, 0);
         if (agora.getHours() < 1) inicioJanelaAtual.setDate(inicioJanelaAtual.getDate() - 1);
 
@@ -366,8 +335,8 @@
             if(btnTarget) btnTarget.classList.add('active');
         }
 
-        if(id === 'abaComparativo') renderizarComparativoMensal();
         if(id === 'abaHistorico') renderizarHistorico();
+        if(id === 'abaClan') renderizarNotas();
     }
 
     function formatarNomeProprio(nome) {
@@ -605,7 +574,6 @@
         salvarLogAutomatico(escalaStr, totalJogadoresEscalados);
         renderizarHistorico();
         renderizarLogs();
-        renderizarComparativoMensal();
     }
 
     function compartilharZap() {
@@ -684,7 +652,6 @@
         saveLogs(logs);
 
         renderizarHistorico();
-        renderizarComparativoMensal();
     }
 
     function renderizarHistorico() {
@@ -769,7 +736,6 @@
             delete banco[chave];
             saveBanco(banco);
             renderizarHistorico();
-            renderizarComparativoMensal();
         }
     }
 
@@ -861,7 +827,6 @@
             log.texto = novoTexto;
             saveLogs(logs);
             renderizarLogs();
-            renderizarComparativoMensal();
         }
         fecharModalEdicao();
     }
@@ -918,24 +883,24 @@
     function excluirLog(id) {
         if(confirm('Tem certeza que deseja apagar este rodízio do histórico?')) {
             let logs = getLogs().filter(l => l.id !== id);
-            saveLogs(logs); renderizarLogs(); renderizarComparativoMensal();
+            saveLogs(logs); renderizarLogs();
         }
     }
     
     function limparLogs() {
         if(confirm('Isso apagará TODO o histórico. Tem certeza?')) {
-            saveLogs([]); renderizarLogs(); renderizarComparativoMensal();
+            saveLogs([]); renderizarLogs();
         }
     }
 
     function limparBancoJogadores() {
         if(confirm('Tem certeza que deseja apagar TODOS os jogadores e pontuações do banco?')) {
-            saveBanco({}); renderizarHistorico(); renderizarComparativoMensal();
+            saveBanco({}); renderizarHistorico();
         }
     }
 
-    // EXPORTAÇÃO AJUSTADA COM BLOB E ELEMENTO INJETADO PARA FORÇAR DOWNLOAD
-    function exportarBackup() {
+    // EXPORTAÇÃO DEFINITIVA VIA DATA URI
+    function exportarBackupForcado() {
         let dados = { 
             banco: getBanco(), 
             logs: getLogs(), 
@@ -947,20 +912,13 @@
             } 
         };
 
-        let jsonStr = JSON.stringify(dados, null, 2);
-        let blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" });
-        let url = URL.createObjectURL(blob);
-        
-        let dlAnchorElem = document.createElement('a');
-        dlAnchorElem.style.display = 'none';
-        dlAnchorElem.href = url;
-        dlAnchorElem.setAttribute("download", "backup_gvg.json");
-
-        document.body.appendChild(dlAnchorElem);
-        dlAnchorElem.click();
-        document.body.removeChild(dlAnchorElem);
-
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dados, null, 2));
+        let downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "backup_gvg.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
     }
     
     function importarBackup(event) {
@@ -980,7 +938,7 @@
                     carregarClan();
                 }
                 sanitizarBanco();
-                renderizarHistorico(); renderizarLogs(); renderizarNotas(); renderizarComparativoMensal();
+                renderizarHistorico(); renderizarLogs(); renderizarNotas();
                 alert('Backup importado com sucesso!');
             } catch(err) {
                 alert('Erro ao importar arquivo. Certifique-se de que é o arquivo correto.');
@@ -1015,127 +973,6 @@
         }
     }
 
-    function processarDadosComparativo() {
-        let logs = getLogs();
-        let banco = getBanco();
-        let analise = {}; 
-        let mesesEncontrados = new Set();
-        
-        logs.forEach(log => {
-            let ptMatch = log.data.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-            if(!ptMatch) return;
-            let chaveMes = `${ptMatch[2]}/${ptMatch[3]}`; 
-            mesesEncontrados.add(chaveMes);
-
-            let linhas = log.texto.split('\n');
-            linhas.forEach(l => {
-                let m = l.match(/• \*(.*?)\*(?: 🛡️)? \(([-\d]+) pts\)/);
-                if(m) {
-                    let nomeOriginal = m[1].trim();
-                    let pts = parseInt(m[2], 10);
-                    let chaveNome = encontrarChaveBanco(banco, nomeOriginal);
-
-                    if(!analise[chaveNome]) analise[chaveNome] = { meses: {}, total: 0 };
-                    if(!analise[chaveNome].meses[chaveMes]) analise[chaveNome].meses[chaveMes] = 0;
-                    
-                    analise[chaveNome].meses[chaveMes] += pts;
-                    analise[chaveNome].total += pts;
-                }
-            });
-        });
-
-        return {
-            dados: analise,
-            meses: Array.from(mesesEncontrados).sort((a,b) => {
-                let [m1, y1] = a.split('/'); let [m2, y2] = b.split('/');
-                return new Date(y2, m2-1) - new Date(y1, m1-1);
-            })
-        };
-    }
-
-    function renderizarComparativoMensal() {
-        let result = processarDadosComparativo();
-        let select = document.getElementById('selectFiltroMesComp');
-        let filtroMes = select.value || "TODOS";
-        
-        let optionsHtml = `<option value="TODOS">📅 Visão Geral (Todos os Meses)</option>`;
-        result.meses.forEach(m => { optionsHtml += `<option value="${m}">${m}</option>`; });
-        select.innerHTML = optionsHtml;
-        select.value = filtroMes;
-        if(!result.meses.includes(filtroMes) && filtroMes !== "TODOS") select.value = "TODOS";
-        
-        filtroMes = select.value;
-
-        let thHtml = `<th>Jogador</th>`;
-        if (filtroMes === "TODOS") {
-            result.meses.forEach(m => { thHtml += `<th>${m}</th>`; });
-            thHtml += `<th>Total Geral</th>`;
-        } else {
-            thHtml += `<th>Total no Mês (${filtroMes})</th>`;
-        }
-        document.getElementById('tableHeaderComp').innerHTML = thHtml;
-
-        let tbody = document.getElementById('tableBodyComp');
-        tbody.innerHTML = '';
-
-        let jogadoresArr = Object.keys(result.dados).map(nome => ({
-            nome: nome,
-            ...result.dados[nome]
-        }));
-
-        if (filtroMes !== "TODOS") {
-            jogadoresArr = jogadoresArr.filter(j => j.meses[filtroMes] && j.meses[filtroMes] > 0);
-            jogadoresArr.sort((a, b) => (b.meses[filtroMes] || 0) - (a.meses[filtroMes] || 0));
-        } else {
-            jogadoresArr.sort((a, b) => b.total - a.total);
-        }
-
-        if(jogadoresArr.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="100%" style="text-align:center; opacity:0.6;">Nenhum dado encontrado.</td></tr>`;
-            return;
-        }
-
-        jogadoresArr.forEach(j => {
-            let tr = document.createElement('tr');
-            let tdHtml = `<td><strong>${j.nome}</strong></td>`;
-            
-            if (filtroMes === "TODOS") {
-                result.meses.forEach(m => {
-                    let pts = j.meses[m] || 0;
-                    tdHtml += `<td class="${pts > 0 ? 'val-pts' : 'val-zero'}">${pts}</td>`;
-                });
-                tdHtml += `<td class="val-pts">${j.total}</td>`;
-            } else {
-                let pts = j.meses[filtroMes] || 0;
-                tdHtml += `<td class="val-pts">${pts}</td>`;
-            }
-            tr.innerHTML = tdHtml;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function enviarZapComparativo() {
-        let result = processarDadosComparativo();
-        let filtroMes = document.getElementById('selectFiltroMesComp').value;
-        if(Object.keys(result.dados).length === 0) return alert("Sem dados no comparativo!");
-
-        let txt = `📊 *COMPARATIVO DE PONTUAÇÃO GvG*\n`;
-        txt += filtroMes === "TODOS" ? `(Visão Geral Acumulada)\n\n` : `(Mês: ${filtroMes})\n\n`;
-
-        let jogadoresArr = Object.keys(result.dados).map(nome => ({ nome, ...result.dados[nome] }));
-        if (filtroMes !== "TODOS") {
-            jogadoresArr = jogadoresArr.filter(j => j.meses[filtroMes] && j.meses[filtroMes] > 0);
-            jogadoresArr.sort((a, b) => (b.meses[filtroMes] || 0) - (a.meses[filtroMes] || 0));
-            jogadoresArr.forEach(j => { txt += `- *${j.nome}*: ${j.meses[filtroMes]} pts\n`; });
-        } else {
-            jogadoresArr.sort((a, b) => b.total - a.total);
-            jogadoresArr.forEach(j => { txt += `- *${j.nome}*: ${j.total} pts total\n`; });
-        }
-
-        let textoFinal = obterCabecalhoLider() + txt;
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textoFinal)}`, '_blank');
-    }
-
     function salvarNotaPronta() {
         let titulo = document.getElementById('tituloNota').value.trim();
         let conteudo = document.getElementById('conteudoNota').value.trim();
@@ -1152,6 +989,7 @@
     function renderizarNotas() {
         let notas = getNotas();
         let container = document.getElementById('listaNotasContainer');
+        if(!container) return;
         container.innerHTML = '';
 
         if(notas.length === 0) {
