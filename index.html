@@ -210,7 +210,7 @@
         <textarea id="editorCodigo" placeholder="O código fonte aparecerá aqui após carregar..." style="height: 320px; font-family: monospace; font-size: 12px; white-space: pre; display:none;"></textarea>
         
         <div id="boxSalvar" style="display:none; margin-top: 15px;">
-            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Adicionado botões de gerenciamento de token local)">
+            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Atualização do export e cronômetro em tempo real)">
             <button onclick="commitarCodigo()" class="action-btn" style="background:#28a745; margin-top: 5px;">🚀 Fazer Commit Direto no GitHub</button>
         </div>
     </div>
@@ -250,7 +250,8 @@
         sanitizarBanco();
         renderizarHistorico(); renderizarLogs(); renderizarNotas();
         renderizarComparativoMensal(); carregarTokenGitLocal();
-        atualizarStatusPremiacao(); setInterval(atualizarStatusPremiacao, 1000);
+        atualizarStatusPremiacao();
+        setInterval(atualizarStatusPremiacao, 1000);
     };
 
     function alternarTema() {
@@ -321,6 +322,8 @@
         btn.innerText = "✨ Salvo!"; setTimeout(() => btn.innerText = "✅ Já Enviei Hoje", 1500);
         atualizarStatusPremiacao();
     }
+
+    // ATUALIZAÇÃO EM TEMPO REAL DO CRONÔMETRO
     function atualizarStatusPremiacao() {
         let agora = new Date();
         let proximaUmAm = new Date(agora);
@@ -336,13 +339,17 @@
         if (agora.getHours() < 1) inicioJanelaAtual.setDate(inicioJanelaAtual.getDate() - 1);
 
         let enviado = ultimoEnvio >= inicioJanelaAtual.getTime();
-        let diff = proximaUmAm - agora;
+        let diff = proximaUmAm.getTime() - agora.getTime();
 
         let timerStr = enviado ? "✅ Premiação enviada! Próxima liberação em: " : "⏳ Faltam: ";
-        document.getElementById('txtTurnoTimer').innerText = timerStr + formatarMs(diff);
+        let timerEl = document.getElementById('txtTurnoTimer');
+        if (timerEl) {
+            timerEl.innerText = timerStr + formatarMs(diff);
+        }
     }
+
     function formatarMs(ms) {
-        if(ms < 0) return "00h 00m 00s";
+        if(ms <= 0) return "00h 00m 00s";
         let s = Math.floor(ms/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
         return `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s%60).padStart(2,'0')}s`;
     }
@@ -927,13 +934,33 @@
         }
     }
 
+    // EXPORTAÇÃO AJUSTADA COM BLOB E ELEMENTO INJETADO PARA FORÇAR DOWNLOAD
     function exportarBackup() {
-        let dados = { banco: getBanco(), logs: getLogs(), notas: getNotas(), config: { guilda: localStorage.getItem('gvg_nome_guilda'), lider: localStorage.getItem('gvg_nome_lider'), saudacao: localStorage.getItem('gvg_texto_saudacao') } };
-        let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dados));
+        let dados = { 
+            banco: getBanco(), 
+            logs: getLogs(), 
+            notas: getNotas(), 
+            config: { 
+                guilda: localStorage.getItem('gvg_nome_guilda'), 
+                lider: localStorage.getItem('gvg_nome_lider'), 
+                saudacao: localStorage.getItem('gvg_texto_saudacao') 
+            } 
+        };
+
+        let jsonStr = JSON.stringify(dados, null, 2);
+        let blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" });
+        let url = URL.createObjectURL(blob);
+        
         let dlAnchorElem = document.createElement('a');
-        dlAnchorElem.setAttribute("href", dataStr);
+        dlAnchorElem.style.display = 'none';
+        dlAnchorElem.href = url;
         dlAnchorElem.setAttribute("download", "backup_gvg.json");
+
+        document.body.appendChild(dlAnchorElem);
         dlAnchorElem.click();
+        document.body.removeChild(dlAnchorElem);
+
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
     
     function importarBackup(event) {
