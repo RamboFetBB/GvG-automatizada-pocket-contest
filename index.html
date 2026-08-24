@@ -17,7 +17,7 @@
         textarea { width: 100%; height: 110px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
         button.action-btn { cursor: pointer; padding: 12px; margin-top: 10px; border: none; border-radius: 6px; color: white; font-weight: bold; width: 100%; font-size: 15px; }
         
-        .result-box { margin-top: 20px; padding: 15px; background: #f8f9fa; white-space: pre-wrap; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; line-height: 1.5; }
+        .result-box { margin-top: 20px; padding: 15px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; line-height: 1.5; }
         
         /* Listas e Controles */
         .search-box { width: 100%; padding: 8px; margin-bottom: 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; }
@@ -37,6 +37,7 @@
         .btn-save { background: #28a745; }
         .btn-copy-adm { background: #25d366; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; }
         .btn-copy-players { background: #007bff; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; }
+        .btn-whatsapp-turno { background: #25d366; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; margin-bottom: 6px; display: inline-flex; align-items: center; gap: 4px; }
 
         /* Paginação */
         .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 15px; }
@@ -70,8 +71,8 @@
         <div id="resultado" class="result-box">A escala aparecerá aqui assim que colar a lista...</div>
         
         <div id="botoesZap" style="display:none; margin-top: 15px;">
-            <button class="action-btn" onclick="compartilharZap('adm')" style="background:#25d366;">📤 Enviar p/ ADM</button>
-            <button class="action-btn" onclick="compartilharZap('players')" style="background:#007bff;">📤 Enviar p/ Players</button>
+            <button class="action-btn" onclick="compartilharZap('adm')" style="background:#25d366;">📤 Enviar p/ ADM (Completo)</button>
+            <button class="action-btn" onclick="compartilharZap('players')" style="background:#007bff;">📤 Enviar p/ Players (Só Premiação)</button>
         </div>
     </div>
 
@@ -96,7 +97,6 @@
         <div class="player-grid" id="listaHistoricoContainer" style="margin-top: 12px;"></div>
         <div class="pagination" id="paginacaoSistema"></div>
 
-        <!-- BOTÕES DE BACKUP COM DATA NO NOME DO ARQUIVO -->
         <div style="display: flex; gap: 10px; margin-top: 15px;">
             <button onclick="exportarBackup()" class="action-btn" style="background:#17a2b8; margin-top:0; padding:10px; font-size:14px;">💾 Exportar Dados (Backup)</button>
             <button onclick="document.getElementById('inputImportar').click()" class="action-btn" style="background:#ffc107; color:#000; margin-top:0; padding:10px; font-size:14px;">📂 Importar Dados</button>
@@ -259,14 +259,11 @@
         }
     }
 
-    // --- EXPORTAR E IMPORTAR COM NOME DINÂMICO BASEADO NA DATA ---
     function exportarBackup() {
         const dados = {
             banco_jogadores: getBancoJogadores(),
             historico_logs: getLogs()
         };
-        
-        // Pega a data atual no formato DD-MM-AAAA
         const agora = new Date();
         const dia = String(agora.getDate()).padStart(2, '0');
         const mes = String(agora.getMonth() + 1).padStart(2, '0');
@@ -308,17 +305,17 @@
         reader.readAsText(file);
     }
 
-    // --- LOGS E PAGINAÇÃO ---
     function getLogs() {
         return JSON.parse(localStorage.getItem('gvg_historico_logs')) || [];
     }
 
-    function salvarLog(playersTexto, completaTexto) {
+    function salvarLog(escalaObj, playersTexto, completaTexto) {
         let logs = getLogs();
         let agora = new Date();
         logs.unshift({ 
             data: agora.toLocaleDateString('pt-BR'), 
             hora: agora.toLocaleTimeString('pt-BR'), 
+            escalaDados: escalaObj, // Salva os turnos estruturados
             conteudo: completaTexto, 
             conteudoPlayers: playersTexto,
             timestamp: agora.getTime() 
@@ -402,10 +399,25 @@
             let textoPlayersSalvo = log.conteudoPlayers || log.conteudo;
             let textoAdmSalvo = log.conteudo;
 
+            // Gera botões de WhatsApp por turno baseado nos dados salvos ou texto
+            let htmlTurnosHistorico = "";
+            if (log.escalaDados) {
+                for (let turno in log.escalaDados) {
+                    let listaTurno = log.escalaDados[turno];
+                    let nomesTurnoStr = listaTurno.length ? listaTurno.map(m => `- ${m.nome} (${m.pontos})`).join('\n') : "- Ninguém disponível";
+                    let mensagemTurnoZap = `📢 *Aviso GvG - ${turno}*\n\nOlá equipe! Segue a escala do dia *${turno}*:\n\n` + nomesTurnoStr + `\n\nPor favor, preparem-se para a entrega dos prêmios!`;
+                    let base64Turno = btoa(encodeURIComponent(mensagemTurnoZap));
+                    
+                    htmlTurnosHistorico += `<div style="margin: 3px 0; font-size: 13px;"><strong>${turno}:</strong> <button onclick="enviarZapTurno(\`${base64Turno}\`)" class="btn-whatsapp-turno" style="padding: 2px 6px; font-size: 11px;">💬 Avisar ${turno}</button></div>`;
+                }
+            } else {
+                htmlTurnosHistorico = `<div style="font-size: 13px; white-space: pre-wrap; color: #333;">${textoAdmSalvo}</div>`;
+            }
+
             let div = document.createElement('div');
             div.className = 'history-item';
             div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#666; margin-bottom:5px; border-bottom:1px dashed #ddd; padding-bottom:4px; flex-wrap:wrap; gap:5px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#666; margin-bottom:8px; border-bottom:1px dashed #ddd; padding-bottom:4px; flex-wrap:wrap; gap:5px;">
                     <span>📅 <strong>${log.data}</strong> às <strong>${log.hora}</strong></span>
                     <div class="btn-group">
                         <button onclick="copiarTextoPersonalizado(this, \`${btoa(encodeURIComponent(textoAdmSalvo))}\`)" class="btn-copy-adm">📋 Copiar p/ ADM</button>
@@ -414,7 +426,9 @@
                         <button class="btn-icon btn-del" onclick="deletarLog(${indexReal})">❌</button>
                     </div>
                 </div>
-                <div style="font-size: 13px; white-space: pre-wrap; color: #333; max-height: 100px; overflow-y: auto; background: #fdfdfd; padding: 6px; border: 1px solid #eee; border-radius: 4px;">${textoAdmSalvo}</div>
+                <div style="background: #fdfdfd; padding: 8px; border: 1px solid #eee; border-radius: 4px; max-height: 150px; overflow-y: auto;">
+                    ${htmlTurnosHistorico}
+                </div>
             `;
             container.appendChild(div);
         });
@@ -535,18 +549,36 @@
             }
         });
 
-        let out = "🏆 *Premiação GvG*\n\n";
+        let htmlBox = "🏆 *Premiação GvG*\n\n";
+        let outPlayers = "🏆 *Premiação GvG*\n\n";
+        let outCompleta = "🏆 *Premiação GvG*\n\n";
+
         turnos.forEach(t => {
-            out += `*${t}:*\n` + (escala[t].length ? escala[t].map(m => `- ${m.nome} (${m.pontos})`).join('\n') : "- Ninguém disponível") + "\n\n";
+            let listaTurno = escala[t];
+            let nomesTurnoStr = listaTurno.length ? listaTurno.map(m => `- ${m.nome} (${m.pontos})`).join('\n') : "- Ninguém disponível";
+            
+            outPlayers += `*${t}:*\n` + nomesTurnoStr + "\n\n";
+            outCompleta += `*${t}:*\n` + nomesTurnoStr + "\n\n";
+
+            let mensagemTurnoZap = `📢 *Aviso GvG - ${t}*\n\nOlá equipe! Segue a escala do dia *${t}*:\n\n` + nomesTurnoStr + `\n\nPor favor, preparem-se para a entrega dos prêmios!`;
+            let base64Turno = btoa(encodeURIComponent(mensagemTurnoZap));
+
+            htmlBox += `*${t}:*\n` + nomesTurnoStr + ` <button onclick="enviarZapTurno(\`${base64Turno}\`)" class="btn-whatsapp-turno">💬 Avisar ${t}</button>\n\n`;
         });
         
-        gradePlayers = out;
-        gradeCompleta = out + "\n📊 *Contagem:*\n" + Object.keys(contagem).map(n => `${n}: ${contagem[n]}x`).join('\n');
+        gradePlayers = outPlayers;
+        gradeCompleta = outCompleta + "\n📊 *Contagem:*\n" + Object.keys(contagem).map(n => `${n}: ${contagem[n]}x`).join('\n');
         
-        document.getElementById('resultado').innerText = gradeCompleta;
+        document.getElementById('resultado').innerHTML = htmlBox + "📊 *Contagem:*\n" + Object.keys(contagem).map(n => `${n}: ${contagem[n]}x`).join('\n');
         document.getElementById('botoesZap').style.display = 'block';
 
-        salvarLog(gradePlayers, gradeCompleta);
+        // Salva a escala estruturada no histórico para permitir o disparo futuro por dia
+        salvarLog(escala, gradePlayers, gradeCompleta);
+    }
+
+    function enviarZapTurno(base64Texto) {
+        let textoReal = decodeURIComponent(atob(base64Texto));
+        window.open("https://wa.me/?text=" + encodeURIComponent(textoReal));
     }
 
     function compartilharZap(tipo) {
