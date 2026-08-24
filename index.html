@@ -197,7 +197,7 @@
     <!-- ABA 5: CONFIGURAÇÕES DO CLÃ -->
     <div id="abaClan" class="tab-content">
         <h3>🛡️ Configurações do Clã</h3>
-        <p style="font-size: 13px; color: #777; margin-top: 0;">Defina o nome da sua guilda e do líder para personalizar os envios automáticos no WhatsApp.</p>
+        <p style="font-size: 13px; color: #777; margin-top: 0;">Personalize os dados e a saudação inicial do WhatsApp.</p>
         
         <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
             <div>
@@ -208,11 +208,15 @@
                 <label style="font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px;">Nome do Líder:</label>
                 <input type="text" id="inputNomeLider" class="search-box" placeholder="Ex: Rambo / Zeus..." style="margin-bottom:0;" oninput="salvarDadosClan()">
             </div>
+            <div>
+                <label style="font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px;">Texto de Saudação (Introdução):</label>
+                <input type="text" id="inputTextoSaudacao" class="search-box" placeholder="Ex: Olá guilda [Guilda], segue:" style="margin-bottom:0;" oninput="salvarDadosClan()">
+            </div>
         </div>
         
         <div style="margin-top: 20px; padding: 12px; background: var(--box-bg); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px;">
-            💡 <strong>Como vai sair no Zap:</strong><br>
-            <code style="color: #007bff; display: block; margin-top: 5px; white-space: pre-wrap;">*[Nome do Líder]*: Olá guilda [Nome da Guilda], segue: ...</code>
+            💡 <strong>Como vai sair no Zap (Exemplo dinâmico):</strong><br>
+            <code id="exemploZapPreview" style="color: #007bff; display: block; margin-top: 5px; white-space: pre-wrap;">*[Nome do Líder]*: Olá guilda [Nome da Guilda], segue: ...</code>
         </div>
     </div>
 </div>
@@ -266,21 +270,43 @@
     function salvarDadosClan() {
         let guilda = document.getElementById('inputNomeGuilda').value.trim();
         let lider = document.getElementById('inputNomeLider').value.trim();
+        let saudacao = document.getElementById('inputTextoSaudacao').value;
+        
         localStorage.setItem('gvg_nome_guilda', guilda);
         localStorage.setItem('gvg_nome_lider', lider);
-        // Atualiza a renderização dos avisos e rodízios dinamicamente se necessário
+        localStorage.setItem('gvg_texto_saudacao', saudacao);
+        
+        atualizarPreviewSaudacao();
         renderizarNotas();
     }
 
     function carregarDadosClanNaTela() {
         document.getElementById('inputNomeGuilda').value = localStorage.getItem('gvg_nome_guilda') || '';
-        document.getElementById('inputNomeLider').value = localStorage.getItem('gvg_nome_lider') || '';
+        document.getElementById('inputNomeLider').value = localStorage.getItem('gvg_nome_lider'] || '';
+        
+        let saudacaoSalva = localStorage.getItem('gvg_texto_saudacao');
+        if (saudacaoSalva === null) {
+            saudacaoSalva = "Olá guilda [Guilda], segue:";
+            localStorage.setItem('gvg_texto_saudacao', saudacaoSalva);
+        }
+        document.getElementById('inputTextoSaudacao').value = saudacaoSalva;
+        atualizarPreviewSaudacao();
+    }
+
+    function atualizarPreviewSaudacao() {
+        let lider = document.getElementById('inputNomeLider').value.trim() || '[Nome do Líder]';
+        let preview = obterCabecalhoLider();
+        document.getElementById('exemploZapPreview').innerText = `*${lider}*: ${preview.replace(obterCabecalhoLider(), '')} ...`;
     }
 
     function obterCabecalhoLider() {
         let lider = localStorage.getItem('gvg_nome_lider') || 'Líder';
         let guilda = localStorage.getItem('gvg_nome_guilda') || 'Guilda';
-        return `*${lider}*: Olá guilda ${guilda}, segue:\n\n`;
+        let saudacaoModelo = localStorage.getItem('gvg_texto_saudacao');
+        if (saudacaoModelo === null) saudacaoModelo = "Olá guilda [Guilda], segue:";
+        
+        let saudacaoPronta = saudacaoModelo.replace(/\[Guilda\]/g, guilda);
+        return `*${lider}*: ${saudacaoPronta}\n\n`;
     }
 
     function marcarComoEnviado() {
@@ -509,7 +535,16 @@
     }
 
     function exportarBackup() {
-        const dados = { banco_jogadores: getBancoJogadores(), historico_logs: getLogs(), notas_prontas: getNotas(), clan_info: { guilda: localStorage.getItem('gvg_nome_guilda'), lider: localStorage.getItem('gvg_nome_lider') } };
+        const dados = { 
+            banco_jogadores: getBancoJogadores(), 
+            historico_logs: getLogs(), 
+            notas_prontas: getNotas(), 
+            clan_info: { 
+                guilda: localStorage.getItem('gvg_nome_guilda'), 
+                lider: localStorage.getItem('gvg_nome_lider'),
+                saudacao: localStorage.getItem('gvg_texto_saudacao')
+            } 
+        };
         const agora = new Date();
         const nomeArquivo = `backup_gvg_${String(agora.getDate()).padStart(2, '0')}_${String(agora.getMonth() + 1).padStart(2, '0')}_${agora.getFullYear()}.json`;
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dados, null, 2));
@@ -534,6 +569,7 @@
                 if (dadosImportados.clan_info) {
                     if (dadosImportados.clan_info.guilda) localStorage.setItem('gvg_nome_guilda', dadosImportados.clan_info.guilda);
                     if (dadosImportados.clan_info.lider) localStorage.setItem('gvg_nome_lider', dadosImportados.clan_info.lider);
+                    if (dadosImportados.clan_info.saudacao) localStorage.setItem('gvg_texto_saudacao', dadosImportados.clan_info.saudacao);
                     carregarDadosClanNaTela();
                 }
                 renderizarHistorico();
@@ -725,7 +761,6 @@
         }
 
         notas.forEach((nota, index) => {
-            // Título do aviso logo abaixo do cabeçalho do líder
             let textoCompletoNota = `📌 *${nota.titulo}*\n\n${nota.conteudo}`;
             let textoZapNotaComLider = obterCabecalhoLider() + textoCompletoNota;
             
