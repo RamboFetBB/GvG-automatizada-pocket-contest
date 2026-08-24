@@ -48,7 +48,7 @@
 
         /* Abas */
         .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; gap: 3px; overflow-x: auto; padding-bottom: 3px; }
-        .tab-btn { flex: 1; padding: 8px 10px; border: none; background: var(--tab-bg); font-weight: bold; font-size: 12px; cursor: pointer; border-radius: 8px 8px 0 0; transition: 0.3s; color: var(--tab-text); white-space: nowrap; text-align: center; }
+        .tab-btn { flex: 1; padding: 8px 10px; border: none; background: var(--tab-bg); font-weight: bold; font-size: 11px; cursor: pointer; border-radius: 8px 8px 0 0; transition: 0.3s; color: var(--tab-text); white-space: nowrap; text-align: center; }
         .tab-btn.active { background: #007bff; color: white; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -113,7 +113,8 @@
         <button class="tab-btn active" onclick="alternarAba('abaRodizio')">📅 Rodízio</button>
         <button class="tab-btn" onclick="alternarAba('abaHistorico')">👥 Pessoas (<span id="countTotal">0</span>)</button>
         <button class="tab-btn" onclick="alternarAba('abaLogs')">📁 Histórico</button>
-        <button class="tab-btn" onclick="alternarAba('abaNotas')">📝 Avisos Prontos</button>
+        <button class="tab-btn" onclick="alternarAba('abaNotas')">📝 Avisos</button>
+        <button class="tab-btn" onclick="alternarAba('abaClan')">🛡️ Clã</button>
     </div>
 
     <!-- ABA 1: GERAR RODÍZIO -->
@@ -192,6 +193,28 @@
 
         <div class="notes-grid" id="listaNotasContainer" style="margin-top: 12px;"></div>
     </div>
+
+    <!-- ABA 5: CONFIGURAÇÕES DO CLÃ -->
+    <div id="abaClan" class="tab-content">
+        <h3>🛡️ Configurações do Clã</h3>
+        <p style="font-size: 13px; color: #777; margin-top: 0;">Defina o nome da sua guilda e do líder para personalizar os envios automáticos no WhatsApp.</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+            <div>
+                <label style="font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px;">Nome da Guilda:</label>
+                <input type="text" id="inputNomeGuilda" class="search-box" placeholder="Ex: Brasil / Dragons..." style="margin-bottom:0;" oninput="salvarDadosClan()">
+            </div>
+            <div>
+                <label style="font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px;">Nome do Líder:</label>
+                <input type="text" id="inputNomeLider" class="search-box" placeholder="Ex: Rambo / Zeus..." style="margin-bottom:0;" oninput="salvarDadosClan()">
+            </div>
+        </div>
+        
+        <div style="margin-top: 20px; padding: 12px; background: var(--box-bg); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px;">
+            💡 <strong>Como vai sair no Zap:</strong><br>
+            <code style="color: #007bff; display: block; margin-top: 5px; white-space: pre-wrap;">*[Nome do Líder]*: Olá guilda [Nome da Guilda], segue: ...</code>
+        </div>
+    </div>
 </div>
 
 <!-- MODAL DE EDIÇÃO -->
@@ -218,6 +241,7 @@
 
     window.onload = () => {
         carregarTemaSalvo();
+        carregarDadosClanNaTela();
         renderizarHistorico();
         renderizarLogs();
         renderizarNotas();
@@ -237,6 +261,26 @@
         let salvo = localStorage.getItem('gvg_tema') || 'light';
         document.documentElement.setAttribute('data-theme', salvo);
         document.querySelector('.theme-btn').innerText = salvo === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro';
+    }
+
+    function salvarDadosClan() {
+        let guilda = document.getElementById('inputNomeGuilda').value.trim();
+        let lider = document.getElementById('inputNomeLider').value.trim();
+        localStorage.setItem('gvg_nome_guilda', guilda);
+        localStorage.setItem('gvg_nome_lider', lider);
+        // Atualiza a renderização dos avisos e rodízios dinamicamente se necessário
+        renderizarNotas();
+    }
+
+    function carregarDadosClanNaTela() {
+        document.getElementById('inputNomeGuilda').value = localStorage.getItem('gvg_nome_guilda') || '';
+        document.getElementById('inputNomeLider').value = localStorage.getItem('gvg_nome_lider') || '';
+    }
+
+    function obterCabecalhoLider() {
+        let lider = localStorage.getItem('gvg_nome_lider') || 'Líder';
+        let guilda = localStorage.getItem('gvg_nome_guilda') || 'Guilda';
+        return `*${lider}*: Olá guilda ${guilda}, segue:\n\n`;
     }
 
     function marcarComoEnviado() {
@@ -312,10 +356,6 @@
                     dataLiberacao.setDate(dataLiberacao.getDate() + 1);
                 }
 
-                if (agora >= dataLiberacao || (diaSemana !== 6 && hora >= 1 && hora < horaLimite === false)) {
-                    // Se passou da hora limite e não foi enviado, avisa que está livre
-                }
-                
                 let diff = dataLiberacao - agora;
                 if (diff > 0) {
                     statusTexto = "⏳ Libera em: " + formatarMilissegundos(diff);
@@ -469,7 +509,7 @@
     }
 
     function exportarBackup() {
-        const dados = { banco_jogadores: getBancoJogadores(), historico_logs: getLogs(), notas_prontas: getNotas() };
+        const dados = { banco_jogadores: getBancoJogadores(), historico_logs: getLogs(), notas_prontas: getNotas(), clan_info: { guilda: localStorage.getItem('gvg_nome_guilda'), lider: localStorage.getItem('gvg_nome_lider') } };
         const agora = new Date();
         const nomeArquivo = `backup_gvg_${String(agora.getDate()).padStart(2, '0')}_${String(agora.getMonth() + 1).padStart(2, '0')}_${agora.getFullYear()}.json`;
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dados, null, 2));
@@ -491,6 +531,11 @@
                 if (dadosImportados.banco_jogadores) localStorage.setItem('gvg_banco_jogadores', JSON.stringify(dadosImportados.banco_jogadores));
                 if (dadosImportados.historico_logs) localStorage.setItem('gvg_historico_logs', JSON.stringify(dadosImportados.historico_logs));
                 if (dadosImportados.notas_prontas) localStorage.setItem('gvg_notas_prontas', JSON.stringify(dadosImportados.notas_prontas));
+                if (dadosImportados.clan_info) {
+                    if (dadosImportados.clan_info.guilda) localStorage.setItem('gvg_nome_guilda', dadosImportados.clan_info.guilda);
+                    if (dadosImportados.clan_info.lider) localStorage.setItem('gvg_nome_lider', dadosImportados.clan_info.lider);
+                    carregarDadosClanNaTela();
+                }
                 renderizarHistorico();
                 renderizarLogs();
                 renderizarNotas();
@@ -606,7 +651,7 @@
                 for (let turno in log.escalaDados) {
                     let listaTurno = log.escalaDados[turno];
                     let nomesTurnoStr = listaTurno.length ? listaTurno.map(m => `- ${m.nome} (${m.pontos})`).join('\n') : "- Ninguém disponível";
-                    let mensagemTurnoZap = `📢 *Aviso GvG - ${turno}*\n\nOlá equipe! Segue a escala do dia *${turno}*:\n\n` + nomesTurnoStr + `\n\nPreparem-se para a entrega dos prêmios!`;
+                    let mensagemTurnoZap = obterCabecalhoLider() + `📢 *Aviso GvG - ${turno}*\n\nOlá equipe! Segue a escala do dia *${turno}*:\n\n` + nomesTurnoStr + `\n\nPreparem-se para a entrega dos prêmios!`;
                     let base64Turno = btoa(encodeURIComponent(mensagemTurnoZap));
                     
                     htmlTurnosHistorico += `<div style="margin: 3px 0; font-size: 13px;"><strong>${turno}:</strong> <button onclick="enviarZapTurno(\`${base64Turno}\`)" class="btn-whatsapp-turno" style="padding: 2px 6px; font-size: 11px;">💬 Avisar ${turno}</button></div>`;
@@ -680,7 +725,13 @@
         }
 
         notas.forEach((nota, index) => {
-            let base64Nota = btoa(encodeURIComponent(nota.conteudo));
+            // Título do aviso logo abaixo do cabeçalho do líder
+            let textoCompletoNota = `📌 *${nota.titulo}*\n\n${nota.conteudo}`;
+            let textoZapNotaComLider = obterCabecalhoLider() + textoCompletoNota;
+            
+            let base64Nota = btoa(encodeURIComponent(textoCompletoNota));
+            let base64ZapNota = btoa(encodeURIComponent(textoZapNotaComLider));
+
             let div = document.createElement('div');
             div.className = 'note-item';
             div.innerHTML = `
@@ -688,7 +739,7 @@
                     <strong>📌 ${nota.titulo}</strong>
                     <div class="btn-group">
                         <button onclick="copiarTextoPersonalizado(this, \`${base64Nota}\`)" class="btn-copy-players">📋 Copiar</button>
-                        <button onclick="enviarZapTurno(\`${base64Nota}\`)" class="btn-whatsapp-turno" style="margin-bottom:0; padding:3px 8px; font-size:11px;">💬 WhatsApp</button>
+                        <button onclick="enviarZapTurno(\`${base64ZapNota}\`)" class="btn-whatsapp-turno" style="margin-bottom:0; padding:3px 8px; font-size:11px;">💬 WhatsApp</button>
                         <button class="btn-icon btn-del" onclick="deletarNota(${index})">❌</button>
                     </div>
                 </div>
@@ -814,7 +865,6 @@
             }
         });
 
-        let htmlBox = "🏆 *Premiação GvG*\n\n";
         let outPlayers = "🏆 *Premiação GvG*\n\n";
         let outCompleta = "🏆 *Premiação GvG*\n\n";
 
@@ -824,30 +874,26 @@
             
             outPlayers += `*${t}:*\n` + nomesTurnoStr + "\n\n";
             outCompleta += `*${t}:*\n` + nomesTurnoStr + "\n\n";
-
-            let mensagemTurnoZap = `📢 *Aviso GvG - ${t}*\n\nOlá equipe! Segue a escala do dia *${t}*:\n\n` + nomesTurnoStr + `\n\nPreparem-se para a entrega dos prêmios!`;
-            let base64Turno = btoa(encodeURIComponent(mensagemTurnoZap));
-
-            htmlBox += `*${t}:*\n` + nomesTurnoStr + ` <button onclick="enviarZapTurno(\`${base64Turno}\`)" class="btn-whatsapp-turno">💬 Avisar ${t}</button>\n\n`;
         });
         
-        gradePlayers = outPlayers;
-        gradeCompleta = outCompleta + "\n📊 *Contagem:*\n" + Object.keys(contagem).map(n => `${n}: ${contagem[n]}x`).join('\n');
+        let rodapéContagem = "📊 *Contagem:*\n" + Object.keys(contagem).map(n => `${n}: ${contagem[n]}x`).join('\n');
         
-        document.getElementById('resultado').innerText = (htmlBox.replace(/<button[^>]*>.*?<\/button>/g, '')).trim() + "\n\n📊 *Contagem:*\n" + Object.keys(contagem).map(n => `${n}: ${contagem[n]}x`).join('\n');
+        gradePlayers = outPlayers + rodapéContagem;
+        gradeCompleta = outCompleta + rodapéContagem;
         
-        // Mantém o HTML interativo no box visual
         let boxVisual = "🏆 *Premiação GvG*\n\n";
         turnos.forEach(t => {
             let listaTurno = escala[t];
             let nomesTurnoStr = listaTurno.length ? listaTurno.map(m => `- ${m.nome} (${m.pontos})`).join('\n') : "- Ninguém disponível";
-            let mensagemTurnoZap = `📢 *Aviso GvG - ${t}*\n\nOlá equipe! Segue a escala do dia *${t}*:\n\n` + nomesTurnoStr + `\n\nPreparem-se para a entrega dos prêmios!`;
+            
+            let mensagemTurnoZap = obterCabecalhoLider() + `📢 *Aviso GvG - ${t}*\n\nOlá equipe! Segue a escala do dia *${t}*:\n\n` + nomesTurnoStr + `\n\nPreparem-se para a entrega dos prêmios!`;
             let base64Turno = btoa(encodeURIComponent(mensagemTurnoZap));
+            
             boxVisual += `*${t}:*\n` + nomesTurnoStr + ` <button onclick="enviarZapTurno(\`${base64Turno}\`)" class="btn-whatsapp-turno">💬 Avisar ${t}</button>\n\n`;
         });
-        boxVisual += "📊 *Contagem:*\n" + Object.keys(contagem).map(n => `${n}: ${contagem[n]}x`).join('\n');
+        boxVisual += rodapéContagem;
+        
         document.getElementById('resultado').innerHTML = boxVisual;
-
         document.getElementById('botoesZap').style.display = 'block';
 
         salvarLog(escala, gradePlayers, gradeCompleta);
@@ -859,7 +905,9 @@
     }
 
     function compartilharZap(tipo) {
-        window.open("https://wa.me/?text=" + encodeURIComponent(tipo === 'adm' ? gradeCompleta : gradePlayers));
+        let textoBase = tipo === 'adm' ? gradeCompleta : gradePlayers;
+        let textoFinal = obterCabecalhoLider() + textoBase;
+        window.open("https://wa.me/?text=" + encodeURIComponent(textoFinal));
     }
 </script>
 </body>
