@@ -196,16 +196,21 @@
     <div id="abaDev" class="tab-content">
         <h3>👨‍💻 Editor de Código (Auto-Commit)</h3>
         
-        <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-            <input type="password" id="inputTokenGit" class="search-box" placeholder="Digite seu Token do GitHub..." style="margin-bottom:0; flex:1;" oninput="salvarTokenGitLocal()">
-            <button onclick="carregarCodigo()" class="action-btn" style="background:#007bff; margin:0; width:auto; padding:8px 15px;">Carregar</button>
-            <button onclick="limparTokenGitLocal()" class="action-btn" style="background:#dc3545; margin:0; width:auto; padding:8px 12px;" title="Remover Token Salvo">🗑️</button>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;">
+            <input type="password" id="inputTokenGit" class="search-box" placeholder="Digite seu Token do GitHub..." style="margin-bottom:0;">
+            
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button onclick="salvarTokenGitLocal()" class="action-btn" style="background:#28a745; margin:0; flex:1; padding:8px 12px; font-size:13px;" title="Salvar Token no navegador">💾 Salvar Local</button>
+                <button onclick="copiarTokenGitLocal()" class="action-btn" style="background:#17a2b8; margin:0; flex:1; padding:8px 12px; font-size:13px;" title="Copiar Token salvo">📋 Copiar Token</button>
+                <button onclick="carregarCodigo()" class="action-btn" style="background:#007bff; margin:0; flex:1; padding:8px 12px; font-size:13px;">⚙️ Carregar</button>
+                <button onclick="limparTokenGitLocal()" class="action-btn" style="background:#dc3545; margin:0; width:auto; padding:8px 12px; font-size:13px;" title="Remover Token Salvo">🗑️</button>
+            </div>
         </div>
 
-        <textarea id="editorCodigo" placeholder="O código fonte aparecerá aqui após validar o Token..." style="height: 320px; font-family: monospace; font-size: 12px; white-space: pre; display:none;"></textarea>
+        <textarea id="editorCodigo" placeholder="O código fonte aparecerá aqui após carregar..." style="height: 320px; font-family: monospace; font-size: 12px; white-space: pre; display:none;"></textarea>
         
         <div id="boxSalvar" style="display:none; margin-top: 15px;">
-            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Correção no gerenciamento de abas e banco de dados)">
+            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Adicionado botões de gerenciamento de token local)">
             <button onclick="commitarCodigo()" class="action-btn" style="background:#28a745; margin-top: 5px;">🚀 Fazer Commit Direto no GitHub</button>
         </div>
     </div>
@@ -284,17 +289,30 @@
 
     function salvarTokenGitLocal() {
         let token = document.getElementById('inputTokenGit').value.trim();
-        if(token) localStorage.setItem('gvg_git_token', token);
-        else localStorage.removeItem('gvg_git_token');
+        if(token) {
+            localStorage.setItem('gvg_git_token', token);
+            alert('✅ Token salvo com sucesso localmente!');
+        } else {
+            alert('⚠️ Digite um token antes de salvar.');
+        }
     }
     function carregarTokenGitLocal() {
         let tokenSalvo = localStorage.getItem('gvg_git_token') || '';
         if(tokenSalvo) document.getElementById('inputTokenGit').value = tokenSalvo;
     }
+    function copiarTokenGitLocal() {
+        let token = document.getElementById('inputTokenGit').value.trim() || localStorage.getItem('gvg_git_token') || '';
+        if(!token) return alert('⚠️ Nenhum token disponível para copiar.');
+        navigator.clipboard.writeText(token).then(() => {
+            alert('📋 Token copiado para a área de transferência!');
+        }).catch(() => {
+            alert('Erro ao copiar token.');
+        });
+    }
     function limparTokenGitLocal() {
         localStorage.removeItem('gvg_git_token');
         document.getElementById('inputTokenGit').value = '';
-        alert('Token removido do armazenamento local!');
+        alert('🗑️ Token removido do armazenamento local!');
     }
 
     function marcarComoEnviado() {
@@ -651,7 +669,6 @@
         delete banco[nomeAntigo];
         saveBanco(banco);
 
-        // Atualização em cascata nos logs para manter o comparativo sincronizado
         let logs = getLogs();
         let regexSubst = new RegExp(`• \\*${nomeAntigo.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\*`, 'g');
         logs.forEach(log => {
@@ -697,8 +714,6 @@
         }
 
         itensPagina.forEach(nome => {
-            let p = banco[nome];
-            let isSys = p.isSistema;
             let div = document.createElement('div');
             div.className = 'player-item';
 
