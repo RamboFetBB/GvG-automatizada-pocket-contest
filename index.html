@@ -36,9 +36,13 @@
         /* Top Bar & Tema */
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .theme-btn { background: none; border: 1px solid var(--border-color); color: var(--text-color); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
-        .next-turn-banner { background: #007bff; color: white; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
-        .banner-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        
+        /* Banner & Painel de Envio */
+        .next-turn-banner { background: #007bff; color: white; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+        .banner-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; flex-wrap: wrap; gap: 5px; }
         .banner-timer { font-size: 13px; opacity: 0.95; background: rgba(0,0,0,0.15); padding: 4px 8px; border-radius: 4px; display: inline-block; width: fit-content; }
+        .btn-marcar-enviado { background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-marcar-enviado:hover { background: #218838; }
 
         /* Abas */
         .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; gap: 3px; overflow-x: auto; padding-bottom: 3px; }
@@ -97,6 +101,7 @@
     <div id="bannerProximoTurno" class="next-turn-banner" style="display:none;">
         <div class="banner-header">
             <span>⏰ Turno Atual: <strong id="txtTurnoNome">Carregando...</strong></span>
+            <button class="btn-marcar-enviado" onclick="marcarComoEnviado()">✅ Já Enviei</button>
         </div>
         <div id="txtTurnoTimer" class="banner-timer">Calculando tempo...</div>
     </div>
@@ -214,7 +219,7 @@
         renderizarLogs();
         renderizarNotas();
         atualizarStatusPremiacao();
-        setInterval(atualizarStatusPremiacao, 1000); // Atualiza o relógio a cada 1 segundo
+        setInterval(atualizarStatusPremiacao, 1000); // Atualiza o cronômetro a cada 1 segundo
     };
 
     function alternarTema() {
@@ -231,54 +236,85 @@
         document.querySelector('.theme-btn').innerText = salvo === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Escuro';
     }
 
+    function marcarComoEnviado() {
+        let agoraMs = new Date().getTime();
+        localStorage.setItem('gvg_ultimo_envio_timestamp', agoraMs);
+        atualizarStatusPremiacao();
+    }
+
     function atualizarStatusPremiacao() {
         let agora = new Date();
         let diaSemana = agora.getDay(); // 0: Dom, 1: Seg, 2: Ter, 3: Qua, 4: Qui, 5: Sex, 6: Sáb
         let hora = agora.getHours();
-        let minuto = agora.getMinutes();
-        let segundo = agora.getSeconds();
 
         let turnoNome = "";
         let statusTexto = "";
         let targetDate = new Date(agora);
 
-        // Lógica baseada nas suas regras exatas
-        if (diaSemana >= 1 && diaSemana <= 5) { // Segunda a Sexta
+        // Identifica o turno atual com base nas regras
+        if (diaSemana >= 1 && diaSemana <= 5) {
             let diasSemanaNomes = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
             turnoNome = diasSemanaNomes[diaSemana];
-
-            // Libera às 01:00
             targetDate.setHours(1, 0, 0, 0);
-            if (hora >= 1) {
-                // Já passou da 01:00 de hoje, então já está liberado ou é para o dia seguinte 01:00
-                statusTexto = "✅ Liberado para Envio!";
-            } else {
-                let diff = targetDate - agora;
-                statusTexto = "⏳ Libera em: " + formatarMilissegundos(diff);
-            }
-        } else if (diaSemana === 6) { // Sábado
+        } else if (diaSemana === 6) {
             if (hora < 11) {
                 turnoNome = "Sáb Manhã";
                 targetDate.setHours(11, 0, 0, 0);
-                let diff = targetDate - agora;
-                statusTexto = "⏳ Envio até 11h (Faltam: " + formatarMilissegundos(diff) + ")";
             } else if (hora >= 11 && hora < 18) {
-                turnoNome = "Sáb Manhã (Encerrando) / Sáb Tarde (Em breve)";
+                turnoNome = "Sáb Manhã (Encerrado) / Sáb Tarde (Em breve)";
                 targetDate.setHours(18, 0, 0, 0);
+            } else {
+                turnoNome = "Sáb Tarde";
+                targetDate.setHours(1, 0, 0, 0); // Próxima janela (domingo 01h)
+                targetDate.setDate(targetDate.getDate() + 1);
+            }
+        } else if (diaSemana === 0) {
+            turnoNome = "Domingo";
+            targetDate.setHours(1, 0, 0, 0);
+        }
+
+        // Verifica se o usuário já marcou como enviado nesta janela
+        let ultimoEnvioMs = parseInt(localStorage.getItem('gvg_ultimo_envio_timestamp')) || 0;
+        let jaEnviadoNestaJanela = false;
+
+        // Se o último envio ocorreu após o início da janela atual, consideramos já enviado
+        let inicioJanelaAtual = new Date(agora);
+        if (diaSemana === 6 && hora >= 11 && hora < 18) {
+            inicioJanelaAtual.setHours(11, 0, 0, 0);
+        } else if (diaSemana === 6 && hora >= 18) {
+            inicioJanelaAtual.setHours(18, 0, 0, 0);
+        } else {
+            inicioJanelaAtual.setHours(1, 0, 0, 0);
+            if (hora < 1) inicioJanelaAtual.setDate(inicioJanelaAtual.getDate() - 1);
+        }
+
+        if (ultimoEnvioMs >= inicioJanelaAtual.getTime()) {
+            jaEnviadoNestaJanela = true;
+        }
+
+        if (jaEnviadoNestaJanela) {
+            statusTexto = "✅ Premiação enviada! Próxima liberação em: " + calcularTempoProximaJanela(agora);
+        } else {
+            // Regras de liberação visual
+            if (diaSemana === 6 && hora >= 11 && hora < 18) {
                 let diff = targetDate - agora;
                 statusTexto = "🔒 Fechado. Sáb Tarde libera às 18h (Faltam: " + formatarMilissegundos(diff) + ")";
             } else {
-                turnoNome = "Sáb Tarde";
-                statusTexto = "✅ Liberado para Envio!";
-            }
-        } else if (diaSemana === 0) { // Domingo
-            turnoNome = "Domingo";
-            targetDate.setHours(1, 0, 0, 0);
-            if (hora >= 1) {
-                statusTexto = "✅ Liberado para Envio!";
-            } else {
-                let diff = targetDate - agora;
-                statusTexto = "⏳ Libera em: " + formatarMilissegundos(diff);
+                let horaLimite = (diaSemana === 6 && hora < 11) ? 11 : 1;
+                let dataLiberacao = new Date(agora);
+                dataLiberacao.setHours(horaLimite, 0, 0, 0);
+                if (hora < horaLimite && diaSemana !== 6) {
+                    // Mantém no mesmo dia às 01:00
+                } else if (hora >= horaLimite) {
+                    dataLiberacao.setDate(dataLiberacao.getDate() + 1);
+                }
+
+                if (agora >= dataLiberacao || (diaSemana !== 6 && hora >= 1)) {
+                    statusTexto = "✅ Liberado para Envio!";
+                } else {
+                    let diff = dataLiberacao - agora;
+                    statusTexto = "⏳ Libera em: " + formatarMilissegundos(diff);
+                }
             }
         }
 
@@ -286,6 +322,34 @@
         banner.style.display = 'flex';
         document.getElementById('txtTurnoNome').innerText = turnoNome;
         document.getElementById('txtTurnoTimer').innerText = statusTexto;
+    }
+
+    function calcularTempoProximaJanela(agora) {
+        let proxima = new Date(agora);
+        let dia = agora.getDay();
+        let h = agora.getHours();
+
+        // Determina quando será a próxima janela com base nas suas regras exatas
+        if (dia >= 1 && dia <= 4) { // Seg a Qui -> Próxima é 01:00 do dia seguinte
+            proxima.setDate(proxima.getDate() + 1);
+            proxima.setHours(1, 0, 0, 0);
+        } else if (dia === 5) { // Sexta -> Próxima é Sáb 11:00 (Sáb Manhã)
+            proxima.setDate(proxima.getDate() + 1);
+            proxima.setHours(11, 0, 0, 0);
+        } else if (dia === 6) { // Sábado
+            if (h < 11) { // Sáb Manhã -> Próxima é Sáb 18:00
+                proxima.setHours(18, 0, 0, 0);
+            } else { // Sáb Tarde -> Próxima é Dom 01:00
+                proxima.setDate(proxima.getDate() + 1);
+                proxima.setHours(1, 0, 0, 0);
+            }
+        } else if (dia === 0) { // Domingo -> Próxima é Seg 01:00
+            proxima.setDate(proxima.getDate() + 1);
+            proxima.setHours(1, 0, 0, 0);
+        }
+
+        let diff = proxima - agora;
+        return formatarMilissegundos(diff);
     }
 
     function formatarMilissegundos(ms) {
