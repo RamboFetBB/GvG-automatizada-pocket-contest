@@ -88,15 +88,9 @@
     <!-- ABA 1: RODÍZIO -->
     <div id="abaRodizio" class="tab-content active">
         <h2>1. Cole a Lista de Nomes</h2>
-        <div style="margin-bottom: 8px;">
-            <label style="font-size: 13px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                <input type="checkbox" id="chkApenasSistema"> 🛡️ Filtrar na escala apenas quem está no Sistema
-            </label>
-        </div>
-        <textarea id="listaTexto" placeholder="Cole a lista aqui..."></textarea>
+        <textarea id="listaTexto" placeholder="Cole a lista de nomes e pontuações aqui..."></textarea>
         
-        <!-- NOVO BOTÃO PARA GERAR A ESCALA SEM DUPLICIDADE -->
-        <button class="action-btn" style="background:#007bff; margin-bottom: 15px;" onclick="processarETocalhar()">⚙️ Gerar e Salvar Escala</button>
+        <button class="action-btn" style="background:#007bff; margin-bottom: 15px;" onclick="processarETocalhar()">⚙️ Gerar e Salvar Escala de Rodízio</button>
         
         <div id="alertaInvalido" class="alert-box">⚠️ Atenção: Detectamos pontuações negativas ou valores inválidos na lista.</div>
         <div id="resultado" class="result-box">A escala aparecerá aqui assim que gerar...</div>
@@ -204,7 +198,7 @@
         <textarea id="editorCodigo" placeholder="O código fonte aparecerá aqui após validar o Token..." style="height: 320px; font-family: monospace; font-size: 12px; white-space: pre; display:none;"></textarea>
         
         <div id="boxSalvar" style="display:none; margin-top: 15px;">
-            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Correção de parsing de nomes e sistema)">
+            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Atualização das regras de escala e pontuação)">
             <button onclick="commitarCodigo()" class="action-btn" style="background:#28a745; margin-top: 5px;">🚀 Fazer Commit Direto no GitHub</button>
         </div>
     </div>
@@ -390,6 +384,7 @@
         }
     }
 
+    // REGRA DE RODÍZIO ATUALIZADA
     function processarETocalhar() {
         let texto = document.getElementById('listaTexto').value.trim();
         let divResult = document.getElementById('resultado');
@@ -405,11 +400,9 @@
         }
 
         let linhas = texto.split('\n');
-        let jogadores = [];
         let temInvalido = false;
         let banco = getBanco();
-
-        let apenasSistema = document.getElementById('chkApenasSistema').checked;
+        let listaProcessada = [];
 
         linhas.forEach(linha => {
             linha = linha.trim();
@@ -443,28 +436,114 @@
                 banco[chave].isSistema = true;
             }
 
-            if (apenasSistema && !banco[chave].isSistema) return;
-
-            jogadores.push({ nome: chave, pts });
+            listaProcessada.push({ nome: chave, pts: pts, isSistema: banco[chave].isSistema });
         });
 
         divAlert.style.display = temInvalido ? 'block' : 'none';
-        if(jogadores.length === 0) {
-            divResult.innerText = apenasSistema ? "Nenhum jogador da lista está marcado no Sistema." : "Nenhum jogador válido encontrado.";
+
+        if(listaProcessada.length === 0) {
+            divResult.innerText = "Nenhum jogador válido encontrado na lista.";
             btnZap.style.display = 'none';
             return;
         }
 
-        let totalTurnos = turnos.length;
-        let escalaStr = "📅 *ESCALA DO RODÍZIO GvG*\n\n";
+        const diasNormais = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sáb Tarde', 'Domingo'];
+        const diasSistema = ['Sexta', 'Sáb Manhã'];
 
-        jogadores.forEach((j, index) => {
-            let turno = turnos[index % totalTurnos];
-            let ehSys = banco[j.nome] && banco[j.nome].isSistema;
-            escalaStr += `• *${j.nome}* ${ehSys ? '🛡️' : ''} - ${turno} (${j.pts} pts)\n`;
-            
-            banco[j.nome].pontos = (banco[j.nome].pontos || 0) + j.pts;
-            banco[j.nome].participacoes = (banco[j.nome].participacoes || 0) + 1;
+        let membrosComuns = listaProcessada.filter(j => !j.isSistema);
+        let membrosSistema = listaProcessada.filter(j => j.isSistema);
+
+        membrosComuns.sort((a, b) => b.pts - a.pts);
+        membrosSistema.sort((a, b) => b.pts - a.pts);
+
+        let escalaDias = {};
+        [...diasNormais, ...diasSistema].forEach(d => escalaDias[d] = []);
+
+        // 1. Processa Sexta e Sáb Manhã (Exclusivo Top 10 Sistema >= 80 pts)
+        let top10Sistema = membrosSistema.filter(j => j.pts >= 80).slice(0, 10);
+
+        diasSistema.forEach(dia => {
+            if (top10Sistema.length > 0) {
+                let idx = 0;
+                let adicionadosHoje = new Set();
+                while (escalaDias[dia].length < 5 && adicionadosHoje.size < top10Sistema.length) {
+                    let player = top10Sistema[idx % top10Sistema.length];
+                    if (!adicionadosHoje.has(player.nome)) {
+                        escalaDias[dia].push(player);
+                        adicionadosHoje.add(player.nome);
+                    }
+                    idx++;
+                }
+            }
+        });
+
+        // 2. Processa Dias Normais (Membros sem Sistema)
+        let altaPontuacao = membrosComuns.filter(j => j.pts > 30);
+        let baixaPontuacao = membrosComuns.filter(j => j.pts <= 30);
+
+        let contagemEscala = {};
+        membrosComuns.forEach(j => contagemEscala[j.nome] = 0);
+
+        diasNormais.forEach(dia => {
+            let adicionadosHoje = new Set();
+
+            // Prioridade 1: Membros com > 30 pts
+            while (escalaDias[dia].length < 5) {
+                let candidatosAlta = altaPontuacao.filter(j => !adicionadosHoje.has(j.nome));
+                if (candidatosAlta.length === 0) break;
+
+                candidatosAlta.sort((a, b) => {
+                    if (contagemEscala[a.nome] !== contagemEscala[b.nome]) {
+                        return contagemEscala[a.nome] - contagemEscala[b.nome];
+                    }
+                    return b.pts - a.pts;
+                });
+
+                let escolhido = candidatosAlta[0];
+                escalaDias[dia].push(escolhido);
+                adicionadosHoje.add(escolhido.nome);
+                contagemEscala[escolhido.nome]++;
+            }
+
+            // Prioridade 2: Membros com <= 30 pts (preenche vagas restantes)
+            while (escalaDias[dia].length < 5) {
+                let candidatosBaixa = baixaPontuacao.filter(j => !adicionadosHoje.has(j.nome));
+                if (candidatosBaixa.length === 0) break;
+
+                candidatosBaixa.sort((a, b) => {
+                    if (contagemEscala[a.nome] !== contagemEscala[b.nome]) {
+                        return contagemEscala[a.nome] - contagemEscala[b.nome];
+                    }
+                    return b.pts - a.pts;
+                });
+
+                let escolhido = candidatosBaixa[0];
+                escalaDias[dia].push(escolhido);
+                adicionadosHoje.add(escolhido.nome);
+                contagemEscala[escolhido.nome]++;
+            }
+        });
+
+        // Monta o texto de exibição
+        let escalaStr = "📅 *ESCALA DO RODÍZIO GvG*\n\n";
+        let totalJogadoresEscalados = 0;
+        let ordemExibicao = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb Manhã', 'Sáb Tarde', 'Domingo'];
+
+        ordemExibicao.forEach(dia => {
+            if (escalaDias[dia] && escalaDias[dia].length > 0) {
+                escalaStr += `📌 *${dia.toUpperCase()}* (${escalaDias[dia].length}/5 vagas):\n`;
+                escalaDias[dia].forEach(j => {
+                    let ehSys = j.isSistema;
+                    escalaStr += `  • *${j.nome}* ${ehSys ? '🛡️' : ''} (${j.pts} pts)\n`;
+                    
+                    if (banco[j.nome]) {
+                        banco[j.nome].pontos = (banco[j.nome].pontos || 0) + j.pts;
+                        banco[j.nome].participacoes = (banco[j.nome].participacoes || 0) + 1;
+                    }
+                    totalJogadoresEscalados++;
+                });
+                escalaStr += `\n`;
+            }
         });
 
         saveBanco(banco);
@@ -472,7 +551,7 @@
         divResult.innerText = escalaStr;
         btnZap.style.display = 'block';
 
-        salvarLogAutomatico(escalaStr, jogadores.length);
+        salvarLogAutomatico(escalaStr, totalJogadoresEscalados);
         renderizarHistorico();
         renderizarLogs();
         renderizarComparativoMensal();
@@ -480,7 +559,7 @@
 
     function compartilharZap() {
         if(!textoEscalaCache) return;
-        let finalStr = obterCabecalhoLider() + textoEscalaCache + `\n\nPreparem-se para a entrega dos prêmios!`;
+        let finalStr = obterCabecalhoLider() + textoEscalaCache + `\nPreparem-se para a entrega dos prêmios!`;
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(finalStr)}`, '_blank');
     }
 
@@ -492,12 +571,10 @@
         let hora = String(agora.getHours()).padStart(2, '0');
         let min = String(agora.getMinutes()).padStart(2, '0');
 
-        let msg = `${texto}`;
-        
         logs.unshift({
             id: Date.now(),
             data: `${dia}/${mm}/${agora.getFullYear()} - ${hora}:${min}`,
-            texto: msg,
+            texto: texto,
             total: totalPlayers
         });
 
@@ -540,7 +617,6 @@
         container.innerHTML = '';
 
         let chaves = Object.keys(banco);
-        
         let filtroSistema = chaves.filter(k => banco[k].isSistema);
         let filtroMembros = chaves.filter(k => !banco[k].isSistema);
 
@@ -574,9 +650,7 @@
 
             if (subAbaAtualPessoas === 'membros') {
                 div.innerHTML = `
-                    <div>
-                        <strong>${nome}</strong>
-                    </div>
+                    <div><strong>${nome}</strong></div>
                     <div class="btn-group">
                         <button onclick="alternarStatusSistema('${nome}')" class="btn-icon" style="background:${isSys ? '#ffc107' : '#17a2b8'}; color:#000;" title="${isSys ? 'Remover do Sistema' : 'Marcar no Sistema'}">
                             ${isSys ? '⭐ Sistema' : '➕ Sistema'}
@@ -624,14 +698,18 @@
     function agruparPorTurno(texto) {
         let linhas = texto.split('\n');
         let turnosMap = {};
+        let diaAtual = "";
+
         linhas.forEach(l => {
-            let m = l.match(/• \*(.*?)\*(?: 🛡️)? - (.*?) \(([-\d]+) pts\)/);
-            if(m) {
-                let nome = m[1];
-                let turno = m[2];
-                let pts = m[3];
-                if(!turnosMap[turno]) turnosMap[turno] = [];
-                turnosMap[turno].push({ nome, pts });
+            let diaMatch = l.match(/📌 \*(.*?)\*/);
+            if (diaMatch) {
+                diaAtual = diaMatch[1].trim();
+                turnosMap[diaAtual] = [];
+            } else {
+                let m = l.match(/• \*(.*?)\*(?: 🛡️)? \(([-\d]+) pts\)/);
+                if (m && diaAtual) {
+                    turnosMap[diaAtual].push({ nome: m[1], pts: m[2] });
+                }
             }
         });
         return turnosMap;
@@ -649,7 +727,7 @@
         textoZap += `Olá equipe! Segue a escala do dia *${turno}*:\n\n`;
         
         jogadores.forEach(j => {
-            textoZap += `- ${j.nome} (${j.pts})\n`;
+            textoZap += `- ${j.nome} (${j.pts} pts)\n`;
         });
         
         textoZap += `\nPreparem-se para a entrega dos prêmios!`;
@@ -691,7 +769,7 @@
 
             div.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; width:100%;">
-                    <strong>📅 ${log.data} (${log.total} Players)</strong>
+                    <strong>📅 ${log.data} (${log.total} Jogadores Escalados)</strong>
                     <button onclick="excluirLog(${log.id})" class="btn-icon btn-del">🗑️</button>
                 </div>
                 <div style="font-size:12px; white-space:pre-wrap; max-height:100px; overflow-y:auto; background:var(--box-bg); padding:6px; border-radius:4px; width:100%; box-sizing:border-box;">${log.texto}</div>
@@ -798,7 +876,7 @@
 
             let linhas = log.texto.split('\n');
             linhas.forEach(l => {
-                let m = l.match(/• \*(.*?)\*(?: 🛡️)? - .*? \(([-\d]+) pts\)/);
+                let m = l.match(/• \*(.*?)\*(?: 🛡️)? \(([-\d]+) pts\)/);
                 if(m) {
                     let nomeOriginal = m[1].trim();
                     let pts = parseInt(m[2], 10);
@@ -824,13 +902,13 @@
 
     function renderizarComparativoMensal() {
         let result = processarDadosComparativo();
-        let filtroMes = document.getElementById('selectFiltroMesComp').value;
         let select = document.getElementById('selectFiltroMesComp');
+        let filtroMes = select.value || "TODOS";
         
         let optionsHtml = `<option value="TODOS">📅 Visão Geral (Todos os Meses)</option>`;
         result.meses.forEach(m => { optionsHtml += `<option value="${m}">${m}</option>`; });
         select.innerHTML = optionsHtml;
-        select.value = filtroMes || "TODOS";
+        select.value = filtroMes;
         if(!result.meses.includes(filtroMes) && filtroMes !== "TODOS") select.value = "TODOS";
         
         filtroMes = select.value;
@@ -871,14 +949,13 @@
             if (filtroMes === "TODOS") {
                 result.meses.forEach(m => {
                     let pts = j.meses[m] || 0;
-                    tdHtml += `<td class="${pts > 0 ? 'val-pts' : 'val-zero'}">${pts > 0 ? pts : '-'}</td>`;
+                    tdHtml += `<td class="${pts > 0 ? 'val-pts' : 'val-zero'}">${pts}</td>`;
                 });
-                tdHtml += `<td class="val-pts" style="color:#007bff;">${j.total}</td>`;
+                tdHtml += `<td class="val-pts">${j.total}</td>`;
             } else {
                 let pts = j.meses[filtroMes] || 0;
                 tdHtml += `<td class="val-pts">${pts}</td>`;
             }
-
             tr.innerHTML = tdHtml;
             tbody.appendChild(tr);
         });
@@ -887,143 +964,142 @@
     function enviarZapComparativo() {
         let result = processarDadosComparativo();
         let filtroMes = document.getElementById('selectFiltroMesComp').value;
-        let jogadoresArr = Object.keys(result.dados).map(nome => ({ nome: nome, ...result.dados[nome] }));
-        
-        let texto = `📊 *Resumo de Pontuação - ${filtroMes === "TODOS" ? "Geral" : filtroMes}*\n\n`;
-        
+        if(Object.keys(result.dados).length === 0) return alert("Sem dados no comparativo!");
+
+        let txt = `📊 *COMPARATIVO DE PONTUAÇÃO GvG*\n`;
+        txt += filtroMes === "TODOS" ? `(Visão Geral Acumulada)\n\n` : `(Mês: ${filtroMes})\n\n`;
+
+        let jogadoresArr = Object.keys(result.dados).map(nome => ({ nome, ...result.dados[nome] }));
         if (filtroMes !== "TODOS") {
             jogadoresArr = jogadoresArr.filter(j => j.meses[filtroMes] && j.meses[filtroMes] > 0);
             jogadoresArr.sort((a, b) => (b.meses[filtroMes] || 0) - (a.meses[filtroMes] || 0));
-            jogadoresArr.forEach(j => { texto += `• ${j.nome}: ${j.meses[filtroMes]} pts\n`; });
+            jogadoresArr.forEach(j => { txt += `- *${j.nome}*: ${j.meses[filtroMes]} pts\n`; });
         } else {
             jogadoresArr.sort((a, b) => b.total - a.total);
-            jogadoresArr.forEach(j => { texto += `• ${j.nome}: ${j.total} pts\n`; });
+            jogadoresArr.forEach(j => { txt += `- *${j.nome}*: ${j.total} pts total\n`; });
         }
 
-        if(jogadoresArr.length === 0) {
-            alert('Não há dados para enviar.'); return;
-        }
-
-        let finalStr = obterCabecalhoLider() + texto;
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(finalStr)}`, '_blank');
+        let textoFinal = obterCabecalhoLider() + txt;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textoFinal)}`, '_blank');
     }
 
     function salvarNotaPronta() {
-        let tit = document.getElementById('tituloNota').value.trim();
-        let cont = document.getElementById('conteudoNota').value.trim();
-        if(!tit || !cont) { alert('Preencha título e conteúdo!'); return; }
+        let titulo = document.getElementById('tituloNota').value.trim();
+        let conteudo = document.getElementById('conteudoNota').value.trim();
+        if(!titulo || !conteudo) return alert('Preencha título e conteúdo!');
 
         let notas = getNotas();
-        notas.push({ id: Date.now(), titulo: tit, conteudo: cont });
+        notas.unshift({ id: Date.now(), titulo, conteudo });
         saveNotas(notas);
-        document.getElementById('tituloNota').value = ''; document.getElementById('conteudoNota').value = '';
+        document.getElementById('tituloNota').value = '';
+        document.getElementById('conteudoNota').value = '';
         renderizarNotas();
     }
 
     function renderizarNotas() {
         let notas = getNotas();
-        let cont = document.getElementById('listaNotasContainer');
-        cont.innerHTML = '';
+        let container = document.getElementById('listaNotasContainer');
+        container.innerHTML = '';
+
         if(notas.length === 0) {
-            cont.innerHTML = `<div style="text-align:center; padding: 20px; opacity:0.6;">Nenhum aviso salvo.</div>`; return;
+            container.innerHTML = `<div style="text-align:center; padding: 20px; opacity:0.6;">Nenhum aviso cadastrado.</div>`;
+            return;
         }
+
         notas.forEach(n => {
             let div = document.createElement('div');
             div.className = 'note-item';
             div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <strong>📌 ${n.titulo}</strong>
-                    <button onclick="excluirNota(${n.id})" class="btn-icon btn-del">🗑️</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <strong>📝 ${n.titulo}</strong>
+                    <div class="btn-group">
+                        <button onclick="enviarZapNota('${n.id}')" class="btn-icon" style="background:#25d366;">📤 Zap</button>
+                        <button onclick="excluirNota('${n.id}')" class="btn-icon btn-del">🗑️</button>
+                    </div>
                 </div>
-                <div style="font-size:13px; margin-top:8px; white-space:pre-wrap; opacity:0.9;">${n.conteudo}</div>
-                <button onclick="enviarNotaZap(${n.id})" class="action-btn" style="background:#25d366; padding:6px; margin-top:10px; font-size:13px;">📤 Enviar Aviso no Zap</button>
+                <div style="font-size:13px; white-space:pre-wrap; opacity:0.9;">${n.conteudo}</div>
             `;
-            cont.appendChild(div);
+            container.appendChild(div);
         });
     }
 
-    function excluirNota(id) {
-        let notas = getNotas().filter(n => n.id !== id);
-        saveNotas(notas); renderizarNotas();
-    }
-
-    function enviarNotaZap(id) {
-        let nota = getNotas().find(n => n.id === id);
+    function enviarZapNota(id) {
+        let notas = getNotas();
+        let nota = notas.find(n => String(n.id) === String(id));
         if(!nota) return;
-        let finalStr = obterCabecalhoLider() + `📢 *${nota.titulo}*\n\n${nota.conteudo}`;
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(finalStr)}`, '_blank');
+        let txt = obterCabecalhoLider() + `*${nota.titulo}*\n\n${nota.conteudo}`;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(txt)}`, '_blank');
     }
 
+    function excluirNota(id) {
+        if(confirm('Excluir este aviso?')) {
+            let notas = getNotas().filter(n => String(n.id) !== String(id));
+            saveNotas(notas);
+            renderizarNotas();
+        }
+    }
+
+    // FUNÇÕES DO MODO DEV (AUTO-COMMIT GITHUB)
     async function carregarCodigo() {
-        const token = document.getElementById('inputTokenGit').value.trim();
-        if(!token) { alert("Digite o token do GitHub primeiro!"); return; }
-
-        const url = `https://api.github.com/repos/${DONO_DO_REPO}/${NOME_DO_REPO}/contents/${CAMINHO_ARQUIVO}?ref=${BRANCH_GIT}`;
+        let token = document.getElementById('inputTokenGit').value.trim();
+        if(!token) return alert('Por favor, digite o Token do GitHub.');
         
+        let url = `https://api.github.com/repos/${DONO_DO_REPO}/${NOME_DO_REPO}/contents/${CAMINHO_ARQUIVO}?ref=${BRANCH_GIT}`;
         try {
-            const resposta = await fetch(url, {
-                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
-            });
-            if (!resposta.ok) throw new Error("Erro ao acessar repositório. Verifique Token, Nome do Repo ou Caminho.");
+            let res = await fetch(url, { headers: { Authorization: `token ${token}` } });
+            if(!res.ok) throw new Error('Erro ao acessar repositório. Verifique Token, Nome do Repo ou Caminho.');
+            let data = await res.json();
+            arquivoSha = data.sha;
+            
+            let bytes = Uint8Array.from(atob(data.content.replace(/\n/g, '')), c => c.charCodeAt(0));
+            let decoder = new TextDecoder('utf-8');
+            let conteudo = decoder.decode(bytes);
 
-            const dados = await resposta.json();
-            arquivoSha = dados.sha; 
-            
-            const conteudoDecodificado = decodeURIComponent(escape(atob(dados.content)));
-            
-            document.getElementById('editorCodigo').value = conteudoDecodificado;
+            document.getElementById('editorCodigo').value = conteudo;
             document.getElementById('editorCodigo').style.display = 'block';
             document.getElementById('boxSalvar').style.display = 'block';
-            
-            alert("Código carregado com sucesso!");
-        } catch (erro) {
-            alert(erro.message);
+            alert('Código carregado com sucesso!');
+        } catch(err) {
+            alert(err.message);
         }
     }
 
     async function commitarCodigo() {
-        const token = document.getElementById('inputTokenGit').value.trim();
-        const mensagem = document.getElementById('inputMensagemCommit').value.trim() || "Atualização via App Gerenciador";
-        const novoConteudo = document.getElementById('editorCodigo').value;
+        let token = document.getElementById('inputTokenGit').value.trim();
+        let conteudo = document.getElementById('editorCodigo').value;
+        let msg = document.getElementById('inputMensagemCommit').value.trim() || 'Atualização de código via Dev Manager';
 
-        if(!token || !novoConteudo || !arquivoSha) {
-            alert("Carregue o código antes de commitar!"); return;
-        }
+        if(!token || !arquivoSha) return alert('Carregue o código primeiro!');
 
-        const url = `https://api.github.com/repos/${DONO_DO_REPO}/${NOME_DO_REPO}/contents/${CAMINHO_ARQUIVO}`;
-        
-        const conteudoCodificado = btoa(unescape(encodeURIComponent(novoConteudo)));
+        let encoder = new TextEncoder();
+        let bytes = encoder.encode(conteudo);
+        let binary = '';
+        bytes.forEach(b => binary += String.fromCharCode(b));
+        let conteudoBase64 = btoa(binary);
 
-        const body = JSON.stringify({
-            message: mensagem,
-            content: conteudoCodificado,
+        let url = `https://api.github.com/repos/${DONO_DO_REPO}/${NOME_DO_REPO}/contents/${CAMINHO_ARQUIVO}`;
+        let body = {
+            message: msg,
+            content: conteudoBase64,
             sha: arquivoSha,
             branch: BRANCH_GIT
-        });
+        };
 
         try {
-            document.querySelector('#boxSalvar button').innerText = "Enviando... ⏳";
-            const resposta = await fetch(url, {
+            let res = await fetch(url, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3+json',
+                    Authorization: `token ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: body
+                body: JSON.stringify(body)
             });
-
-            if (!resposta.ok) throw new Error("Falha ao salvar no GitHub.");
-
-            const dados = await resposta.json();
-            arquivoSha = dados.content.sha; 
-            
-            alert("✅ Atualização salva no GitHub com sucesso!");
-            document.getElementById('inputMensagemCommit').value = "";
-        } catch (erro) {
-            alert(erro.message);
-        } finally {
-            document.querySelector('#boxSalvar button').innerText = "🚀 Fazer Commit Direto no GitHub";
+            if(!res.ok) throw new Error('Erro ao salvar commit. Verifique as permissões do Token.');
+            let data = await res.json();
+            arquivoSha = data.content.sha;
+            alert('🚀 Commit realizado com sucesso no GitHub!');
+        } catch(err) {
+            alert(err.message);
         }
     }
 </script>
