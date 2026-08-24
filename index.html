@@ -130,7 +130,7 @@
             <select id="itensPorPaginaSistema" class="select-per-page" onchange="paginaSistema = 1; renderizarHistorico()">
                 <option value="5">5 p/ pág</option>
                 <option value="10">10 p/ pág</option>
-                <option value="20">20 p/ pág</option>
+                <option value="20" selected>20 p/ pág</option>
             </select>
         </div>
         
@@ -155,7 +155,7 @@
             <select id="itensPorPaginaLogs" class="select-per-page" onchange="paginaLogs = 1; renderizarLogs()">
                 <option value="5">5 p/ pág</option>
                 <option value="10">10 p/ pág</option>
-                <option value="20">20 p/ pág</option>
+                <option value="20" selected>20 p/ pág</option>
             </select>
         </div>
         
@@ -210,7 +210,6 @@
     }
 
     function calcularProximoTurnoDinamico() {
-        // Ordem dos dias da semana padrão do rodízio
         const ordemTurnos = [
             { nome: 'Sexta', diaSemana: 5 },
             { nome: 'Sáb Manhã', diaSemana: 6, periodo: 'manha' },
@@ -224,9 +223,7 @@
 
         let agora = new Date();
         let diaHoje = agora.getDay();
-        let horaAtual = agora.getHours();
 
-        // Encontra o próximo turno aproximado com base no dia atual
         let proximo = ordemTurnos.find(t => t.diaSemana > diaHoje) || ordemTurnos[0];
         let banner = document.getElementById('bannerProximoTurno');
         banner.style.display = 'flex';
