@@ -104,7 +104,6 @@
     <div id="abaHistorico" class="tab-content">
         <h3>⚙️ Gerenciador de Pessoas</h3>
         
-        <!-- SUB-GUIAS DE PESSOAS -->
         <div style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
             <button id="btnSubMembros" class="sub-nav-btn active" onclick="alternarSubAbaPessoas('membros')">👥 Membros (<span id="countMembros">0</span>)</button>
             <button id="btnSubSistema" class="sub-nav-btn" onclick="alternarSubAbaPessoas('sistema')">🛡️ Sistema (<span id="countSistema">0</span>)</button>
@@ -201,14 +200,13 @@
         <textarea id="editorCodigo" placeholder="O código fonte aparecerá aqui após validar o Token..." style="height: 320px; font-family: monospace; font-size: 12px; white-space: pre; display:none;"></textarea>
         
         <div id="boxSalvar" style="display:none; margin-top: 15px;">
-            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Ajustadas sub-guias de pessoas)">
+            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Correção de parsing de nomes e sistema)">
             <button onclick="commitarCodigo()" class="action-btn" style="background:#28a745; margin-top: 5px;">🚀 Fazer Commit Direto no GitHub</button>
         </div>
     </div>
 </div>
 
 <script>
-    // --- CONFIGURAÇÕES DO REPOSITÓRIO GITHUB ---
     const DONO_DO_REPO = "RamboFetBB";
     const NOME_DO_REPO = "GvG-automatizada-pocket-contest";
     const CAMINHO_ARQUIVO = "index.html";
@@ -217,12 +215,14 @@
     let arquivoSha = "";
     let textoEscalaCache = "";
     let pag = { sis: 1, log: 1 };
-    let subAbaAtualPessoas = 'membros'; // 'membros' ou 'sistema'
+    let subAbaAtualPessoas = 'membros';
     const turnos = ['Sáb Tarde', 'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb Manhã'];
 
     document.getElementById('listaTexto').addEventListener('input', processarETocalhar);
     window.onload = () => {
-        carregarTema(); carregarClan(); renderizarHistorico(); renderizarLogs(); renderizarNotas();
+        carregarTema(); carregarClan(); 
+        sanitizarBanco(); // Limpa e corrige nomes que foram salvos com erro anteriormente
+        renderizarHistorico(); renderizarLogs(); renderizarNotas();
         renderizarComparativoMensal(); carregarTokenGitLocal();
         atualizarStatusPremiacao(); setInterval(atualizarStatusPremiacao, 1000);
     };
@@ -261,20 +261,14 @@
         return `*${lider}*: ${saudacao}\n\n`;
     }
 
-    // --- GERENCIAMENTO DE TOKEN LOCAL ---
     function salvarTokenGitLocal() {
         let token = document.getElementById('inputTokenGit').value.trim();
-        if(token) {
-            localStorage.setItem('gvg_git_token', token);
-        } else {
-            localStorage.removeItem('gvg_git_token');
-        }
+        if(token) localStorage.setItem('gvg_git_token', token);
+        else localStorage.removeItem('gvg_git_token');
     }
     function carregarTokenGitLocal() {
         let tokenSalvo = localStorage.getItem('gvg_git_token') || '';
-        if(tokenSalvo) {
-            document.getElementById('inputTokenGit').value = tokenSalvo;
-        }
+        if(tokenSalvo) document.getElementById('inputTokenGit').value = tokenSalvo;
     }
     function limparTokenGitLocal() {
         localStorage.removeItem('gvg_git_token');
@@ -335,12 +329,63 @@
     const getNotas = () => JSON.parse(localStorage.getItem('gvg_notas_prontas')) || [];
     const saveNotas = (dados) => localStorage.setItem('gvg_notas_prontas', JSON.stringify(dados));
 
-    // Busca insensível a maiúsculas/minúsculas para evitar duplicações de nomes
     function encontrarChaveBanco(banco, nome) {
         if (!nome) return '';
         let nomeTrim = nome.trim();
         let existente = Object.keys(banco).find(k => k.trim().toLowerCase() === nomeTrim.toLowerCase());
         return existente || nomeTrim;
+    }
+
+    // SANITIZAÇÃO AUTOMÁTICA DE DADOS CORROMPIDOS NO LOCALSTORAGE
+    function sanitizarBanco() {
+        let banco = getBanco();
+        let alterado = false;
+        let novoBanco = {};
+
+        Object.keys(banco).forEach(chaveAntiga => {
+            let item = banco[chaveAntiga];
+            let nomeLimpo = chaveAntiga;
+            let ehSistema = item.isSistema || false;
+            let pontos = item.pontos || 0;
+
+            if (/\bsistema\b/i.test(nomeLimpo)) {
+                ehSistema = true;
+                nomeLimpo = nomeLimpo.replace(/\bsistema\b/gi, '').trim();
+            }
+
+            let matchNum = nomeLimpo.match(/^(.+?)\s+([-\d]+)$/);
+            if (matchNum) {
+                nomeLimpo = matchNum[1].trim();
+                let ptsExtraidos = parseInt(matchNum[2], 10);
+                if (pontos === 0 && !isNaN(ptsExtraidos)) {
+                    pontos = ptsExtraidos;
+                }
+            }
+
+            if (!nomeLimpo) return;
+
+            let chaveExistente = Object.keys(novoBanco).find(k => k.trim().toLowerCase() === nomeLimpo.toLowerCase()) || nomeLimpo;
+
+            if (!novoBanco[chaveExistente]) {
+                novoBanco[chaveExistente] = {
+                    participacoes: item.participacoes || 0,
+                    pontos: pontos,
+                    isSistema: ehSistema
+                };
+            } else {
+                novoBanco[chaveExistente].participacoes = Math.max(novoBanco[chaveExistente].participacoes || 0, item.participacoes || 0);
+                novoBanco[chaveExistente].pontos = Math.max(novoBanco[chaveExistente].pontos || 0, pontos);
+                if (ehSistema) novoBanco[chaveExistente].isSistema = true;
+            }
+
+            if (chaveAntiga !== chaveExistente || item.isSistema !== ehSistema || item.pontos !== pontos) {
+                alterado = true;
+            }
+        });
+
+        if (alterado) {
+            saveBanco(novoBanco);
+        }
     }
 
     function processarETocalhar() {
@@ -367,6 +412,13 @@
         linhas.forEach(linha => {
             linha = linha.trim();
             if(!linha) return;
+
+            let ehSistemaLinha = false;
+            if (/\bsistema\b/i.test(linha)) {
+                ehSistemaLinha = true;
+                linha = linha.replace(/\bsistema\b/gi, '').trim();
+            }
+
             let match = linha.match(/^(.+?)\s+([-\d]+)$/);
             let nomeRaw = "", pts = 0;
 
@@ -379,12 +431,17 @@
                 pts = 0;
             }
 
+            if (!nomeRaw) return;
+
             let chave = encontrarChaveBanco(banco, nomeRaw);
 
-            if (apenasSistema) {
-                let ehSistema = banco[chave] && banco[chave].isSistema;
-                if (!ehSistema) return;
+            if (!banco[chave]) {
+                banco[chave] = { participacoes: 0, pontos: 0, isSistema: ehSistemaLinha };
+            } else if (ehSistemaLinha) {
+                banco[chave].isSistema = true;
             }
+
+            if (apenasSistema && !banco[chave].isSistema) return;
 
             jogadores.push({ nome: chave, pts });
         });
@@ -403,10 +460,7 @@
             let turno = turnos[index % totalTurnos];
             let ehSys = banco[j.nome] && banco[j.nome].isSistema;
             escalaStr += `• *${j.nome}* ${ehSys ? '🛡️' : ''} - ${turno} (${j.pts} pts)\n`;
-            
-            if(!banco[j.nome]) {
-                banco[j.nome] = { participacoes: 0, pontos: 0, isSistema: false };
-            }
+
             banco[j.nome].participacoes += 1;
             banco[j.nome].pontos += j.pts;
         });
@@ -472,7 +526,6 @@
             div.className = 'player-item';
 
             if (subAbaAtualPessoas === 'membros') {
-                // GUIA MEMBROS: EXIBE NOME E PONTUAÇÃO (SEM O BADGE DO SISTEMA)
                 div.innerHTML = `
                     <div>
                         <strong>${nome}</strong><br>
@@ -486,7 +539,6 @@
                     </div>
                 `;
             } else {
-                // GUIA SISTEMA: EXIBE APENAS NOME + SELO SISTEMA (SEM A PONTUAÇÃO)
                 div.innerHTML = `
                     <div>
                         <strong>${nome}</strong> <span class="badge-sys">🛡️ Sistema</span>
@@ -520,6 +572,11 @@
         let input = document.getElementById('novoNomeSistema');
         let rawNome = input.value.trim();
         if (!rawNome) return;
+        
+        if (/\bsistema\b/i.test(rawNome)) {
+            rawNome = rawNome.replace(/\bsistema\b/gi, '').trim();
+        }
+
         let banco = getBanco();
         let chave = encontrarChaveBanco(banco, rawNome);
 
@@ -759,7 +816,6 @@
         a.click();
     }
 
-    // LEITURA E UNIFICAÇÃO INTELIGENTE DE BACKUPS (ANTIGOS E NOVOS)
     function importarBackup(e) {
         let file = e.target.files[0];
         if (!file) return;
@@ -794,7 +850,6 @@
                 if (dados.logs) novosLogs = dados.logs;
                 if (dados.notas) novasNotas = dados.notas;
 
-                // Unifica banco de jogadores
                 if (novoBanco && typeof novoBanco === 'object') {
                     Object.keys(novoBanco).forEach(k => {
                         let item = novoBanco[k];
@@ -819,7 +874,6 @@
                     saveBanco(bancoAtual);
                 }
 
-                // Unifica histórico de logs sem duplicar IDs
                 if (novosLogs && Array.isArray(novosLogs)) {
                     let logsAtuais = getLogs();
                     let ids = new Set(logsAtuais.map(l => l.id));
@@ -827,7 +881,6 @@
                     saveLogs(logsAtuais);
                 }
 
-                // Unifica avisos sem duplicar IDs
                 if (novasNotas && Array.isArray(novasNotas)) {
                     let notasAtuais = getNotas();
                     let ids = new Set(notasAtuais.map(n => n.id));
@@ -842,6 +895,7 @@
                     carregarClan();
                 }
 
+                sanitizarBanco();
                 alert('✅ Backup restaurado e unificado com sucesso!');
                 renderizarHistorico(); renderizarLogs(); renderizarNotas(); renderizarComparativoMensal();
             } catch (err) {
@@ -849,7 +903,7 @@
             }
         };
         reader.readAsText(file);
-        e.target.value = ''; // Limpa o input para poder reimportar se necessário
+        e.target.value = '';
     }
 
     function salvarNotaPronta() {
@@ -919,7 +973,6 @@
         }
     }
 
-    // --- MODO DEV (GITHUB INTEGRATION) ---
     async function carregarCodigo() {
         const token = document.getElementById('inputTokenGit').value.trim();
         if (!token) { alert('Digite o Token!'); return; }
@@ -950,7 +1003,7 @@
     async function commitarCodigo() {
         const token = document.getElementById('inputTokenGit').value.trim();
         const conteudo = document.getElementById('editorCodigo').value;
-        const msg = document.getElementById('inputMensagemCommit').value.trim() || 'Atualização das sub-guias de pessoas e restauração de backup';
+        const msg = document.getElementById('inputMensagemCommit').value.trim() || 'Correção de parsing de nomes e higienização automática do banco';
 
         if (!token || !arquivoSha) { alert('Carregue o código e insira o token!'); return; }
 
