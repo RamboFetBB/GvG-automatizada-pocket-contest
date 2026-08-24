@@ -214,7 +214,6 @@
     let textoEscalaCache = "";
     let pag = { sis: 1, log: 1 };
     let subAbaAtualPessoas = 'membros';
-    const turnos = ['Sáb Tarde', 'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb Manhã'];
 
     window.onload = () => {
         carregarTema(); carregarClan(); 
@@ -328,7 +327,7 @@
 
     function encontrarChaveBanco(banco, nome) {
         if (!nome) return '';
-        let nomeTrim = nome.trim();
+        let nomeTrim = nome.trim().replace(/🛡️/g, '').trim();
         let existente = Object.keys(banco).find(k => k.trim().toLowerCase() === nomeTrim.toLowerCase());
         return existente || nomeTrim;
     }
@@ -340,7 +339,7 @@
 
         Object.keys(banco).forEach(chaveAntiga => {
             let item = banco[chaveAntiga];
-            let nomeLimpo = chaveAntiga;
+            let nomeLimpo = chaveAntiga.replace(/🛡️/g, '').trim();
             let ehSistema = item.isSistema || false;
             let pontos = item.pontos || 0;
 
@@ -384,7 +383,7 @@
         }
     }
 
-    // REGRA DE RODÍZIO ATUALIZADA
+    // REGRA DE RODÍZIO ATUALIZADA E RESTRITA ÀS ESPECIFICAÇÕES
     function processarETocalhar() {
         let texto = document.getElementById('listaTexto').value.trim();
         let divResult = document.getElementById('resultado');
@@ -413,6 +412,9 @@
                 ehSistemaLinha = true;
                 linha = linha.replace(/\bsistema\b/gi, '').trim();
             }
+
+            // Remove emojis de tag antes de processar
+            linha = linha.replace(/🛡️/g, '').trim();
 
             let match = linha.match(/^(.+?)\s+([-\d]+)$/);
             let nomeRaw = "", pts = 0;
@@ -450,81 +452,75 @@
         const diasNormais = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sáb Tarde', 'Domingo'];
         const diasSistema = ['Sexta', 'Sáb Manhã'];
 
-        let membrosComuns = listaProcessada.filter(j => !j.isSistema);
-        let membrosSistema = listaProcessada.filter(j => j.isSistema);
-
-        membrosComuns.sort((a, b) => b.pts - a.pts);
-        membrosSistema.sort((a, b) => b.pts - a.pts);
-
         let escalaDias = {};
         [...diasNormais, ...diasSistema].forEach(d => escalaDias[d] = []);
 
-        // 1. Processa Sexta e Sáb Manhã (Exclusivo Top 10 Sistema >= 80 pts)
-        let top10Sistema = membrosSistema.filter(j => j.pts >= 80).slice(0, 10);
+        // 1. REGRA SEXTA E SÁBADO MANHÃ: EXCLUSIVO TOP 10 SISTEMA COM >= 80 PTS
+        let candidatosSistema = listaProcessada.filter(j => j.isSistema && j.pts >= 80);
+        candidatosSistema.sort((a, b) => b.pts - a.pts);
+        
+        let top10Sistema = candidatosSistema.slice(0, 10);
 
         diasSistema.forEach(dia => {
             if (top10Sistema.length > 0) {
                 let idx = 0;
-                let adicionadosHoje = new Set();
-                while (escalaDias[dia].length < 5 && adicionadosHoje.size < top10Sistema.length) {
+                while (escalaDias[dia].length < 5) {
                     let player = top10Sistema[idx % top10Sistema.length];
-                    if (!adicionadosHoje.has(player.nome)) {
-                        escalaDias[dia].push(player);
-                        adicionadosHoje.add(player.nome);
-                    }
+                    escalaDias[dia].push(player);
                     idx++;
                 }
             }
         });
 
-        // 2. Processa Dias Normais (Membros sem Sistema)
-        let altaPontuacao = membrosComuns.filter(j => j.pts > 30);
-        let baixaPontuacao = membrosComuns.filter(j => j.pts <= 30);
-
+        // 2. REGRA DIAS NORMAIS (SEGUNDA A QUINTA, SÁB TARDE, DOMINGO): 
+        // Prioridade > 30 pontos, seguida por <= 30 pontos. Limite diário de 5 prêmios por dia.
         let contagemEscala = {};
-        membrosComuns.forEach(j => contagemEscala[j.nome] = 0);
+        listaProcessada.forEach(j => contagemEscala[j.nome] = 0);
 
         diasNormais.forEach(dia => {
             let adicionadosHoje = new Set();
 
-            // Prioridade 1: Membros com > 30 pts
-            while (escalaDias[dia].length < 5) {
-                let candidatosAlta = altaPontuacao.filter(j => !adicionadosHoje.has(j.nome));
-                if (candidatosAlta.length === 0) break;
+            let candidatosAlta = listaProcessada.filter(j => j.pts > 30);
+            let candidatosBaixa = listaProcessada.filter(j => j.pts <= 30);
 
-                candidatosAlta.sort((a, b) => {
+            // Prioridade Alta (> 30 pts)
+            while (escalaDias[dia].length < 5) {
+                let disponiveis = candidatosAlta.filter(j => !adicionadosHoje.has(j.nome));
+                if (disponiveis.length === 0) break;
+
+                disponiveis.sort((a, b) => {
                     if (contagemEscala[a.nome] !== contagemEscala[b.nome]) {
                         return contagemEscala[a.nome] - contagemEscala[b.nome];
                     }
                     return b.pts - a.pts;
                 });
 
-                let escolhido = candidatosAlta[0];
+                let escolhido = disponiveis[0];
                 escalaDias[dia].push(escolhido);
                 adicionadosHoje.add(escolhido.nome);
                 contagemEscala[escolhido.nome]++;
             }
 
-            // Prioridade 2: Membros com <= 30 pts (preenche vagas restantes)
+            // Prioridade Baixa (<= 30 pts)
             while (escalaDias[dia].length < 5) {
-                let candidatosBaixa = baixaPontuacao.filter(j => !adicionadosHoje.has(j.nome));
-                if (candidatosBaixa.length === 0) break;
+                let disponiveis = candidatosBaixa.filter(j => !adicionadosHoje.has(j.nome));
+                if (disponiveis.length === 0) break;
 
-                candidatosBaixa.sort((a, b) => {
+                disponiveis.sort((a, b) => {
                     if (contagemEscala[a.nome] !== contagemEscala[b.nome]) {
                         return contagemEscala[a.nome] - contagemEscala[b.nome];
                     }
                     return b.pts - a.pts;
                 });
 
-                let escolhido = candidatosBaixa[0];
+                let escolhido = disponiveis[0];
                 escalaDias[dia].push(escolhido);
                 adicionadosHoje.add(escolhido.nome);
                 contagemEscala[escolhido.nome]++;
             }
         });
 
-        // Monta o texto de exibição
+        // Monta o texto final
         let escalaStr = "📅 *ESCALA DO RODÍZIO GvG*\n\n";
         let totalJogadoresEscalados = 0;
         let ordemExibicao = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb Manhã', 'Sáb Tarde', 'Domingo'];
