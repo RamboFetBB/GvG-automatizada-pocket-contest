@@ -58,7 +58,6 @@
         .sub-nav-btn { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; background: var(--tab-bg); color: var(--text-color); }
         .sub-nav-btn.active { background: #007bff; color: white; border-color: #007bff; }
 
-        /* MODAL DE EDIÇÃO CUSTOMIZADO */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; padding: 15px; box-sizing: border-box; }
         .modal-content { background: var(--container-bg); color: var(--text-color); width: 100%; max-width: 600px; border-radius: 10px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 12px; }
         .modal-header { font-weight: bold; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
@@ -205,7 +204,7 @@
         <textarea id="editorCodigo" placeholder="O código fonte aparecerá aqui após validar o Token..." style="height: 320px; font-family: monospace; font-size: 12px; white-space: pre; display:none;"></textarea>
         
         <div id="boxSalvar" style="display:none; margin-top: 15px;">
-            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Modal de edição customizado e fix no filtro de dias)">
+            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Ajuste do ciclo Sáb Tarde -> Sáb Manhã e fix botões de envio)">
             <button onclick="commitarCodigo()" class="action-btn" style="background:#28a745; margin-top: 5px;">🚀 Fazer Commit Direto no GitHub</button>
         </div>
     </div>
@@ -306,10 +305,10 @@
     function atualizarStatusPremiacao() {
         let agora = new Date(), dia = agora.getDay(), hora = agora.getHours();
         let turnoNome = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"][dia];
-        if(dia === 6) turnoNome = hora < 11 ? "Sáb Manhã" : (hora < 18 ? "Sáb Tarde (Em breve)" : "Sáb Tarde");
+        if(dia === 6) turnoNome = hora < 11 ? "Sáb Manhã" : "Sáb Tarde";
 
         let inicioJanela = new Date(agora);
-        inicioJanela.setHours(dia === 6 && hora >= 18 ? 18 : (dia === 6 && hora >= 11 ? 11 : 1), 0, 0, 0);
+        inicioJanela.setHours(dia === 6 && hora >= 11 ? 11 : 1, 0, 0, 0);
         if(hora < 1 && dia !== 6) inicioJanela.setDate(inicioJanela.getDate() - 1);
 
         let ultimoEnvio = parseInt(localStorage.getItem('gvg_ultimo_envio_timestamp')) || 0;
@@ -319,7 +318,7 @@
         if(enviado) {
             target.setDate(target.getDate() + 1); target.setHours(1,0,0,0);
         } else {
-            target.setHours(dia === 6 && hora < 11 ? 11 : (dia === 6 && hora >= 11 && hora < 18 ? 18 : 1), 0,0,0);
+            target.setHours(dia === 6 && hora < 11 ? 11 : 1, 0, 0, 0);
             if(hora >= target.getHours()) target.setDate(target.getDate() + 1);
         }
 
@@ -470,7 +469,8 @@
             return;
         }
 
-        const diasNormais = ['SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SÁB TARDE', 'DOMINGO'];
+        // ORDEM DO CICLO DA SEMANA: Inicia no Sábado Tarde e encerra no Sábado Manhã
+        const diasNormais = ['SÁB TARDE', 'DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA'];
         const diasSistema = ['SEXTA', 'SÁB MANHÃ'];
 
         let membrosComuns = listaProcessada.filter(j => !j.isSistema);
@@ -545,7 +545,7 @@
 
         let escalaStr = "📅 *ESCALA DO RODÍZIO GvG*\n\n";
         let totalJogadoresEscalados = 0;
-        let ordemExibicao = ['SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁB MANHÃ', 'SÁB TARDE', 'DOMINGO'];
+        let ordemExibicao = ['SÁB TARDE', 'DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁB MANHÃ'];
 
         ordemExibicao.forEach(dia => {
             if (escalaDias[dia] && escalaDias[dia].length > 0) {
@@ -733,15 +733,24 @@
         return turnosMap;
     }
 
+    function normalizarTexto(txt) {
+        return String(txt || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^\w\s]/gi, "")
+            .trim()
+            .toUpperCase();
+    }
+
     function compartilharDiaZap(logId, turno) {
         let logs = getLogs();
         let log = logs.find(l => String(l.id) === String(logId));
         if(!log) return;
         
         let turnosMap = agruparPorTurno(log.texto);
-        let chaveTurnoBusca = String(turno).trim().toUpperCase();
+        let turnoNorm = normalizarTexto(turno);
         
-        let chaveReal = Object.keys(turnosMap).find(k => k.toUpperCase() === chaveTurnoBusca);
+        let chaveReal = Object.keys(turnosMap).find(k => normalizarTexto(k) === turnoNorm);
         let jogadores = chaveReal ? turnosMap[chaveReal] : [];
         
         if (jogadores.length === 0) {
@@ -749,8 +758,8 @@
             return;
         }
 
-        let textoZap = `📢 *Aviso GvG - ${chaveTurnoBusca}*\n\n`;
-        textoZap += `Olá equipe! Segue a escala do dia *${chaveTurnoBusca}*:\n\n`;
+        let textoZap = `📢 *Aviso GvG - ${chaveReal}*\n\n`;
+        textoZap += `Olá equipe! Segue a escala do dia *${chaveReal}*:\n\n`;
         
         jogadores.forEach(j => {
             textoZap += `- *${j.nome}* (${j.pts} pts)\n`;
