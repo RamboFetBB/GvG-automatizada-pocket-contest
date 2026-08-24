@@ -204,7 +204,7 @@
         <textarea id="editorCodigo" placeholder="O código fonte aparecerá aqui após validar o Token..." style="height: 320px; font-family: monospace; font-size: 12px; white-space: pre; display:none;"></textarea>
         
         <div id="boxSalvar" style="display:none; margin-top: 15px;">
-            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Ajuste do ciclo Sáb Tarde -> Sáb Manhã e fix botões de envio)">
+            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Ajuste no parser de regex dos turnos)">
             <button onclick="commitarCodigo()" class="action-btn" style="background:#28a745; margin-top: 5px;">🚀 Fazer Commit Direto no GitHub</button>
         </div>
     </div>
@@ -713,33 +713,37 @@
         }
     }
 
+    function normalizarTexto(txt) {
+        return String(txt || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-zA-Z0-9\s]/g, "")
+            .trim()
+            .toUpperCase();
+    }
+
     function agruparPorTurno(texto) {
         let linhas = texto.split('\n');
         let turnosMap = {};
         let diaAtual = "";
 
         linhas.forEach(l => {
-            let diaMatch = l.match(/📌 \*(.*?)\*/);
-            if (diaMatch) {
-                diaAtual = diaMatch[1].trim().toUpperCase();
-                turnosMap[diaAtual] = [];
+            let diaMatch = l.match(/(?:📌|\*)\s*\*?([^*()]+)\*?/);
+            
+            if (l.includes('📌') || (diaMatch && /SÁB|DOMINGO|SEGUNDA|TERÇA|QUARTA|QUINTA|SEXTA/i.test(diaMatch[1]))) {
+                let nomeDia = l.replace(/^.*?📌\s*\*/, '').replace(/\*.*$/, '').trim();
+                if (!nomeDia || l.includes('ESCALA DO RODÍZIO')) return;
+                
+                diaAtual = nomeDia.replace(/\s*\(\d+\/\d+\s*vagas\):?/, '').trim().toUpperCase();
+                if (diaAtual) turnosMap[diaAtual] = [];
             } else {
-                let m = l.match(/• \*(.*?)\*(?: 🛡️)? \(([-\d]+) pts\)/);
-                if (m && diaAtual) {
-                    turnosMap[diaAtual].push({ nome: m[1], pts: m[2] });
+                let m = l.match(/[*•-]?\s*\*([^*]+)\*(?:\s*🛡️)?\s*\(([-\d]+)\s*pts\)/);
+                if (m && diaAtual && turnosMap[diaAtual]) {
+                    turnosMap[diaAtual].push({ nome: m[1].trim(), pts: m[2] });
                 }
             }
         });
         return turnosMap;
-    }
-
-    function normalizarTexto(txt) {
-        return String(txt || "")
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/[^\w\s]/gi, "")
-            .trim()
-            .toUpperCase();
     }
 
     function compartilharDiaZap(logId, turno) {
@@ -753,7 +757,7 @@
         let chaveReal = Object.keys(turnosMap).find(k => normalizarTexto(k) === turnoNorm);
         let jogadores = chaveReal ? turnosMap[chaveReal] : [];
         
-        if (jogadores.length === 0) {
+        if (!jogadores || jogadores.length === 0) {
             alert(`Nenhum jogador encontrado para o turno: ${turno}`);
             return;
         }
