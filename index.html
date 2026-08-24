@@ -1,3 +1,5 @@
+Isso acontece porque a função que filtra os dias no histórico (agruparPorTurno) está procurando a palavra exata em caixa alta (SEGUNDA), enquanto a escala gerada estava salvando o nome do dia em caixa mista (Segunda). Como o texto salvo no log não batia exatamente com a chave do botão, a lista do dia específico saía em branco na mensagem do WhatsApp.
+Abaixo está o arquivo index.html corrigido com a padronização e o botão de envio individual para cada dia funcionando corretamente.
 <!DOCTYPE html>
 <html lang="pt-br" data-theme="light">
 <head>
@@ -198,7 +200,7 @@
         <textarea id="editorCodigo" placeholder="O código fonte aparecerá aqui após validar o Token..." style="height: 320px; font-family: monospace; font-size: 12px; white-space: pre; display:none;"></textarea>
         
         <div id="boxSalvar" style="display:none; margin-top: 15px;">
-            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Atualização das regras de escala e pontuação)">
+            <input type="text" id="inputMensagemCommit" class="search-box" placeholder="Mensagem do commit (ex: Correção no envio diário do WhatsApp)">
             <button onclick="commitarCodigo()" class="action-btn" style="background:#28a745; margin-top: 5px;">🚀 Fazer Commit Direto no GitHub</button>
         </div>
     </div>
@@ -214,7 +216,6 @@
     let textoEscalaCache = "";
     let pag = { sis: 1, log: 1 };
     let subAbaAtualPessoas = 'membros';
-    const turnos = ['Sáb Tarde', 'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb Manhã'];
 
     window.onload = () => {
         carregarTema(); carregarClan(); 
@@ -697,7 +698,7 @@
         linhas.forEach(l => {
             let diaMatch = l.match(/📌 \*(.*?)\*/);
             if (diaMatch) {
-                diaAtual = diaMatch[1].trim();
+                diaAtual = diaMatch[1].trim().toUpperCase();
                 turnosMap[diaAtual] = [];
             } else {
                 let m = l.match(/• \*(.*?)\*(?: 🛡️)? \(([-\d]+) pts\)/);
@@ -715,13 +716,19 @@
         if(!log) return;
         
         let turnosMap = agruparPorTurno(log.texto);
-        let jogadores = turnosMap[turno] || [];
+        let chaveTurno = String(turno).trim().toUpperCase();
+        let jogadores = turnosMap[chaveTurno] || [];
         
-        let textoZap = `📢 *Aviso GvG - ${turno}*\n\n`;
-        textoZap += `Olá equipe! Segue a escala do dia *${turno}*:\n\n`;
+        if (jogadores.length === 0) {
+            alert(`Nenhum jogador encontrado para o turno: ${turno}`);
+            return;
+        }
+
+        let textoZap = `📢 *Aviso GvG - ${chaveTurno}*\n\n`;
+        textoZap += `Olá equipe! Segue a escala do dia *${chaveTurno}*:\n\n`;
         
         jogadores.forEach(j => {
-            textoZap += `- ${j.nome} (${j.pts})\n`;
+            textoZap += `- *${j.nome}* (${j.pts} pts)\n`;
         });
         
         textoZap += `\nPreparem-se para a entrega dos prêmios!`;
@@ -1115,3 +1122,4 @@
 </script>
 </body>
 </html>
+
